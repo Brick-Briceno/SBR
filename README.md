@@ -1,6 +1,6 @@
 # SBR language 🚀
 
-![](https://img.shields.io/badge/python-3.13-blue) ![](https://img.shields.io/badge/license-MIT-green)
+![](https://img.shields.io/badge/python-3.13-blue) ![](https://img.shields.io/badge/license-BSD%203--Clause-green)
 
 The SBR language provides super creative tools
 to musicians to make good music and from this make memorable melodies
