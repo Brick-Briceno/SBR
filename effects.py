@@ -134,12 +134,14 @@ def turn_right(data, args):
     if len(args) == 0: args = [1]
     valid_argument_type(">", input_data=data, input_types=(Rhythm, Tones, Group, Melody),
                         args=args, args_types=(int,))
-    data = data.bin
+    if isinstance(data, Rhythm): data = data.bin
     if args == []: args = [1]
     elif args == [0]: return Rhythm(data)
     args = int(args[0])
     while args > len(data): args -= len(data)
-    return Rhythm(data[-args:]+data[:-args])
+    if isinstance(data, str):
+        return Rhythm(data[-args:]+data[:-args])
+    return type(data)(data[-args:]+data[:-args])
 
 def turn_left(data, args):
     valid_argument_type("<", input_data=data, input_types=(Rhythm, Tones, Group, Melody),
