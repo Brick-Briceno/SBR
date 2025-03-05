@@ -1,8 +1,8 @@
 import commands
+from sbr_types import Melody, Rhythm, Group, Tones
 from compiler import (only_has, replace_variables, compiler,
                       delete_args, variables_sys, variables_user,
                       off_long_comment, delete_comments, SBR_ERROR)
-from sbr_types import Melody, Rhythm, Group, Tones
 #system vars
 piece_of_code = ""
 open_keys = 0
@@ -82,9 +82,27 @@ def sbr_line(idea):
                 sbr_import(imp[1])
             else: raise SBR_ERROR("You must import a code file")
             return
+        elif imp[0] == "for":
+            # 1=variable, 2=iter object, 3=code
+            if len(imp) == 4:
+                iter_obj = sbr_line(imp[2])
+                if isinstance(iter_obj, int):
+                    iter_obj = range(iter_obj)
+                #convert the objet to a group
+                else: iter_obj = sbr_line(f"{imp[2]}G")
+                lines_data = []
+                for x in iter_obj:
+                    sbr_line(f"{imp[1]}={x}")
+                    lines_data.append(sbr_line(imp[3]))
+                return [x for x in lines_data if x is not None]
+            else: raise SBR_ERROR(
+                "For loop must have varible name, iter object and code")
+            return
 
+    #delete comments and indentation
     idea = delete_comments(idea)
     idea = indentation(idea)
+
     #the code is empety
     if idea == "": return
     #logic to check the type of instruction

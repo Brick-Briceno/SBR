@@ -234,6 +234,14 @@ class Group(list):
                 raise SBR_ERROR(f"Cannot round this data type '{type(n).__name__}' '{n}'")
         return Group(new)
 
+    def __invert__(self):
+        end = []
+        for item in self:
+            if isinstance(item, (int, float, Note, Tones)):
+                end.append(~item)
+            else: raise SBR_ERROR(f"This type cannot be inverted: {item}")
+        return Tones(end)
+
     def __reversed__(self):
         return super().__reversed__()
 
@@ -330,7 +338,7 @@ class Note:
     def __add__(self, valor):
         #You can add or increment values ​​in str or int
         if isinstance(valor, int):
-            return Note(self.__diatonic_tone + valor)
+            return Note(f"{self.__diatonic_tone + valor+1}{self.str_alteration}")
         elif isinstance(valor, str):
             if valor.isnumeric():
                 return Note(self.__diatonic_tone + int(valor))
@@ -345,7 +353,7 @@ class Note:
     def __sub__(self, valor):
         #You can add or increment values ​​in str or int
         if isinstance(valor, int):
-            return Note(self.__diatonic_tone - valor)
+            return Note(f"{self.__diatonic_tone - valor+1}{self.str_alteration}")
         elif valor.isnumeric():
             return Note(self.__diatonic_tone - int(valor))
         elif valor == "b":
@@ -720,6 +728,14 @@ class Structure(Group):
 
     def __str__(self):
         return self.__repr__()
+
+    def __mul__(self, i):
+        end = []
+        for x in self:
+            if isinstance(x, (Melody, Rhythm)):
+                end.append(x*i)
+            else: end.append(x)
+        return Structure(end)
 
 #avaible path caracters
 abc = "._/\\: abcdefghijklmnñopqrstuvwxyz áéíóú 0123456789"

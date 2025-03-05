@@ -203,7 +203,7 @@ def insert_multiplication_operators(expression):
 
 def maths(expression):
     try: return eval(insert_multiplication_operators(
-        expression.replace("()", "")))
+        expression.replace("...", "").replace("()", "")))
     except (SyntaxError, TypeError):
         raise SBR_ERROR(f"Invalid formula or syntax '{expression}'")
     except ZeroDivisionError:

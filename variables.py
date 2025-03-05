@@ -26,7 +26,42 @@ variables_sys = {
     #CHORDS
 
     #PORGRESSIONS
-    "pop": "M0,-2,2,-1 Chord1,3,5",
+    "pop": "M 0,-2,2,-1 Chord1,3,5",
+    "soda": "M -2,-1,0 Chord1,3,5",
+    "hi": "M -2,-3,0 Chord1,3,5",
+    # 67(1'7ma)(4'7ma) m
+    # 163(7sus4) m
+    # 13671 m
+    # 1736 m
+    # 6513 m
+    # 1765m
+    # 1374 m
+    # 1567 m
+    # 1541 m
+    # 1561 m
+    # 1(b6)(b7)1 m
+    # 156 M
+    # 14564 M
+    # 4156 M
+    # 4165M
+    # 1564 M
+    # 1635 M
+    # 6451 M
+    # 1(3M)(4m) M
+    # 415 M
+    # 251 M
+    # 1(b7)4 M
+    # 2516 M
+    # 564511 M
+    # 561 M
+    # 15634145 M
+    # 1(b7)(b6)5 M
+    # 1(3M)4(6m) M
+    # 17(6’7)7 156(7sus4)7 m
+    # 136(7sus4)7 416(7sus)7 m
+    # 14(2#)6M M
+    # 1(4M)(5M)
+    # A E G#7 C#m7 ----  B F#/A# F#m11 A Am9 A/B
 
     #The Scales are formed by their mode and their tone
 

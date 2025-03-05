@@ -115,7 +115,7 @@ You can do this as well
             input("but... and if it's melodic")
             print("""
 However, in case of containing generators, effects or any musical data
-such as notes, tones, thythms or a groups, everything will be
+such as notes, tones, rhythms or a groups, everything will be
 processed left to right in this order
 
 Examples:
@@ -386,6 +386,15 @@ def rec(_):
 def sbr_editor(_):
     Thread(target=editor.main).start()
 
+def sleep(arg):
+    if len(arg) == 0:
+        raise SBR_ERROR("Enter the time to sleep")
+    else:
+        s = sbr_lines_2(arg[0])
+        if isinstance(s, (int, float)):
+            time.sleep(s)
+        else: raise SBR_ERROR("Only numbers are allowed")
+
 def donate(_):
     print("Help this project continue to grow")
     print("https://paypal.me/BrickUwu")
@@ -404,6 +413,7 @@ record = {
     "clock": clock,
     "ident": ident,
     "play": play,
+    "sleep": sleep,
     "export": export,
     "metric": metric,
     "phrase": phrase,
