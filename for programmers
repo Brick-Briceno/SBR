@@ -26,9 +26,9 @@ Define una clase de excepción personalizada SBR_ERROR para manejar errores espe
 Este archivo renombra archivos de audio en una estructura de directorios específica, basándose en patrones de nombres de notas musicales.
 
 9. generators.py
-Define generadores para crear datos rítmicos, tonales y de grupo en el lenguaje SBR. Los generadores incluyen B, N, C, E, A, Range, M, V, T, Sm, Poly, Struct, y inst.
+Define generadores para crear datos rítmicos, tonales y de grupo en el lenguaje SBR. Los generadores incluyen B, N, C, E, A, Range, M, Jumps, V, T, Sm, Poly, Struct, y inst.
 
-10. inst.sm
+10. main.sm
 Archivo de configuración que define rutas a varios instrumentos y muestras de audio.
 
 11. interpreter.py
