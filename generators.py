@@ -135,15 +135,31 @@ def M(arg):
     valid_argument_type("M", arg, (int, Note, Tones, Group))
     return Tones(arg)
 
+
+def one_dimention_list_recurtion(group):
+    new = []
+    for item in group:
+        if not isinstance(item, list):
+            new.append(item)
+        else:
+            for x in one_dimention_list_recurtion(item):
+                new.append(x)
+    return new
+
+
 def Jumps(arg):
     "My philosophy is that notes don't matter, intervals produce the emotions"
-    valid_argument_type("Jumps", arg, (int,))
-    end = []
+    valid_argument_type("Jumps", arg, (int, Group))
+    if arg == []: return Tones()
+    #I don't wanted to repeat code pero yo vivo la vida relax xd
+    #this for loop is the Arp effect
+    notes = []
     grade = 0
+    arg = one_dimention_list_recurtion(arg)
     for x in arg:
-        end.append(grade)
+        notes.append(grade)
         grade += x
-    return Tones(end)
+    return Tones(notes)
 
 "Generadores de Velocity"
 
@@ -182,7 +198,7 @@ def Poly(arg):
 def Struct(arg):
     "Do you've amazing ideas but don't know how to put together the puzzle? I'm your solution"
     valid_argument_type("Struct", arg, (Group,))
-    if not len(arg): raise SBR_ERROR("Struc needs at least one argument")
+    if not len(arg): raise SBR_ERROR("Struct needs at least one argument")
     return Structure(arg[0])
 
 

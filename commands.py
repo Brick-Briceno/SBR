@@ -52,6 +52,38 @@ def delete_comments(code):
             new_code += char
     return new_code.replace("\xff", "")
 
+def sbr_licence(_):
+    print("""
+BSD 3-Clause License
+
+Copyright (c) 2025, Miguel Briceño
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+""")
+
 def sbr_help(instruction):
     if len(instruction) != 0:
         h = instruction[0]
@@ -62,19 +94,19 @@ def sbr_help(instruction):
             print("generator^     ^ effect")
             for keys, value in zip(effects.record.keys(), effects.record.values()):
                 print(keys, value.__doc__ if value.__doc__ else 
-                      "There's no description", sep=f" {"."*((12)-len(keys))} ")
+                      "There's no description", sep=f" {'.'*((12)-len(keys))} ")
 
         elif h in ("generators", "generator"):
             print("Example: B 1011")
             print("generator^ ^^^^one argument")
             for keys, value in zip(generators.record.keys(), generators.record.values()):
                 print(keys, value.__doc__ if value.__doc__ else 
-                      "There's no description", sep=f" {"."*((12)-len(keys))} ")
+                      "There's no description", sep=f" {'.'*((12)-len(keys))} ")
 
         elif h in ("commands", "command"):
             for keys, value in zip(record.keys(), record.values()):
                 print(keys, value.__doc__ if value.__doc__ else 
-                      "There's no description", sep=f" {"."*((12)-len(keys))} ")
+                      "There's no description", sep=f" {'.'*((12)-len(keys))} ")
 
         elif h in ("variables", "variable"):
             print("Variables are like boxes, you can save things inside")
@@ -158,12 +190,14 @@ help: operators
 help: syntax
 help: E
 
+licence:
+
 invite me a coffee :)
-donate:
+donate: <3
 """)
 
 
-def sbr_lines_2(idea):
+def sbr_lines_2(idea: str):
     idea = clean_code(idea)
     #The code is empety
     if idea == "": raise
@@ -232,9 +266,9 @@ def code_made(args):
         print("-"*42)
     else: #if save is true
         try:
-            with open(args[0]+".sbr", "w") as f:
+            with open(args[0]+".sm", "w") as f:
                 f.write(code)
-        except: print(f"Error saving the file {args[0]}.sbr")
+        except: print(f"Error saving the file {args[0]}.sm")
 
 def clock(args):...
 
@@ -278,7 +312,8 @@ def sbr_type(args):
         result = sbr_lines_2(arg)
         result_type = type(result).__name__
         print(result, result_type,
-              sep=" is an " if result_type[0].upper() in ("a", "e", "i", "o", "h") else " is a ")
+              sep=" is an " if result_type[0].lower() in (
+                  "a", "e", "i", "o", "h") else " is a ")
 
 
 def euclidean_brute_force(args):
@@ -305,7 +340,14 @@ def obj_to_array(text_sbr_obj):
         elif isinstance(obj_data, Tones):
             obj_data = Structure([
                 Instrument(f"{program_directory}\\inst\\Strange Thong", 2**32), Velocity([0]),
-                Melody([obj_data, Rhythm("10"*len(obj_data))]) #it need a default sample to the Rhythm
+                Melody([obj_data, Rhythm('10'*len(obj_data))]) #it need a default sample to the Rhythm
+            ])
+
+        #Instrument
+        elif isinstance(obj_data, Instrument):
+            obj_data = Structure([
+                obj_data, Velocity([0]),
+                Melody([Tones([[35, 42, 49]]), Rhythm(1)]) #it need a default sample to the Rhythm
             ])
 
         meta_data = Bsound.struct_to_metadata(obj_data)
@@ -316,9 +358,12 @@ def obj_to_array(text_sbr_obj):
 def play(args):
     if len(args) == 0:
         print("Enter a data to play")
-    else:
+    elif len(args) == 1:
         audio_array = obj_to_array(args[0])
         Bsound.play_array(audio_array)
+    else:
+        audio_array = obj_to_array(args[0])
+        Bsound.play_array(audio_array, sleep=args[1])
 
 
 def export(args):
@@ -386,6 +431,9 @@ def rec(_):
 def sbr_editor(_):
     Thread(target=editor.main).start()
 
+def sm1(_):
+    import sm1
+
 def sleep(arg):
     if len(arg) == 0:
         raise SBR_ERROR("Enter the time to sleep")
@@ -406,6 +454,7 @@ record = {
     "help": sbr_help,
     "donate": donate,
     "exit": sbr_exit,
+    "licence": sbr_licence,
     "print": sbr_print,
     "type": sbr_type,
     #"pulse": fn_pulse,
@@ -413,6 +462,7 @@ record = {
     "clock": clock,
     "ident": ident,
     "play": play,
+    "sm1": sm1,
     "sleep": sleep,
     "export": export,
     "metric": metric,

@@ -130,6 +130,19 @@ def Q(data, args):
             else: final += "0"
         return Rhythm(final)
 
+
+def Add(data, args):
+    valid_argument_type("Add", input_data=data, input_types=(Rhythm),
+                        args=args, args_types=(int,))
+    if len(args) == 0: return data
+    new = list(data.bin)
+    for x in args:
+        if len(data.bin) <= x:
+            raise SBR_ERROR("Add: The argument is too big")
+        new[x] = "1"
+    return Rhythm("".join(new))
+
+
 def turn_right(data, args):
     if len(args) == 0: args = [1]
     valid_argument_type(">", input_data=data, input_types=(Rhythm, Tones, Group, Melody),
@@ -143,11 +156,13 @@ def turn_right(data, args):
         return Rhythm(data[-args:]+data[:-args])
     return type(data)(data[-args:]+data[:-args])
 
+
 def turn_left(data, args):
     valid_argument_type("<", input_data=data, input_types=(Rhythm, Tones, Group, Melody),
                         args=args, args_types=(int,))
     if args == []: args = [1]
     return turn_right(data, [len(data)-args[0]])
+
 
 def abrir(data, arg):
     valid_argument_type("Neither [ nor ]", input_data=data, input_types=(Rhythm, Tones, Group),
@@ -205,7 +220,7 @@ def Chord(data, args):
             progression.append(Group(Chord(note, args)))
         return Tones(Group(progression))
 
-def Arp(data, args):
+def Arp(data, _):
     valid_argument_type("Arp", input_data=data, input_types=(Tones, Group))
     end = []
     for x in data:
@@ -240,6 +255,7 @@ record = {
     "R": R,
     "I": I,
     "Q": Q,
+    "Add": Add,
     ">>": turn_right,
     "<<": turn_left,
     "[": abrir,

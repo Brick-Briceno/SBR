@@ -52,6 +52,7 @@ def clean_code(code):
     return code
 
 def sbr_import(data):
+    data = data.replace("\xff", " ")
     try:
         with open(data, "r") as _file:
             _file = _file.read()

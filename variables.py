@@ -23,6 +23,13 @@ variables_sys = {
     "rumba": "B1001000100101000",
     "gahu": "B100100100010010",
 
+    #BOOLEANS
+    "true": 1,
+    "false": 0,
+    #" and ": " * ",
+    #" or ": " + ",
+
+
     #CHORDS
 
     #PORGRESSIONS

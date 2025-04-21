@@ -11,7 +11,7 @@ import soundfile as sf
 import numpy as np
 #import numba as nb
 import random
-#import time
+import time
 #import os
 
 """
@@ -36,15 +36,14 @@ humanize_ms = 0
 mixer.pre_init(sample_rate, -16, 2, 1024)
 mixer.init()
 
-def play_array(audio_data):
+def play_array(audio_data, sleep=False):
     # Convertir a int16
     audio_data_int16 = (audio_data * 2**15*.9).astype(np.int16)
     audio_data_int16 = np.ascontiguousarray(audio_data_int16)
     # Reproducir el audio
     mixer.Sound(array=audio_data_int16).play()
     #Thread(target=sa.play_buffer, args=(audio_data_int16, 2, 2, sample_rate)).start()
-    #time.sleep((1/sample_rate)*len(audio_data))
-
+    if sleep: time.sleep((1/sample_rate)*len(audio_data))
 
 def audio_render_engine(meta_data):
     note_path, when_kick = meta_data["files"], meta_data["position"]
@@ -118,7 +117,7 @@ def audio_render_engine(meta_data):
 
         #Superponer el sonido en el resultado (mezcla los canales individualmente)
         mixed_audio[tiempo_inicio:tiempo_inicio+len(audio_data), :] += audio_data
-
+    mixed_audio = audio_effects.remove_ending_in_silence(mixed_audio)
     if np.max(mixed_audio) == 0: raise SBR_ERROR("Empty audio")
     #normalizar la mezcla (opcional)
     mixed_audio /= np.max(np.abs(mixed_audio))
@@ -188,7 +187,7 @@ class audio_effects:
 
 
     #@nb.njit
-    def remove_ending_in_silence(audio, umbral=0):
+    def remove_ending_in_silence(audio, umbral=10e-4):
         # Encontrar el último índice donde el audio supera el umbral
         indice_final = np.where(np.abs(audio) > umbral)[0][-1]
         # Cortar el audio hasta ese índice
@@ -197,7 +196,6 @@ class audio_effects:
 
 def random_float():
     return (random.randint(-100, 100)/100)
-
 
 ms = 0
 def struct_to_metadata(data):

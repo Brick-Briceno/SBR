@@ -22,7 +22,7 @@ with it and that it helps all of you make better music, hugs 💙
 ```bash
 git clone https://github.com/Brick-Briceno/SBR.git
 cd SBR
-pip .
+pip install .
 ```
 
 ***The program must have a main.sm file to work, in which the data, commands or variables that you want to have loaded whenever you run the interpreter will be stored.***
@@ -106,6 +106,15 @@ write, basically a multi-line comment
 ***
 
 ```
+You can clear the SBR console with these commands:
+```
+clear
+cls
+...
+..
+
+```
+
 ```
 -- these are rhythms
 B1000*4
@@ -199,6 +208,122 @@ i_dance = Struct{
 }
 
 play: i_dance * 2
+```
+
+```
+-- creating a melody in SBR
+mode = wind
+tone = e_
+tempo = 128
+
+bass = Sm{
+   B1010 1011*2 X8
+   M1|1, 6|, 7|, 3|1, 2|1
+}
+
+play: bass*2 Oct3
+
 
 ```
 
+### view the magic
+```
+-- creating a Song in SBR
+mode = wind -- minor mode
+tone = f_ -- f tone
+tempo = 128 -- this is the tempo in bpm
+
+-- melody
+
+intervals = 0,4,0,-1,-1,
+
+melody = Sm{
+   (son Add14 * 3 C3,4*2X2Q4) * 2
+   Jumps {
+      intervals, -4, intervals, -1, intervals, 1, 1, 1, -4
+      intervals, -4, intervals, -1, intervals, 1, 2, -4
+      }
+} Oct5
+
+-- chords
+chords = Sm{B1000X4*8;pop} Oct4
+
+bass = Sm{
+   B1010 1011*2 X8
+   M1|1, 6|, 7|, 3|1, 2|1
+} Oct3
+
+song = Struct{
+  --melody
+   V0; $Harp; melody
+   V0; $Harp; chords
+   -- bass
+   V3; $Jazz_Guitar; bass
+   -- drumps
+   V0; $Kick; C4,16 son
+   V0; $Clap; C8 >>4 X2
+   V0; $Hat; E13L32 X2
+}
+
+play: song
+
+-- This song was made some time before starting SBR
+-- https://youtu.be/FNt8UnD2Jl4
+
+```
+
+### You can pass arguments to the executable and open code files to test it
+
+```bash
+sm my_amazing_song.sm
+__main__.py my_amazing_song.sm
+```
+
+## SBR tools and commands
+
+Arguments in commands are separeted by double semicolons (;;)
+
+help: is used to search for documentation
+donate: if you like this tool, help me keep growing <3
+exit: exits the interpreter
+license: displays the license
+print: displays the data
+
+type: displays the type(s) of data
+### example
+```
+type: 1;; son;; pop;; $Seno
+1 is an int
+B1001 0010 0010 1000 is a Rhythm
+M{1|;3|;5|},{-1|;1|;3|},{3|;5|;7|},{0|;2|;4|} is a Tones
+$8 ***$Seno*** is an Instrument
+```
+
+vars: displays the variables in the system
+ident: identifies the code
+play: plays the data you enter
+#### example
+```
+-- plays the content
+play: son
+
+-- plays the content and pauses playback
+--until the audio floats finish playing.
+play: son;; true
+```
+
+sm1: a small piano roll I made in 2022-2023
+sleep: pauses the code
+export: exports the audio of the data in different formats
+
+#### example
+```
+export: song;; my_song.mp3
+```
+
+metric: measures the metric of rhythmic data
+editor: a minimalist text editor
+rec: records the rhythm you play on the console
+tap: calculates the bpm you enter
+code_made: displays and saves a history of the commands you have entered
+instrument: is used to import an instrument, be it a folder or .wav file

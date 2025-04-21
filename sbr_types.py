@@ -438,7 +438,7 @@ class Tones(Group):
         #subtracts it from the pitches, and prints it by adding
         #the octave effect with the most convenient octave argument
         #tones_array = self.separate_chors #calculate the average of the octave
-        #if len(self) == 0: return "M"
+        if len(self) == 0: return "M"
         #octave_average = round(sum(tones_array)/len(tones_array)/7)
         pw = "M"
         for i in self:
@@ -760,8 +760,8 @@ class Instrument:
         return f"${self.inst_id} ***${self.name} {self.type} instrument from '{self.path}'***"
 
     def __str__(self):
-        return self.__repr__()
-
+        return f"${self.inst_id} ***${self.name}***"
+        
     def path_note(self, cromatic_note: int) -> str:
         path_note = self.path+"\\{:02d}".format(cromatic_note)+".wav"
         if not os.path.exists(path_note):
