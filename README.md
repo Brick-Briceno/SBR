@@ -283,14 +283,18 @@ __main__.py my_amazing_song.sm
 
 Arguments in commands are separeted by double semicolons (;;)
 
-help: is used to search for documentation
-donate: if you like this tool, help me keep growing <3
-exit: exits the interpreter
-license: displays the license
-print: displays the data
+**help:** is used to search for documentation
 
-type: displays the type(s) of data
-### example
+**donate**: if you like this tool, help me keep growing <3
+
+**exit**: exits the interpreter
+
+**license**: displays the license
+
+**print**: displays the data
+
+**type**: displays the type(s) of data
+_example_
 ```
 type: 1;; son;; pop;; $Seno
 1 is an int
@@ -299,9 +303,9 @@ M{1|;3|;5|},{-1|;1|;3|},{3|;5|;7|},{0|;2|;4|} is a Tones
 $8 ***$Seno*** is an Instrument
 ```
 
-vars: displays the variables in the system
-ident: identifies the code
-play: plays the data you enter
+**vars**: displays the variables in the system
+**ident**: identifies the code
+**play**: plays the data you enter
 #### example
 ```
 -- plays the content
@@ -312,18 +316,23 @@ play: son
 play: son;; true
 ```
 
-sm1: a small piano roll I made in 2022-2023
-sleep: pauses the code
-export: exports the audio of the data in different formats
+**sm1**: a small piano roll I made in 2022-2023
+**sleep**: pauses the code
+**export**: exports the audio of the data in different formats
 
 #### example
 ```
 export: song;; my_song.mp3
 ```
 
-metric: measures the metric of rhythmic data
-editor: a minimalist text editor
-rec: records the rhythm you play on the console
-tap: calculates the bpm you enter
-code_made: displays and saves a history of the commands you have entered
-instrument: is used to import an instrument, be it a folder or .wav file
+**metric**: measures the metric of rhythmic data
+
+**editor**: a minimalist text editor
+
+**rec**: records the rhythm you play on the console
+
+**tap**: calculates the bpm you enter
+
+**code_made**: displays and saves a history of the commands you have entered
+
+**instrument**: is used to import an instrument, be it a folder or .wav file
