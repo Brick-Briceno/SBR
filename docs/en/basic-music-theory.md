@@ -7,7 +7,7 @@ A Todos nos gusta la música ¿A quién no le gusta la música? Pueden desbordar
 
 En este documento conseguirás ejemplos y analogías que en ningún otro lado conseguirás, no estoy exagerando, entenderás la música como ningún músico la aprendió en su momento, y espero, que te diviertas haciéndolo
 
-![](imagen1.png)
+![](img/image14.png)  
 
 Para no perder mucho tiempo en tu viaje por la música este documento estará dividido en 3 partes, la parte armónica, notas y todo eso, la parte rítmica, y al final uniremos todo eso, te explotará la cabeza, empecemos 😎😉
 
@@ -16,23 +16,23 @@ Para no perder mucho tiempo en tu viaje por la música este documento estará di
 **Un poco de contexto** 🎹🐕
 
 Esto es un piano, quizás lo abras visto antes  
-![][image2]
+![](img/image8.jpg)  
 
 Existen 12 notas ¿por qué? lo veremos más adelante, pero existen 12, como imaginarás hay pianos o teclados que tienen 88 notas, lo que pasa es que esas mismas notas se repiten varias veces, en varias “octavas”
 
 ¿Que es una octava?  
 *Es la misma nota, solo que más aguda o más grave*
 
-![][image3]  
+![](img/image28.jpg)  
 *¿Ves que hay 2 teclas negras que están juntas? ¿Vez que también hay 3 teclas negras juntas? La tecla blanca que está debajo de las 2 teclas negras se le llama “Do”, o “C”*
 
-![][image4]![][image5]
+![](img/image17.jpg)![](img/image29.jpg)  
 
 *Las **12** notas que se **repiten** y vuelven a empezar como **un bucle** puedes verlo como **un reloj de 12 horas*** 🕒
 
 En la música, de estas 12 notas tomamos 7, el 99% de las veces
 
-![][image6]  
+![](img/image7.jpg)  
 *Puedes verlo como un reloj de 7 horas, pero como es algo a lo que no estamos acostumbrados mejor verlo como **los 7 días de la semana**, lunes, martes, miércoles, jueves, viernes, sábado y domingo* 🗓️
 
 *Lo que quiero que se te quede en la mente es que hay 12 notas y una escala es literalmente hacer un grupo de notas, una selección, escoger algunas de ellas para hacer una escala, escalera se llama así porque subes y bajar por grupos, escalones o tonos que se pueden medir*
@@ -44,7 +44,7 @@ Son las primeras 7 letras del abecedario, solo que empieza desde la C ¿por qué
 Los griegos usaban letras griegas para su música, después en reino unido empezaron a usar letras latinas, las que usamos en el inglés y el español, de ahí las notas
 
 Se pronuncian de la siguiente manera  
-![][image7]  
+![](img/image30.jpg)  
 *La=A, Si=B, Do=C,*  
 *Re=D, Mi=E, Fa=F, Sol=G*
 
@@ -58,7 +58,7 @@ A*b*\=La bemol, G\#=Sol sostenido, B*b*\=Si bemol, etc, esto quiere decir que la
 
 F\# y G*b* son la misma nota “suenan igual”, está debajo del sol y arriba del fa
 
-![][image8]
+![](img/image10.jpg)  
 
 *Un dato curioso es que* No siempre es correcto llamar a esa nota F\# o Gb, dependiendo de en qué escala estés esa nota se llama de una forma u otra, aunque sean la misma ¿Por qué? Lo veremos más adelante 😉
 
@@ -71,7 +71,7 @@ Esta es la forma en la que los músicos nos comunicamos, y esto es la punta del 
 
 **Agiliza tu cerebro** 🧠
 
-*![][image9]*
+![](img/image8.jpg)  
 
 *¿Ya sabes identificar el “C” (Do)?* 
 
@@ -89,14 +89,14 @@ Si ya dominas esto perfecto\! podemos empezar a jugar con las notas, seleccionan
 
 Si de estás 12 notas quiero tomar solo 6 de ellas por ejemplo
 
-![][image10]  
+![](img/image24.jpg)  
 *Escala de blues, sobre A y sobre C, escala muy usada en el género blues*
 
 Hay muchos tipos de escalas pero las más usadas son un grupo de **7** escalas de las que **2** son las más comunes, que en realidad son una misma escala, solo que como vemos en la imagen de arriba empezamos desde el punto azul, pero podríamos empezar desde cualquier otro lugar, a esto le llamamos modos, pero si no lo entiendes, tranquilo, profundizaremos esto en el capítulo 3, sobre armonía modal
 
 Lo cierto es que hay 2 escalas que usaras el 95% de las veces, la “escala” o mejor dicho el modo, mayor y menor que en realidad son lo mismo pero **una es el espejo de la otra**, es así
 
-![][image11]  
+![](img/image15.jpg)  
 Observe la figura geométrica que forma las líneas Rojas es una forma de 7 esquinas que forma una escala de 7 notas, los modos es donde empiezas es figura, si la empiezas desde el punto Azul será una escala de Do Mayor, en cambio si empiezas desde el punto Verde tendrás una escala de La menor, no es menor porque empiece en A, es menor porque si empiezas desde esa esquina específica con esa figura geométrica específica tendrás ese sonido, podrías girar esa figura en círculos como una rueda y tener un Sol menor, o un Si bemol mayor si empiezas desde la esquina azul
 
 Con eso podemos ver también que C mayor y A menor son la misma escala ya que tienen las mismas notas\! y notamos también que estas escalas no tienen sostenidos ni bemoles, vuelve a mirar la figura
@@ -109,7 +109,7 @@ Otro detalle importante es que las escalas tienen **grados**
 
 Si estás en por ejemplo la escala de C mayor, o modo mayor sobre C, el primer grado sería esa misma nota, el segundo sería el D, el tercero E, etc, si estás en G mayor el primero sería G evidentemente, y el séptimo seria F\#, es simplemente ponerle un número a la nota de la escala para identificarla, esto es porque cada grado produce una emoción distinta
 
-![][image12]  
+![](img/image5.jpg)  
 *El octavo grado, puede ser llamado primer grado ya que son equivalentes, asi como el noveno grado puede ser llamado 2do grado también, por cierto, octava viene del octavo grado, misma nota pero una octava más aguda*
 
 **Intervalos 🔢✌🏻**  
@@ -137,7 +137,7 @@ Si estás en por ejemplo la escala de C mayor, o modo mayor sobre C, el primer g
 Perfecto, ahora, piensa, ¿qué distancia hay desde **C** hasta **D**?  
 respuesta: 2st, despues de C viene C\#, van 1, viene D, van 2, 2 st
 
-![][image13]  
+![](img/image12.jpg)  
 *Podemos verlo como que desde esta parte hasta la otra hay 2 horas de diferencia, en el área de la música las horas serian los semitonos, desde C a D hay 2 notas cromáticas, 2 semitonos*
 
 A estos le llamamos intervalos cromáticos, y para calcular intervalos cromáticos más fácilmente podemos usar uno de los muchos trucos que hay desde el punto de vista diatonico
@@ -145,7 +145,7 @@ A estos le llamamos intervalos cromáticos, y para calcular intervalos cromátic
 **Diatónico** ✨**7**  
 Aquí en vez de contar las notas contamos los grados
 
-![][image14]
+![](img/image23.jpg)  
 
 De C a D hay una 2da, de C a E una tercera como se ve en el gráfico, de E a G hay una tercera también, de C a G abría una quinta, etc
 
@@ -160,10 +160,10 @@ A ver, si tocas un C3, un C4, y un C5, eso No es un acorde, son octavas, no vale
 
 Para hacer un acorde en cualquier escala debes tocar una nota si y una nota no, y así sucesivamente :)
 
-![][image15]  
+![](img/image3.jpg)  
 *Acorde de Do mayor (C Maj)* 🌞
 
-![][image16]  
+![](img/image9.jpg)  
 *Acorde de Do menor (C minor)*
 
 ***¿Cómo sé qué acorde es mayor y cuál es menor?*** 🤔
@@ -209,7 +209,7 @@ Todos los acordes tienen sus 3ras y sus 5tas, y su fundamental
 2. ***3ra**: 2da nota del acorde*  
 3. ***5ta**: 3ra nota del acorde*
 
-![][image17]  
+![](img/image17.jpg)  
 Nos saltamos una nota
 
 Solo debes saltarte una nota, ¿quieres un acorde de Sol mayor?
