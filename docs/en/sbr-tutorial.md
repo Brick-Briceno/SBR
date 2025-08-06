@@ -22,7 +22,7 @@ pip install .
 ***To learn how to use it with "help:" in the console and all the information will appear***
 
 
-![](img/image1.png)  
+![](img/image30.png)  
 *It's not necessary to have 2 parameters, it can be just one*
 
 ### Syntax
