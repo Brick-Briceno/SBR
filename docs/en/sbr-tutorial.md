@@ -23,6 +23,7 @@ pip install .
 
 
 ![](img/image1.png)
+
 *It's not necessary to have 2 parameters, it can be just one*
 
 ### Syntax
