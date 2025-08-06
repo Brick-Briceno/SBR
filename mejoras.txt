@@ -1,0 +1,104 @@
+mejorar la sintaxis
+documentación para distintas versiones
+poder guardar variables cerca de ciertas expresiones
+necesita poder crear efectos dentro del mismo codigo
+necesita strings para guardar rutas (quizas esto no haga falta)
+
+quizas sea necesario poder tener strings
+se deberian añadir decoradores a tipos de datos
+de python para reciclarlos en el lenguaje como los int
+o quizas usar el modulo decimal para evitar errores al
+interpretar los numeros
+
+
+meter colores en comandos (solo en casos especiales)
+
+funcion personalizada de impresión 'bprint'
+imprima melodias como se hacia en simetric melody
+recicla ese codigo :D se verá visualmente mejor
+
+mejora el comando de identación
+
+no te olvides de la fuerza bruta!
+
+EFECTOS Y GENERADORES:
+
+efecto X para melodias dato Sm
+
+Generador de times a partir de ritmo:
+	el dato de ritmo debe tenener un metodo de
+	arroje una lista con 10010010 > 332 para calcular la duracion
+	de las notas o kicks debe calcular trsiilos de negra y blanca
+
+efecto que tome un dato, sea una lista, melodia, o mas comunmente ritmo
+y lo repita con una estructura predefinida, sea AAAB, ABAC, ABACAD, etc
+tambien debe definirse como
+
+efecto que calcule tonos mediante función coseno
+
+funcion replace, te permite cambia x objeto de un iterable por otro siempre y cuando se consiga
+
+SINTAXIS:
+debe corregirse el problema de las variables
+debe corregirse el problema con los espacios entre generadores y efectos (añadir coma automaticamente)
+debe correjirse el problema con los flotantes con notacion de elevación negativa y positiva
+creo que cambiaré el nombre de grupos a listas pero seguiré conservando que se creen con {}
+se debe facilitar el acceso a listas, poder acceder a solo las que se escojan
+se debe poder asignar varias variables en una misma linea, y ahora poder permirir asignar variables dontro de grupos
+se debe crear algo como instrucciones, cambiar tempo, escalas, trasponer a otros modos, etc,
+en cierta parte de las canciones
+debe añadirse en los tonos si la nota es primaria o secundaria esto podria ser mediante un punto con doble ||
+
+COMANDOS:
+
+buerza bruta euclideana
+ritmo o melodia a buscar; *;efectos;;;...
+
+
+MOTOR DE AUDIO E INSTRUMENTOS
+
+el motor de audio debe tener un sistema de tokenización para no
+volver a procesar arrays que al final quedaran iguales sin tomar
+en cuenta el efecto stereo, me refiero a que la melodia seria la misma
+
+debe tener un sistema para crear el efecto glisando con el dato ritmico 5
+
+crear una estructura de datos para instrumentos
+
+crear un sonido por defecto para cuando no haya sonidos importados
+
+debe poder cargar instrumentos virtuales, clap, vst etc
+
+DOCUMENTACIÓN
+
+el interprete debe ser extremandamente facilmente portable
+correr en windows, linux, android, ipone, debe correr en todos los daw
+y si es posible debe correr hasta en una lavadora
+
+la documentación debe tener VARIOS MODULOS:
+
+teoria musical basica (aqui pongo el mini libro que hice en 2023)
+debe tener ejemplos con codigo
+
+debe tener ejercicios para entrenar tu oido ritmico y sobre tonos
+por ejemplo solfeo y ver si un acorde es mayor, menor, aumentado o disminuido
+la pagina debe venir con audio incluido
+
+debe tener un tutorial de armonia modal y otro de armonia funcional
+
+tecnicas de composicion que he inventato con los años
+
+seciones de analisis de generos musicales, jazz, rock, y mas generos
+tanto su ritmo como sus harmonias
+
+un tutorial de SBR, desde lo basico hasta lo mas avanzado
+y debe tener ejemplos de codigo, hablar de los generadores, efectos, comandos, sintaxis, etc
+
+
+debe tener un buscador de palabras clave
+
+la documentacion debe poder ser descargada en html (y funcionar como si hubiera internet)
+debe poder ser descargada en pdf, txt y otros formatos más, en pdf las partes donde haya audio el pdf debe avisar que en la pagina si suena en audio, ya que pdf no tiene audio
+
+debe poder estar en español, ingles y portugues, si no existe ese articulo en el idioma selecionado se pone en ingles
+

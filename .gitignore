@@ -1,0 +1,5 @@
+bugs.log
+bugs.txt
+src/inst
+src/__pycache__
+docs/__pycache__

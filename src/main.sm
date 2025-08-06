@@ -1,0 +1,31 @@
+***
+Carga automatica de
+instrumentos y configuraciones
+***
+
+-- instrumentos del flex de fl studio
+instrument: inst\Growl Man
+instrument: inst\Harmonica
+instrument: inst\Jazz Guitar
+instrument: inst\Harp
+instrument: inst\Warm Pad
+instrument: inst\Strange Thong
+instrument: inst\Music Box
+instrument: inst\Organ 1
+instrument: inst\Seno
+instrument: inst\Square Woof
+instrument: inst\Viola
+instrument: inst\Xylophone
+
+-- instrumentos de Brick
+instrument: inst\Synt1
+instrument: inst\Synt3
+
+-- Samples
+instrument: inst\Vocal.wav
+
+-- Percusiones
+instrument: inst\Kick.wav
+instrument: inst\Clap.wav
+instrument: inst\Hat.wav
+instrument: inst\Snare.wav

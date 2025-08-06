@@ -1,0 +1,161 @@
+system time 2025-06-19 07:04:22.558302
+SBR version: 2.0.2
+Python version: 3.13.2
+Platform: Windows-10-10.0.19045-SP0
+
+Program path: C:\Brick_data\SBR_2\src\__main__.py
+
+Commands entered by the user:
+br
+play: bossa*4
+
+
+play: bossa*4
+
+********************************
+Python errors:
+
+Traceback (most recent call last):
+  File "C:\Brick_data\SBR_2\src\__main__.py", line 95, in <module>
+    result = sbr_line(command)
+  File "C:\Brick_data\SBR_2\src\interpreter.py", line 145, in sbr_line
+    commands.record[command](delete_args(instruction.split("::")))
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Brick_data\SBR_2\src\commands.py", line 388, in play
+    audio_array = obj_to_array(args[0])
+  File "C:\Brick_data\SBR_2\src\commands.py", line 380, in obj_to_array
+    audio_array = Bsound.audio_render_engine(meta_data)
+  File "C:\Brick_data\SBR_2\src\Bsound.py", line 111, in audio_render_engine
+    audio_data = audio_effects.pan_sound(audio_data, panning)
+  File "C:\Brick_data\SBR_2\src\Bsound.py", line 144, in pan_sound
+    if sound.shape[1] != 2:
+       ~~~~~~~~~~~^^^
+IndexError: tuple index out of range
+
+
+system time 2025-08-05 00:27:03.878063
+SBR version: 2.0.2
+Python version: 3.13.5
+Platform: Windows-10-10.0.19045-SP0
+
+Program path: c:\Brick_data\SBR_2\src\__main__.py
+
+Commands entered by the user:
+vars:
+$seno
+play: seno
+play: $seno
+
+********************************
+Python errors:
+
+Traceback (most recent call last):
+  File "c:\Brick_data\SBR_2\src\__main__.py", line 95, in <module>
+    result = sbr_line(command)
+  File "c:\Brick_data\SBR_2\src\interpreter.py", line 145, in sbr_line
+    commands.record[command](delete_args(instruction.split("::")))
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Brick_data\SBR_2\src\commands.py", line 391, in play
+    audio_array = obj_to_array(args[0])
+  File "c:\Brick_data\SBR_2\src\commands.py", line 382, in obj_to_array
+    meta_data = Bsound.struct_to_metadata(obj_data)
+  File "c:\Brick_data\SBR_2\src\Bsound.py", line 266, in struct_to_metadata
+    audio_data["files"].append(f"SYNT{chr()}")
+                                      ~~~^^
+TypeError: chr() takes exactly one argument (0 given)
+
+
+system time 2025-08-05 00:27:46.769023
+SBR version: 2.0.2
+Python version: 3.13.5
+Platform: Windows-10-10.0.19045-SP0
+
+Program path: c:\Brick_data\SBR_2\src\__main__.py
+
+Commands entered by the user:
+play: $seno
+
+********************************
+Python errors:
+
+Traceback (most recent call last):
+  File "c:\Brick_data\SBR_2\src\__main__.py", line 95, in <module>
+    result = sbr_line(command)
+  File "c:\Brick_data\SBR_2\src\interpreter.py", line 145, in sbr_line
+    commands.record[command](delete_args(instruction.split("::")))
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Brick_data\SBR_2\src\commands.py", line 391, in play
+    audio_array = obj_to_array(args[0])
+  File "c:\Brick_data\SBR_2\src\commands.py", line 382, in obj_to_array
+    meta_data = Bsound.struct_to_metadata(obj_data)
+  File "c:\Brick_data\SBR_2\src\Bsound.py", line 266, in struct_to_metadata
+    audio_data["files"].append(f"SYNT{chr()}")
+                                      ~~~^^
+TypeError: chr() takes exactly one argument (0 given)
+
+
+system time 2025-08-06 10:06:31.419860
+SBR version: 2.0.2
+Python version: 3.13.5
+Platform: Windows-10-10.0.19045-SP0
+
+Program path: c:\Brick_data\SBR_2\src\__main__.py
+
+Commands entered by the user:
+-- creating a Song in SBR
+mode = wind -- minor mode
+tone = f_ -- f tone
+tempo = 128 -- this is the tempo in bpm
+
+-- melody
+
+intervals = 0,4,0,-1,-1,
+
+melody = Sm{
+   (son Add14 * 3 C3,4*2X2Q4) * 2
+   Jumps {
+      intervals, -4, intervals, -1, intervals, 1, 1, 1, -4
+      intervals, -4, intervals, -1, intervals, 1, 2, -4
+      }
+} Oct5
+
+-- chords
+chords = Sm{B1000X4*8;pop} Oct4
+
+bass = Sm{
+   B1010 1011*2 X8
+   M1|1, 6|, 7|, 3|1, 2|1
+} Oct3
+
+song = Struct{
+  --melody
+   V0; $seno; melody
+   V0; $seno; chords
+   -- bass
+   V3; $seno; bass
+   -- drumps
+}
+
+play: song
+
+********************************
+Python errors:
+
+Traceback (most recent call last):
+  File "c:\Brick_data\SBR_2\src\__main__.py", line 95, in <module>
+    result = sbr_line(command)
+  File "c:\Brick_data\SBR_2\src\interpreter.py", line 145, in sbr_line
+    commands.record[command](delete_args(instruction.split("::")))
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Brick_data\SBR_2\src\commands.py", line 391, in play
+    audio_array = obj_to_array(args[0])
+  File "c:\Brick_data\SBR_2\src\commands.py", line 383, in obj_to_array
+    audio_array = Bsound.audio_render_engine(meta_data)
+  File "c:\Brick_data\SBR_2\src\Bsound.py", line 78, in audio_render_engine
+    arrays_bank[_file] = create_tone(ord(_file), .3, sample_rate)
+                         ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Brick_data\SBR_2\src\synthesizer.py", line 67, in create_tone
+    sine_wave[-fade_out_samples:] *= fade_out
+ValueError: operands could not be broadcast together with shapes (13230,) (0,) (13230,) 
+
+

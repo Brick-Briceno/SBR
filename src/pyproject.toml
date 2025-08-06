@@ -1,0 +1,12 @@
+[project]
+name = "SBR"
+version = "2.0.1"
+description = "Programmable music and composition tool"
+authors = [{name = "Brick Briceño"}]
+
+dependencies = [
+    "soundfile >=0.13.1",
+    "pygame >=2.6.1",
+    "numpy >=1.23.3",
+    "colorama >=0.4.6"
+]
