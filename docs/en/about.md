@@ -1,6 +1,6 @@
 # About SBR
 
-SBR (Symmetry, Brick, Rhythm values) or Brick Symmetry Rhythm, is an interpreted music programming language. Initially focused solely on rhythm and polyrhythms in 2022, it expanded to include melodies as well by the end of 2024. It was designed for experienced musicians who wanted to experiment more, but ultimately, its creator (me) embraced all areas of music where this can help.
+SBR (Symmetry, Brick, Rhythm values) or Brick Symmetry Rhythm, is an interpreted music programming language. Initially focused solely on rhythm and polyrhythms in 2022, it expanded to include melodies as well by the end of 2024. It was designed for experimental musicians who wanted to experiment more, but ultimately, its creator (me) embraced all areas of music where this can help.
 
 So, while it was designed for more advanced and experimental musical composition, it can also be used by music beginners and even teach you music.
 
