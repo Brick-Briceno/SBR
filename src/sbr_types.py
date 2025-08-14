@@ -4,8 +4,7 @@ by @brick_briceno 2024
 """
 
 from sbr_utils import (separate_path_extension,
-                       convert_unions_to_tuples,
-                        one_dimention_list_recurtion)
+                       convert_unions_to_tuples)
 from typing import get_type_hints
 from errors import *
 import inspect

@@ -225,12 +225,12 @@ Te queda G, B, D, osea G mayor 👏🏻
 También hay **Acordes de 4 notas** 4⃣  
 Se llaman **Acordes con 7mas** (séptimas)
 
-![][image18]  
+![](img/image6.jpg)  
 Do mayor 7ma (C Maj7)
 
 Intenta tocar los acordes en un piano, si no tienes hay aplicaciones de teclado para teléfonos y en PC 🎹
 
-![][image19]  
+![](img/image20.jpg)  
 *Acorde de Do menor con novena y también con séptima, (Cmin 7 Add9)*
 
 *add 9 significa que se le añade una novena, add 7 una séptima*
@@ -238,10 +238,10 @@ Intenta tocar los acordes en un piano, si no tienes hay aplicaciones de teclado 
 ***Acordes suspendidos** (sus2 y sus4)*  
 *Se reemplaza la 3ra del acorde por una cuarta o una 2da*
 
-*![][image20]*  
+![](img/image22.jpg)  
 *Acorde C(sus4)*
 
-*![][image21]*  
+![](img/image4.jpg)   
 *Acorde C(sus2)*
 
 **Disminuidos y Aumentados 💀✨**
@@ -249,24 +249,25 @@ Intenta tocar los acordes en un piano, si no tienes hay aplicaciones de teclado 
 Aquí no cambiaremos la 3ra si no la quinta  
 Le meteremos un semitono de más o un semitono menos
 
-![][image22]  
+![](img/image26.jpg)  
 *Acorde de Do disminuido (Cdim)*  
 *Exactamente igual a un acorde menor pero con la quinta disminuida, osea con un Semitono menos, osea una nota por debajo, en vez de G es un Gb*
 
-![][image23]  
+![](img/image11.jpg)  
 Acorde de Do aumentado, un acorde mayor pero con la quinta aumentada, osea una nota hacia arriba
 
 **Inversiones 🤑💰**  
 Todos los acordes que mencionamos se les pueden dar diferentes emociones aunque sean las mismas notas
 
 1. **1ra inversión**: es cuando la 3ra del acorde es la nota más grave, en vez de ser C, E, G, sería E, G, C  
-   ![][image24]  
+   ![](img/image21.png)  
+
      
 2. **2da inversión**: es cuando la 5ta del acorde es la nota más grave, en vez de ser C, E, G, sería G, C, E  
-   ![][image25]  
+   ![](img/image16.png)  
      
 3. **3ra inversión**: es cuándo la 7ma del acorde es la nota más… bueno ya sabes el resto, en vez de ser C, E, G, B, ahora es lo mismo pero con la 7ma abajo, B, C, E, G  
-   ![][image26]
+   ![](img/image1.png)  
 
 Eso es un acorde, si cantas un C (Do), y tocas en el piano un G (Sol), y alguien toca un E (Mi) en una guitarra, eso es un acorde de Do mayor (Cmaj)
 
@@ -317,7 +318,7 @@ Se escriben así
 ![][image30]  
 *Corchea*
 
-Y claro también existen figuras con cierta duración que representan silencio
+Y claro  existen figuras con cierta dutambiénración que representan silencio
 
 **El compás 4️⃣/4️⃣**  
 Es compás es como una memoria tiene un espacio limite, es como una botella de agua 💧
@@ -367,6 +368,7 @@ Repetición
 Esto es la punta del iceberg ;)
 
 Mi opinión de la música
+
 
 **Datos curiosos**
 

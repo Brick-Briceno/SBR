@@ -251,8 +251,8 @@ def instrument(arg):
             print(f"This instrument already exists: {inst.name}")
         vars_instruments[f"${inst.name}"] = inst
 
-inst = Instrument("seno", 2**32)
-vars_instruments[f"${inst.name}"] = inst
+seno = Instrument("seno", 2**32)
+vars_instruments[f"${seno.name}"] = seno
 
 def phrase(arg):
     print("Hi! how are you :)")
@@ -354,21 +354,19 @@ def obj_to_array(text_sbr_obj):
         #print(obj_data)
         #Melody
         if isinstance(obj_data, Melody):
-            obj_data = Structure([Instrument(f"{program_directory}\\inst\\Strange Thong", 2**31),
-                Velocity([0]), obj_data #it need a default instrument
+            obj_data = Structure([seno, Velocity([0]), obj_data
+                                  #it need a default instrument
             ])
 
         #Rhythm
         elif isinstance(obj_data, Rhythm):
-            obj_data = Structure([
-                Instrument(f"{program_directory}\\inst\\br.wav", 2**32), Velocity([0]),
+            obj_data = Structure([Instrument(f"{program_directory}\\inst\\Kick.wav", 2**32), Velocity([0]),
                 Melody([obj_data, Tones([7*7])]) #it need a default sample to the Rhythm
             ])
 
         #Tones
         elif isinstance(obj_data, Tones):
-            obj_data = Structure([
-                Instrument(f"{program_directory}\\inst\\Strange Thong", 2**32), Velocity([0]),
+            obj_data = Structure([seno, Velocity([0]),
                 Melody([obj_data, Rhythm('10'*len(obj_data))]) #it need a default sample to the Rhythm
             ])
 

@@ -1,6 +1,5 @@
 import os
 
-
 def clean_console():
     "Clears the console on all systems"
     if os.name == 'nt':  # For Windows
@@ -58,4 +57,3 @@ def format_time(seconds: float):
         return f"{seconds * 1e6:.2f} µs"
     else:
         return f"{seconds * 1e9:.2f} ns"
-
