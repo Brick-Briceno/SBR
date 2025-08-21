@@ -25,13 +25,14 @@ import os
 
 """
 pip install soundfile
+pip install colorama
+pip install midiutil
 pip install pygame
 pip install numpy
 pip install numba
-pip install colorama
 """
 
-__version__ = "2.0.2"
+__version__ = "2.0.3"
 
 # Set to True to enable debug mode, which will raise exceptions instead of logging them
 DEBUG = False

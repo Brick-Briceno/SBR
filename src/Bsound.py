@@ -4,10 +4,11 @@ Symmetry Melody Api v2.1
 """
 
 from variables import variables_user
+from synthesizer import create_tone
 from errors import SBR_ERROR
 from pygame import mixer
+from sbr_utils import *
 from sbr_types import *
-from synthesizer import create_tone
 
 try: import soundfile as sf
 except ImportError:
