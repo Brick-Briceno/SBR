@@ -351,7 +351,7 @@ def obj_to_array(text_sbr_obj):
         program_path = os.path.abspath(__file__)
         program_directory = os.path.dirname(program_path)
         obj_data = sbr_lines_2(text_sbr_obj)
-        #print(obj_data)
+        #%AppData%
         #Melody
         if isinstance(obj_data, Melody):
             obj_data = Structure([seno, Velocity([0]), obj_data

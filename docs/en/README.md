@@ -1,6 +1,6 @@
-# Project Documentation
+# SBR Docs
 
-Welcome to the project documentation! This documentation is designed to provide you with all the necessary information regarding the project, including its features, usage, and various resources available in multiple languages.
+Welcome to the documentation! This documentation is designed to provide... documentation xD
 
 ## Table of Contents
 
