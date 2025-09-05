@@ -13,6 +13,7 @@ from pprint import pprint
 from sbr_utils import *
 from variables import *
 from sbr_help import *
+import midiutil
 import Bsound
 import Sbyte
 import editor 
@@ -397,11 +398,25 @@ def pause(args):
     Bsound.pause()
 
 def export(args):
-    "I export adictive sutances... the music!"
-    #this export to mp3, wav and .mid
+    "I export addictive substances... the music! I've it in mp3, wav and mid, which do you want?"
+    #this export to mp3, wav and mid
     if len(args) < 2:
         print("Enter a data to export and the file name")
-        print("Example: B1000:: uwu.mp3")
+        print("For example: B1000:: uwu.mp3")
+
+    elif separate_path_extension(args[1])[2] == ".mid":
+        midi_file = midiutil.MIDIFile()
+        midi_file.addTrack("Track 1")
+        obj = sbr_lines_2(args[0])
+        if isinstance(obj, Melody):
+            time_pos = 0
+            for tone, rhythm in zip(obj.tones, obj.rhythms):
+                duration = rhythm.metric * (60/variables_user["tempo"])
+                for n in tone:
+                    midi_file.addNote(0, 0, n+60, time_pos, duration, 100)
+                time_pos += duration
+
+        midi_file.write(args[1])
     else:
         audio_array = obj_to_array(args[0])
         try: Bsound.sf.write(file=args[1], data=audio_array, samplerate=Bsound.sample_rate)

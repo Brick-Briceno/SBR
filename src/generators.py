@@ -41,7 +41,7 @@ def E(args: list[int]):
     a, b, c = int(a), int(b), int(c)
     if a > b: a = b
     if a == 0: return ["0" for i in range(c)]
-    
+
     #Simetrizar
     pattern = []
     counts = []

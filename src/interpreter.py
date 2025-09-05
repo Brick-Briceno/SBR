@@ -2,7 +2,8 @@ import commands
 from sbr_types import Melody, Rhythm #, Group, Tones
 from compiler import (only_has, replace_variables, compiler,
                       delete_args, variables_sys, variables_user,
-                      off_long_comment, delete_comments, SBR_ERROR)
+                      long_comment, delete_comments, SBR_ERROR)
+
 #system vars
 piece_of_code = ""
 open_keys = 0

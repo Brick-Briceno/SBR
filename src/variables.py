@@ -29,7 +29,6 @@ variables_sys = {
     #" and ": " * ",
     #" or ": " + ",
 
-
     #CHORDS
     "trd": "M{0,2,4}",
     "sep": "M{0,2,4,6}",
@@ -44,11 +43,11 @@ variables_sys = {
     # 67(1'7ma)(4'7ma) m
     "zeus": "(trd+-2) (trd+-1) (sep) (sep+3)",
     # 163(7sus4) m
-    "hera": "0",
+    #"hera": "0",
     # 13671 m
-    "poseidon": "0",
+    #"poseidon": "0",
     # 1736 m
-    "demeter": "0",
+    #"demeter": "0",
     # 6513 m
     # 1765m
     # 1374 m
@@ -78,43 +77,42 @@ variables_sys = {
     # 14(2#)6M M
     # 1(4M)(5M)
     # A E G#7 C#m7 ----  B F#/A# F#m11 A Am9 A/B
-    "ares": "0",
-    "athena": "0",
-    "apollo": "0",
-    "artemis": "0",
-    "hephaestus": "0",
-    "aphrodite": "0",
-    "hermes": "0",
-    "dionysus": "0",
-    "hades": "0",
-    "persephone": "0",
-    "cronus": "0",
-    "rhea": "0",
-    "odin": "0",
-    "frigg": "0",
-    "thor": "0",
-    "loki": "0",
-    "baldur": "0",
-    "freyja": "0",
-    "freyr": "0",
-    "heimdall": "0",
-    "tyr": "0",
-    "idun": "0",
-    "bragi": "0",
-    "sif": "0",
-    "hel": "0",
-    "fenrir": "0",
-    "jormungandr": "0",
-    "sleipnir": "0",
-    "huginn": "0",
-    "muninn": "0",
-    "ymir": "0",
-    "skadi": "0",
-    "njord": "0",
-    "valkyrie": "0",
-    "mjolnir": "0",
-    "asgard": "0",
-
+    # "ares": "0",
+    # "athena": "0",
+    # "apollo": "0",
+    # "artemis": "0",
+    # "hephaestus": "0",
+    # "aphrodite": "0",
+    # "hermes": "0",
+    # "dionysus": "0",
+    # "hades": "0",
+    # "persephone": "0",
+    # "cronus": "0",
+    # "rhea": "0",
+    # "odin": "0",
+    # "frigg": "0",
+    # "thor": "0",
+    # "loki": "0",
+    # "baldur": "0",
+    # "freyja": "0",
+    # "freyr": "0",
+    # "heimdall": "0",
+    # "tyr": "0",
+    # "idun": "0",
+    # "bragi": "0",
+    # "sif": "0",
+    # "hel": "0",
+    # "fenrir": "0",
+    # "jormungandr": "0",
+    # "sleipnir": "0",
+    # "huginn": "0",
+    # "muninn": "0",
+    # "ymir": "0",
+    # "skadi": "0",
+    # "njord": "0",
+    # "valkyrie": "0",
+    # "mjolnir": "0",
+    # "asgard": "0",
 
     #The Scales are formed by their mode and their tone
 
@@ -130,7 +128,7 @@ variables_sys = {
     "arabic": "B110011011001",
     "hungara": "B101100111001",
 
-    #TONES
+    #TONES (plase don't change, could u corrupt the interpreter)
     "a_": 9,
     "a#_": 10,
     "b_": 11,

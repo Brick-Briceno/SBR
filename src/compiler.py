@@ -14,18 +14,17 @@ class syntax_data:
     rhythms = "0123456789"
     all_data = set(numbers+tones+rhythms)
 
-off_long_comment = True
+long_comment = False
 def delete_comments(code):
     #delete short comment
     code = code.split("--", 1)[0]
     new_code = ""
-    global off_long_comment
+    global long_comment
     code = code.replace("***", "\xff")
     for char in code:
         if char == "\xff":
-            off_long_comment = not off_long_comment
-        elif off_long_comment:
-            new_code += char
+            long_comment = not long_comment
+        elif not long_comment: new_code += char
     return new_code.replace("\xff", "")
 
 def something_of_them_in_others(them, others):

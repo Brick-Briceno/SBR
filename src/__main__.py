@@ -27,12 +27,13 @@ import os
 pip install soundfile
 pip install colorama
 pip install midiutil
+pip install wxPython
 pip install pygame
 pip install numpy
 pip install numba
 """
 
-__version__ = "2.0.3"
+__version__ = "2.0.4"
 
 # Set to True to enable debug mode, which will raise exceptions instead of logging them
 DEBUG = False
@@ -59,6 +60,7 @@ program_directory = os.path.dirname(program_path)
 
 try: sbr_line(f"welcome {program_directory.replace(" ", "\xff")}\\main.sm")
 except SBR_ERROR as bad:
+    clean_console()
     b_print("Error:", color=color3, end="")
     b_print(bad, color=color4)
     b_print("Please create the preset file, no matter if the file is empty", color=color2)
@@ -83,7 +85,7 @@ if __name__ == "__main__":
         while awake:
             try:
                 consol = ""
-                if not (sbr_ident.open_keys or not sbr_ident.off_long_comment): consol = "> "
+                if not sbr_ident.open_keys or sbr_ident.long_comment: consol = "> "
                 else: consol = "  "+(" "*ident*sbr_ident.open_keys)
                 if DEBUG: consol = "(dev) " + consol
                 command = input(consol)

@@ -1,11 +1,12 @@
 -- creating a Song in SBR
 mode = wind -- minor mode
 tone = c_ -- c tone
-tempo = 96 -- this is the tempo in bpm
+tempo = 125 -- this is the tempo in bpm
 
 -- melody
 
 intervals = 0,4,0,-1,-1,
+
 
 melody = Sm{
    (son Add14 * 3 C3,4*2X2Q4) * 2
@@ -40,4 +41,3 @@ song = Struct{
 }
 
 play: song
-
