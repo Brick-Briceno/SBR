@@ -1,4 +1,5 @@
 bin/
+src/temp
 src/inst
 src/__pycache__
 src/test.py
