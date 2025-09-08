@@ -156,3 +156,6 @@ if __name__ == "__main__":
         except Exception as e:
             if DEBUG: raise e
             error_log() #create a log
+
+#clean trash
+sbr_line("del_temp:")

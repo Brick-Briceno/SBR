@@ -2,12 +2,11 @@ import wx
 
 #pip install wxPython
 
-class FileDropSource(wx.ListCtrl):
+class _FileDropSource(wx.ListCtrl):
     def __init__(self, parent, files):
         super().__init__(parent, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
         self.InsertColumn(0, "Files")
-        for f in files:
-            self.InsertItem(self.GetItemCount(), f)
+        for f in files: self.InsertItem(self.GetItemCount(), f)
         self.Bind(wx.EVT_LIST_BEGIN_DRAG, self.on_begin_drag)
         # Dark theme for the list
         dark_bg = wx.Colour(30, 30, 30)
@@ -26,7 +25,7 @@ class FileDropSource(wx.ListCtrl):
         drop_source.SetData(data)
         drop_source.DoDragDrop(flags=wx.Drag_CopyOnly)
 
-class MyFrame(wx.Frame):
+class __MyFrame(wx.Frame):
     def __init__(self, files):
         super().__init__(None, title="Drag files to another app", size=(400, 300))
         # Dark theme for the frame
@@ -40,14 +39,14 @@ class MyFrame(wx.Frame):
         self.SetWindowStyle(self.GetWindowStyle() & ~wx.RESIZE_BORDER)
         self.SetSizeHints(self.GetSize(), self.GetSize())
         sizer = wx.BoxSizer(wx.VERTICAL)
-        self.file_list = FileDropSource(panel, files)
+        self.file_list = _FileDropSource(panel, files)
         sizer.Add(self.file_list, 1, wx.EXPAND | wx.ALL, 10)
         panel.SetSizer(sizer)
 
-def drag_n_drop(files: list[str]):
+def main(files: list[str]):
     # Change the path to a folder with your files
     app = wx.App(False)
-    frame = MyFrame(files)
+    frame = __MyFrame(files)
     frame.Show()
     app.MainLoop()
     app.MainLoop()

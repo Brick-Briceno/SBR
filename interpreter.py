@@ -67,7 +67,7 @@ def sbr_import(data):
         raise SBR_ERROR(f"The system doesn't have permission to accesss this file '{data}'")
 
 
-def sbr_line(idea):
+def sbr_line(idea: str):
     #multiline code
     if "\\"*3 in idea:
         lines_data = []

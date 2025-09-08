@@ -2,9 +2,8 @@
 Symmetry Melody Api v2.1
 @Brick_briceno 2023
 """
-
 from variables import variables_user
-from synthesizer import create_tone
+from lib.synthesizer import create_tone
 from errors import SBR_ERROR
 from pygame import mixer
 from sbr_utils import *

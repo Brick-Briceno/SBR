@@ -216,9 +216,9 @@ def replace_variables(code):
     #Sort variables by text length (largest first)
     all_variables = list(variables_sys)+list(variables_user)+list(vars_instruments)
     all_variables = sorted(all_variables, key=len, reverse=True)
-    variables_sys_keys = sorted(variables_sys, key=len, reverse=True)
-    variables_user_keys = sorted(variables_user, key=len, reverse=True)
-    vars_instruments_keys = sorted(vars_instruments, key=len, reverse=True)
+    # variables_sys_keys = sorted(variables_sys, key=len, reverse=True)
+    # variables_user_keys = sorted(variables_user, key=len, reverse=True)
+    # vars_instruments_keys = sorted(vars_instruments, key=len, reverse=True)
     #Iterate variables and replace text fragments
     for variable in all_variables:
         if variable in variables_sys:

@@ -13,11 +13,12 @@ from pprint import pprint
 from sbr_utils import *
 from variables import *
 from sbr_help import *
+import shutil
 import midiutil
 import Bsound
 import Sbyte
-import editor 
 import time
+import lib
 import sys
 import os
 
@@ -105,7 +106,7 @@ def sbr_help(instruction):
             sbr_help(["effects"]), input()
             b_print("the Commands are awsome!", color=color1)
             sbr_help(["commands"]), input()
-            b_print("check the SBR's Documentation for learn music and more about this increible lenguage ;)", color=color1)
+            b_print("check the SBR's Documentation for learn music and more about this increible lenguage ;)", color=color2)
             input()
 
         elif "effect" in h:
@@ -187,10 +188,8 @@ The total of all the code is called Brick :D""")
  ↑    (0,-2,2,-1) arguments are separated by commas
 (M) is used to generate the tones
 """)
-        elif h in ("how are u?", "how're u?",
-                "how are u", "how're u",
-                "how are you?", "how're you?",
-                "how are you", "how're you",):
+        elif h.lower().replace("?", "") in ("how are u", "how're u",
+                                            "how are you", "how're you"):
             print("I'm fine, thanks for asking ^^")
         else: print(f"No help information for '{instruction[0]}'")
     else:
@@ -348,7 +347,7 @@ def brute_force(args):
     ...
 
 
-def obj_to_array(text_sbr_obj):
+def obj_to_array(text_sbr_obj: str, meta_data=False):
         program_path = os.path.abspath(__file__)
         program_directory = os.path.dirname(program_path)
         obj_data = sbr_lines_2(text_sbr_obj)
@@ -365,8 +364,9 @@ def obj_to_array(text_sbr_obj):
                 Melody([obj_data, Tones([7*7])]) #it need a default sample to the Rhythm
             ])
 
-        #Tones
-        elif isinstance(obj_data, Tones):
+        #Note and tones
+        elif isinstance(obj_data, (Tones, Note)):
+            if isinstance(obj_data, Note): obj_data = Tones([obj_data])
             obj_data = Structure([seno, Velocity([0]),
                 Melody([obj_data, Rhythm('10'*len(obj_data))]) #it need a default sample to the Rhythm
             ])
@@ -378,9 +378,9 @@ def obj_to_array(text_sbr_obj):
                 Melody([Tones([[35, 42, 49]]), Rhythm(1)]) #it need a default sample to the Rhythm
             ])
 
-        meta_data = Bsound.struct_to_metadata(obj_data)
-        audio_array = Bsound.audio_render_engine(meta_data)
-        return audio_array
+        __meta_data = Bsound.struct_to_metadata(obj_data)
+        if meta_data: return __meta_data
+        return Bsound.audio_render_engine(__meta_data)
 
 
 def play(args):
@@ -394,33 +394,54 @@ def play(args):
         Bsound.play_array(audio_array, sleep=args[1])
 
 def pause(args):
-    "Umm i just pause, i don't know what u want to i say .-."
+    "Umm i just pause, i don't know what u wanna i say .-."
     Bsound.pause()
 
 def export(args):
     "I export addictive substances... the music! I've it in mp3, wav and mid, which do you want?"
     #this export to mp3, wav and mid
     if len(args) < 2:
-        print("Enter a data to export and the file name")
-        print("For example: B1000:: uwu.mp3")
+        raise SBR_ERROR("Enter a data to export and the file name",
+                        "For example: B1000:: uwu.mp3")
 
-    elif separate_path_extension(args[1])[2] == ".mid":
-        midi_file = midiutil.MIDIFile()
-        midi_file.addTrack("Track 1")
-        obj = sbr_lines_2(args[0])
-        if isinstance(obj, Melody):
-            time_pos = 0
-            for tone, rhythm in zip(obj.tones, obj.rhythms):
-                duration = rhythm.metric * (60/variables_user["tempo"])
-                for n in tone:
-                    midi_file.addNote(0, 0, n+60, time_pos, duration, 100)
-                time_pos += duration
+    elif separate_path_extension(args[1])[2].lower() in (".mid", ".midi", ".rmi", ".kar"):
+        meta_data = obj_to_array(args[0], meta_data=True)
+        mf = midiutil.MIDIFile(1)
+        tempo = variables_user["tempo"]
+        mf.addTempo(0, 0, tempo)
 
-        midi_file.write(args[1])
+        when_kick =  [when*tempo/60 for when in meta_data["position"]]
+        duration = [dur/4 for dur in meta_data["duration"]]
+        cromatic_note = meta_data["cromatic_note"]
+        velocity = [int(vel*100) for vel in meta_data["velocity"]]
+        #longit = len(sbr_lines_2(args[0]))//4
+        for when, vel, dur, crom in zip(when_kick, velocity, duration, cromatic_note):
+            #if when+dur > longit:
+                #dur = longit-when #nojda chamo, no tengo cabeza pa una simple formula, njd
+            if vel > 127: vel = 127
+            mf.addNote(0, 0, crom, when, dur, vel)
+
+        # Exportación del archivo MIDI
+        with open(args[1].strip(), "wb") as output_file:
+            mf.writeFile(output_file)
     else:
         audio_array = obj_to_array(args[0])
-        try: Bsound.sf.write(file=args[1], data=audio_array, samplerate=Bsound.sample_rate)
+        try: Bsound.sf.write(file=args[1].strip(), data=audio_array, samplerate=Bsound.sample_rate)
         except: raise SBR_ERROR("Error in audio export")
+
+
+def fn_drag_n_drop(args):
+    if not len(args):
+        raise SBR_ERROR("Any argument here :O", "mid or mp3 whit:: vars like melody, bass etc")
+    drags = []
+    ext = args[0]
+    _vars = [x.strip() for x in args[1:]]
+    for var_name in _vars:
+        file_name = f"temp/{var_name}.{ext}"
+        export([var_name, file_name])
+        drags.append(file_name)
+
+    lib.drag_n_drop.main(drags)
 
 
 def template(args): #command template
@@ -479,11 +500,11 @@ def rec(_):
 
 def sbr_editor(_):
     "A simple text editor"
-    Thread(target=editor.main).start()
+    Thread(target=lib.editor.main).start()
 
-def sm1(_):
+def sm2(_):
     "A little daw that i was made in 2023 after job :)"
-    import sm1
+    #import sm2
 
 def sleep(arg):
     "I pause the code for a few secounds"
@@ -502,6 +523,11 @@ def donate(_):
     print("Binance ID: 482 345 114 (recomended)")
     print("Thank you for your donation <3")
 
+def ls(_):
+    #ls command in bash
+    os.system("dir" if os.name == "nt" else "ls")
+
+
 def fn_pulse(new_pulse):
     "Change the time signature"
     if len(new_pulse) != 1:
@@ -510,6 +536,17 @@ def fn_pulse(new_pulse):
         pulse_will_be(int(new_pulse[0]))
         print(f"Now pulse is {new_pulse[0]} times")
     else: print("Pulse must be an int")
+
+def del_temp(args):
+    "I clear temporal files"
+    path = "temp"
+    for item in os.listdir(path):
+        item_path = os.path.join(path, item)
+        if os.path.isfile(item_path):
+            os.remove(item_path)
+        elif os.path.isdir(item_path):
+            shutil.rmtree(item_path)
+
 
 record = {
     "help": sbr_help,
@@ -524,16 +561,19 @@ record = {
     "ident": ident,
     "play": play,
     "pause": pause,
-    "sm1": sm1,
+    "sm2": sm2,
     "sleep": sleep,
     "export": export,
+    "drag_n_drop": fn_drag_n_drop,
     "metric": metric,
     "phrase": phrase,
     "editor": sbr_editor,
     "rec": rec,
     "tap": tap,
+    "ls": ls,
     "code_made": code_made,
     "instrument": instrument,
     "set_max_digits": set_max_digits,
     "brute_force": brute_force,
+    "del_temp": del_temp,
 }

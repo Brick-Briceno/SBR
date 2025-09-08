@@ -3,9 +3,9 @@ import os
 def clean_console():
     "Clears the console on all systems"
     if os.name == 'nt':  # For Windows
-        os.system("cls") # this run in cmd no powersell clear is not in cmd
+        os.system("cls") # this run in cmd, no powershell, clear ain't in cmd
     else:  # For Linux and macOS (and other Unix-like systems)
-        os.system('clear')
+        os.system("clear")
 
 def one_dimention_list_recurtion(group):
     new = []
