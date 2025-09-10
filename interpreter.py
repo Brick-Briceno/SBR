@@ -81,7 +81,10 @@ def sbr_line(idea: str):
     if imp != []:
         if imp[0] in ("import", "welcome"):
             if len(imp) == 2:
+                wait = "Importing..."
+                print(wait, end="\r")
                 sbr_import(imp[1])
+                print(" "*len(wait), end="\r")
             else: raise SBR_ERROR("You must import a code file")
             return
         elif imp[0] == "for":

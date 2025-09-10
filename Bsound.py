@@ -5,7 +5,6 @@ Symmetry Melody Api v2.1
 from variables import variables_user
 from lib.synthesizer import create_tone
 from errors import SBR_ERROR
-from pygame import mixer
 from sbr_utils import *
 from sbr_types import *
 
@@ -13,6 +12,7 @@ try: import soundfile as sf
 except ImportError:
     print("Missing soundfile library")
 
+from pygame import mixer
 import numpy as np
 #import numba as nb
 import random

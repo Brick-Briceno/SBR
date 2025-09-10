@@ -13,6 +13,7 @@ from pprint import pprint
 from sbr_utils import *
 from variables import *
 from sbr_help import *
+import itertools
 import shutil
 import midiutil
 import Bsound
@@ -94,8 +95,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 def sbr_help(instruction):
     "Everyone asks me for help but, no one asks me how I am"
     if len(instruction) != 0:
-        h = instruction[0].strip().lower()
-        if h == "tutorial":
+        h = instruction[0].strip()#.lower()
+        if h.lower() == "tutorial":
             b_print("This is how we do this Syntax", color=color1)
             sbr_help(["syntax"]), input()
             b_print("but what is the Operators", color=color1)
@@ -109,7 +110,7 @@ def sbr_help(instruction):
             b_print("check the SBR's Documentation for learn music and more about this increible lenguage ;)", color=color2)
             input()
 
-        elif "effect" in h:
+        elif "effect" in h.lower():
             print("The effects are put after a data")
             print("or a generator that in turn returns a data")
             print("Example: B1011 X2")
@@ -118,19 +119,19 @@ def sbr_help(instruction):
                 print(keys, value.__doc__ if value.__doc__ else 
                       "There's no description", sep=f" {'.'*((12)-len(keys))} ")
 
-        elif "generator" in h:
+        elif "generator" in h.lower():
             print("Example: B 1011")
             print("generator^ ^^^^one argument")
             for keys, value in zip(generators.record.keys(), generators.record.values()):
                 print(keys, value.__doc__ if value.__doc__ else 
                       "There's no description", sep=f" {'.'*((12)-len(keys))} ")
 
-        elif "command" in h:
+        elif "command" in h.lower():
             for keys, value in zip(record.keys(), record.values()):
                 print(keys, value.__doc__ if value.__doc__ else 
                       "There's no description", sep=f" {'.'*((12)-len(keys))} ")
 
-        elif "variable" in h:
+        elif "variable" in h.lower():
             print("Variables are like boxes, you can save things inside")
             print("They must be in lowercase and they can't start with a number")
 
@@ -242,6 +243,7 @@ def compile_variables():
 compile_variables()
 
 def instrument(arg):
+    "I record an instrument"
     if len(arg) == 0:
         raise SBR_ERROR("Enter the path of an instrument or sample")
     else:
@@ -270,6 +272,7 @@ def sbr_exit(_):
     raise SystemExit
 
 def code_made(args):
+    "I remember all you really do it"
     _all = False
     save = False
     if len(args) >= 1:
@@ -323,11 +326,21 @@ def ident(args):
     print(ident_code)
 
 def metric(args):
+    "How many pulses does any data have"
     for x in args:
         data = sbr_lines_2(x)
         if isinstance(data, (Melody, Rhythm)):
             print(f"metric --- {data.metric}")
-        else: raise SBR_ERROR("Only rhythms and melodies have metric")
+        else: raise SBR_ERROR(f"Only rhythms and melodies have metric, not {type(data.__name__)}")
+
+def sbr_len(args):
+    "What length is a data"
+    for x in args:
+        ""
+        data = sbr_lines_2(x)
+        if isinstance(data, (Melody, Rhythm, Group, Tones)):
+            print(f"len --- {len(data)}")
+        else: raise SBR_ERROR(f"Only rhythms and melodies have len, not {type(data.__name__)}")
 
 def sbr_print(args):
     for x in args:
@@ -344,7 +357,29 @@ def sbr_type(args):
 
 
 def brute_force(args):
-    ...
+    if len(args) != 1:
+        raise SBR_ERROR("Put just one argument")
+    elif isinstance(args[0], (Rhythm, Tones, Melody)):
+        raise SBR_ERROR("Put just one Rhythms, Tones and Melodies")
+    #Brute force
+    data = sbr_lines_2(args[0])
+    tokens_tones = ("Jumps", "M", "", "", "", "", "", "", )
+    tokens_numbers = tuple([f"{x}," for x in range(33)])
+    tokens_rhythm = ("E,", "C,", "B,", "N,",)
+    tokens_effects = ("*,", "L,", "X,", "S,", "Q,", "R,", "I,", ">>,",
+                     "<<,", "[,", "],", "D,", "Add,",)
+    if isinstance(data, Melody):
+        _match = data.rhythm.bin
+        for x in range(len(tokens_rhythm)-1):
+            for y in range(len(tokens_numbers)):
+                for perm in itertools.permutations(tokens_rhythm[:x+1]+tokens_numbers[:y]):
+                    if perm[0] in tokens_numbers+tokens_effects: continue
+                    print("".join(perm))
+
+    elif isinstance(data, Rhythm):
+        ...
+    elif isinstance(data, Tones):
+        ...
 
 
 def obj_to_array(text_sbr_obj: str, meta_data=False):
@@ -471,20 +506,6 @@ def record_rhythem(history):
         else: item -= 16
     return Rhythm("".join(part))
 
-def tap(_):
-    "Use me for know the tempo that you are beating"
-    print("Mark the tempo to calculate it")
-    print("Press D or ctrl+D and Enter when you're done :)")
-    while 1:
-        d = input()
-        request = Sbyte.tap()
-        if d.upper() == "D":
-            return print()
-        elif request:
-            request = round(request)
-            print(f"Bpm is {request}", end="\r")
-        else: print("Try again")
-
 def rec(_):
     "Kick enter to record the Rhythm faster"
     print("Kick enter to record the Rhythm faster")
@@ -495,8 +516,27 @@ def rec(_):
     history.clear()
     for _ in range(32):
         print(record_rhythem(history))
-        input()
+        d = input()
         history.append(time.time())
+        if d.upper() == "D":
+            return print()
+
+
+def tap(_):
+    "Use me for know the tempo that you are beating"
+    print("Mark the tempo to calculate it")
+    print("Press D or ctrl+D and Enter when you're done :)")
+    while True:
+        d = input()
+        request = Sbyte.tap()
+        if d.upper() == "D":
+            return print()
+        elif request:
+            request = round(request)
+            variables_user["tempo"] = request
+            print(f"Bpm is {request}", end="\r")
+        else: print("Try again")
+
 
 def sbr_editor(_):
     "A simple text editor"
@@ -524,6 +564,7 @@ def donate(_):
     print("Thank you for your donation <3")
 
 def ls(_):
+    "If you wanna i show you files and folders..."
     #ls command in bash
     os.system("dir" if os.name == "nt" else "ls")
 
@@ -566,6 +607,7 @@ record = {
     "export": export,
     "drag_n_drop": fn_drag_n_drop,
     "metric": metric,
+    "len": sbr_len,
     "phrase": phrase,
     "editor": sbr_editor,
     "rec": rec,
