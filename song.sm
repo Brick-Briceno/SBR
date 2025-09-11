@@ -1,7 +1,7 @@
 -- creating a Song in SBR
 mode = wind -- minor mode
-tone = c_ -- c tone
-tempo = 125 -- this is the tempo in bpm
+tone = c_ -- - 9 -- c tone
+tempo = 125--*.4 -- this is the tempo in bpm
 
 -- melody
 
@@ -42,6 +42,9 @@ song = Struct{
 
 --export: melody:: melody.mid
 --export: chords:: chords.mid
---export: bass:: bass.mid
 --drag_n_drop: mp3::melody:: chords:: bass
-brute_force: melody
+--valve_distortion_gain: 50
+play: song--:: true
+--export: song:: song.mp3
+
+--brute_force: melody

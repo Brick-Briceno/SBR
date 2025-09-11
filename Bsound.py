@@ -34,6 +34,7 @@ arrays_bank = {}
 volumen = 1
 
 #motor config
+valve_distortion_gain = 0 #40
 random_stereo_value = .6
 random_tunin_cst = 0
 humanize_ms = 0
@@ -138,10 +139,16 @@ def audio_render_engine(meta_data):
 
         #Superponer el sonido en el resultado (mezcla los canales individualmente)
         mixed_audio[tiempo_inicio:tiempo_inicio+len(audio_data), :] += audio_data
+
     mixed_audio = audio_effects.remove_ending_in_silence(mixed_audio)
     if np.max(mixed_audio) == 0: raise SBR_ERROR("Empty audio")
     #normalizar la mezcla (opcional)
     mixed_audio /= np.max(np.abs(mixed_audio))
+    #distorsion de valvula
+    mixed_audio = audio_effects.valve_distortion(
+        mixed_audio, gain=valve_distortion_gain)
+    #normalizar la mezcla (opcional)
+    #mixed_audio /= np.max(np.abs(mixed_audio)) # esto ya lo hace la distorsion de valvula
     #regular volumen
     mixed_audio *= volumen
     #retornar el array
@@ -214,6 +221,42 @@ class audio_effects:
         # Cortar el audio hasta ese índice
         return audio[:indice_final + 1]
 
+
+    def valve_distortion(audio_input: np.ndarray, gain=1.2) -> np.ndarray:
+        if gain == 0: return audio_input
+        #parámetros del modelo de una válvula 12AX7 (por ejemplo, un 12AX7)
+        # Voltajes de polarización de la válvula (ejemplo)
+        Vpk = 275  # Voltaje de placa
+        Vgk = -2   # Voltaje de rejilla (polarización)
+
+        k_p = 600  # Parámetro para el exponente
+        k_vb = 300  # Voltaje de polarización
+        mu = 100  # Factor de amplificación
+        Ex = 1.4  # Coeficiente
+        v = 6.3
+
+        # La entrada de la rejilla es la suma del voltaje de polarización y la señal de audio
+        # Tienes que escalar el audio para que se ajuste al rango de voltaje de la válvula
+        V_audio = audio_input * v  # Ajusta este valor según tu necesidad
+        V_total = Vgk + V_audio
+        # Calcula la corriente de placa (Ip) usando la fórmula de Koren
+        # Evitar la división por cero y logaritmos de números negativos
+        V_term = Vpk + Ex * np.log(1 + np.exp(V_total / Ex))
+        # Manejar el caso de logaritmo de un número negativo
+        log_arg = (V_term / mu) - (V_total / gain)
+        # Establecer los valores negativos en 0 para evitar log(negativo)
+        log_arg[log_arg < 0] = 0.0
+        Ip = (k_p * np.log(1 + np.exp((k_p * np.log(1 + np.exp(log_arg))) / k_vb)))
+        # La salida distorsionada es la corriente de placa
+        distorted_audio = Ip / np.max(np.abs(Ip))
+
+        # Normaliza para que el pico negativo sea -1 y el positivo sea 1
+        max_pos = np.max(distorted_audio)
+        min_neg = np.min(distorted_audio)
+        # Escala el audio para que el rango sea [-1, 1]
+        distorted_audio = 2 * (distorted_audio - min_neg) / (max_pos - min_neg) - 1
+
+        return distorted_audio
 
 def random_float():
     return random.randint(-100, 100)/100

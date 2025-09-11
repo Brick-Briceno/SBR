@@ -33,7 +33,7 @@ def X(data: list[Rhythm], args: list[int]):
         data = data.replace("2", "11")
         data = data.replace("4", "11")
         data = data.replace("8", "11")
-        data = data.replace("3", "10010010")
+        data = data.replace("3", "6")
         data = data.replace("6", "1000010000100000")
 
     #Ritmos ternarios o mayores a 2
@@ -157,12 +157,12 @@ turn_left.__name__ = "<<"
 def abrir(data: list[Rhythm | Tones | Group], args: list[int]):
     if len(data) <= 1:
         return type(data)()
-    elif arg == []: arg = [1]
+    elif args == []: args = [1]
     if isinstance(data, Rhythm):
         data = data.bin
-        return Rhythm(data[int(arg[0]):])
+        return Rhythm(data[int(args[0]):])
 
-    return type(data)(data[int(arg[0]):])
+    return type(data)(data[int(args[0]):])
 
 abrir.__name__ = "Neither [ nor ]"
 

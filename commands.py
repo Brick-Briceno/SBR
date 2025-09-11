@@ -3,7 +3,7 @@ SBR Commands
 """
 
 #from pprint import pprint
-from compiler import (compiler, replace_variables,
+from compiler import (compiler, replace_variables, magia,
                       effects, generators, pulse_will_be)
 from b_color import (hls_to_rgb, rbg_to_hex, color1,
                      color2, color3, color4, color5)
@@ -356,30 +356,51 @@ def sbr_type(args):
                   "a", "e", "i", "o", "h") else " is a ")
 
 
+tokens_tones = ("Jumps", "M", "", "", "", "", "", "", )
+tokens_rhythm = {"E": tuple("E"+",".join([str(z) for z in x])
+                        for x in itertools.permutations(range(1, 18), 3)),
+                 "C": tuple("C"+",".join([str(z) for z in x])
+                        for x in itertools.permutations(range(1, 33), 2)),
+                 "N": tuple("N"+",".join([str(z) for z in x])
+                        for x in itertools.permutations(range(1, 10**3), 1)),
+                 }
+
+tokens_effects = ("*,", "L,", "X,", "S,", "Q,", "R,", "I,", ">>,",
+                  "<<,", "[,", "],", "D,", "Add,",)
+
 def brute_force(args):
+    print("THE COMMAND WILL BE AVAILABLE SOON")
+    return
     if len(args) != 1:
         raise SBR_ERROR("Put just one argument")
     elif isinstance(args[0], (Rhythm, Tones, Melody)):
         raise SBR_ERROR("Put just one Rhythms, Tones and Melodies")
     #Brute force
     data = sbr_lines_2(args[0])
-    tokens_tones = ("Jumps", "M", "", "", "", "", "", "", )
-    tokens_numbers = tuple([f"{x}," for x in range(33)])
-    tokens_rhythm = ("E,", "C,", "B,", "N,",)
-    tokens_effects = ("*,", "L,", "X,", "S,", "Q,", "R,", "I,", ">>,",
-                     "<<,", "[,", "],", "D,", "Add,",)
-    if isinstance(data, Melody):
-        _match = data.rhythm.bin
-        for x in range(len(tokens_rhythm)-1):
-            for y in range(len(tokens_numbers)):
-                for perm in itertools.permutations(tokens_rhythm[:x+1]+tokens_numbers[:y]):
-                    if perm[0] in tokens_numbers+tokens_effects: continue
-                    print("".join(perm))
 
-    elif isinstance(data, Rhythm):
-        ...
+    if isinstance(data, Rhythm):
+        for x in range(1, 4):
+            for y in itertools.permutations(("+", "-")+
+                                            tokens_rhythm["E"]+
+                                            tokens_rhythm["C"]+
+                                            tokens_rhythm["N"], x):
+                print("".join(y))
+
+        return "E"
+
     elif isinstance(data, Tones):
-        ...
+        return "Jumps0,5"
+
+    elif isinstance(data, Melody):
+        start = time.time()
+        rh = brute_force([f"B{data.rhythm.bin}"])
+        tns = brute_force([repr(data.tones)])
+        end = time.time() - start
+        print(f"melody found in {end:.2f}s")
+
+        result = "Sm{"+rh+"; "+tns+"}"
+
+    print(result)
 
 
 def obj_to_array(text_sbr_obj: str, meta_data=False):
@@ -478,9 +499,6 @@ def fn_drag_n_drop(args):
 
     lib.drag_n_drop.main(drags)
 
-
-def template(args): #command template
-    ...
 
 def set_max_digits(args):
     "Don't looking for the 5th hand's cat"
@@ -588,6 +606,13 @@ def del_temp(args):
         elif os.path.isdir(item_path):
             shutil.rmtree(item_path)
 
+def valve_distortion_gain(args):
+    "Set the gain for the valve distortion effect in master"
+    if len(args) != 1:
+        raise SBR_ERROR("Just one argument")
+    elif not args[0].replace(".", "").isnumeric():
+        raise SBR_ERROR("Put me a number please >:)")
+    Bsound.valve_distortion_gain = float(args[0])
 
 record = {
     "help": sbr_help,
@@ -618,4 +643,5 @@ record = {
     "set_max_digits": set_max_digits,
     "brute_force": brute_force,
     "del_temp": del_temp,
+    "valve_distortion_gain": valve_distortion_gain,
 }
