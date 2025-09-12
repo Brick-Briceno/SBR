@@ -19,6 +19,7 @@ def hex_to_rgb(hexa):
         return int(hexa[1],16)*17, int(hexa[2],16)*17, int(hexa[3],16)*17, int(hexa[4],16)*17
     else: raise TypeError(f"This is not an RGB hex code: {hexa}")
 
+
 def print_color(*objects, color="#ccc", sep=" ", end="\n", go_to_print=True):
     r, g, b, _ = hex_to_rgb(color)
     text = ""
@@ -51,6 +52,32 @@ def hls_to_rgb(h, l, s):
 
     return r, g, b
 
+
+def rgb_to_hls(r, g, b):
+    # Normaliza los valores RGB a [0, 1]
+    r, g, b = r / 255, g / 255, b / 255
+    maxc = max(r, g, b)
+    minc = min(r, g, b)
+    l = (maxc + minc) / 2
+
+    if maxc == minc:
+        h = 0.0
+        s = 0.0
+    else:
+        d = maxc - minc
+        s = d / (2.0 - maxc - minc) if l > 0.5 else d / (maxc + minc)
+        if maxc == r:
+            h = ((g - b) / d) % 6
+        elif maxc == g:
+            h = ((b - r) / d) + 2
+        else:
+            h = ((r - g) / d) + 4
+        h *= 60
+        if h < 0:
+            h += 360
+
+    return h, l * 2, s
+
 def rbg_to_hex(r, g, b):
     r, g, b = hex(r)[2:], hex(g)[2:], hex(b)[2:]
     if len(r) == 1: r = "0" + r
@@ -72,7 +99,7 @@ def quad(h):
     return (h+360/4*1)%360, (h+360/4*2)%360, (h+360/4*3)%360
 
 
-def random_palette():
+def random_palette() -> tuple[str]:
     #selecionar tipo de armonia
     opcion_harm = random.choices(
         #tipos de armonia y sus probabilidades
@@ -143,6 +170,4 @@ def random_palette():
 
     return paleta
 
-
 color1, color2, color3, color4, color5 = random_palette()
-

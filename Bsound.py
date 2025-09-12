@@ -224,8 +224,8 @@ class audio_effects:
 
     def valve_distortion(audio_input: np.ndarray, gain=1.2) -> np.ndarray:
         if gain == 0: return audio_input
-        #parámetros del modelo de una válvula 12AX7 (por ejemplo, un 12AX7)
-        # Voltajes de polarización de la válvula (ejemplo)
+        #parámetros del modelo de una válvula 12AX7
+        # Voltajes de polarización de la válvula
         Vpk = 275  # Voltaje de placa
         Vgk = -2   # Voltaje de rejilla (polarización)
 

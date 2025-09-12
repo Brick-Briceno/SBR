@@ -5,8 +5,8 @@ SBR Commands
 #from pprint import pprint
 from compiler import (compiler, replace_variables, magia,
                       effects, generators, pulse_will_be)
-from b_color import (hls_to_rgb, rbg_to_hex, color1,
-                     color2, color3, color4, color5)
+from b_color import (hls_to_rgb, hex_to_rgb, rbg_to_hex, rgb_to_hls,
+                     color1, color2, color3, color4, color5)
 from b_color import print_color as b_print
 from threading import Thread
 from pprint import pprint
@@ -23,7 +23,12 @@ import lib
 import sys
 import os
 
-welcome = """The SBR language provides super creative tools
+welcome = """
+▒█▀▀▀█ ▒█▀▀█ ▒█▀▀█ 
+░▀▀▀▄▄ ▒█▀▀▄ ▒█▄▄▀ 
+▒█▄▄▄█ ▒█▄▄█ ▒█░▒█
+
+The SBR language provides super creative tools
 to musicians to make good music and from this make memorable melodies
 
 With all my heart I hope that good things can be
@@ -90,7 +95,7 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-""")
+""".strip())
 
 def sbr_help(instruction):
     "Everyone asks me for help but, no one asks me how I am"
@@ -168,6 +173,7 @@ You can do this as well
 
 """)
             input("but... and if it's melodic")
+            clean_console()
             print("""
 However, in case of containing generators, effects or any musical data
 such as notes, tones, rhythms or a groups, everything will be
@@ -183,6 +189,7 @@ Examples:
 
 The total of all the code is called Brick :D""")
             input("Other example")
+            clean_console()
             print("""
  M0,-2,2,-1
  ↑     ↑
@@ -195,13 +202,15 @@ The total of all the code is called Brick :D""")
         else: print(f"No help information for '{instruction[0]}'")
     else:
         clean_console()
-        for i, char in enumerate(welcome.split(" ")):
-            grade = 360*(i/len(welcome))*1.5
+        #r, g, b = hex_to_rgb(color1)
+        base = rgb_to_hls(*hex_to_rgb(color1)[:3])[0]
+        for i, char in enumerate(welcome):
+            grade = base-i*(360/6/len(welcome))
             h, _, _ = hls_to_rgb(grade, 1, 1)
             r, g, b = hls_to_rgb(h, 1, 1)
             hexa = rbg_to_hex(r, g, b)
-            b_print(char, end="", color=hexa, sep=" ")
-            time.sleep(.01)
+            b_print(char, end="", color=hexa, sep="")
+            time.sleep(.005)
 
         #input("sísí me vale vrg")
         input()
@@ -259,15 +268,20 @@ vars_instruments[f"${seno.name}"] = seno
 def phrase(arg):
     print("Hi! how are you :)")
 
-def sbr_vars(arg):
-    print("Default")
-    pprint(variables_sys)
-    print("Instruments")
-    pprint(vars_instruments)
-    print("Users'")
-    pprint(variables_user)
+def print_dict(d: dict, name: str):
+    b_print(name, color=color1)
+    for k, v in zip(d, d.values()):
+        b_print(k, color=color3, end="")
+        b_print("=", end="", color=color5)
+        b_print(v, color=color4)
+
+def sbr_vars(args):
+    print_dict(vars_instruments, "Instruments")
+    print_dict(variables_sys, "Constants")
+    print_dict(variables_user, "Of Users")
 
 def sbr_exit(_):
+    "Never give up, stay hard"
     print("Use Ctrl+C to exit or cancel any processes")
     raise SystemExit
 
@@ -369,8 +383,8 @@ tokens_effects = ("*,", "L,", "X,", "S,", "Q,", "R,", "I,", ">>,",
                   "<<,", "[,", "],", "D,", "Add,",)
 
 def brute_force(args):
-    print("THE COMMAND WILL BE AVAILABLE SOON")
-    return
+    #print("THE COMMAND WILL BE AVAILABLE SOON")
+    #return
     if len(args) != 1:
         raise SBR_ERROR("Put just one argument")
     elif isinstance(args[0], (Rhythm, Tones, Melody)):
@@ -434,10 +448,13 @@ def obj_to_array(text_sbr_obj: str, meta_data=False):
                 Melody([Tones([[35, 42, 49]]), Rhythm(1)]) #it need a default sample to the Rhythm
             ])
 
+        wait = "Wait..."
+        print(wait, end="\r")
         __meta_data = Bsound.struct_to_metadata(obj_data)
         if meta_data: return __meta_data
-        return Bsound.audio_render_engine(__meta_data)
-
+        array = Bsound.audio_render_engine(__meta_data)
+        print(" "*len(wait), end="\r")
+        return array
 
 def play(args):
     if len(args) == 0:

@@ -1,5 +1,5 @@
 """
-Effects developed by @brick_briceno in 2023
+Effects developed by @brick_briceno in 2022
 
 I hope it helps you a lot and you can experiment with this
 the only rule is that there are no rules :)
@@ -12,6 +12,7 @@ from sbr_types import *
 "efectos de ritmo"
 
 def L(data: list[Rhythm | Tones | Group], args: list[int]):
+    "I shorten or repeat a number depending on the case"
     if not len(args): return data
     if isinstance(data, Rhythm):
         data = data.bin
@@ -21,6 +22,7 @@ def L(data: list[Rhythm | Tones | Group], args: list[int]):
     return type(data)(data[:int(args[0])])
 
 def X(data: list[Rhythm], args: list[int]):
+    "I stretch the rhythmic pattern as symmetrically as possible"
     if not len(args): args = [2]
     args = args[0]
     if args == 0: return Rhythm()
@@ -48,6 +50,7 @@ def X(data: list[Rhythm], args: list[int]):
     return Rhythm(data)
 
 def S(data: list[Rhythm], args: list[int]):
+    "I only let a certain amount of pulses through"
     if not len(args): args = [7, 0]
     if len(args) == 1: args += [0]
     data = data.bin
@@ -67,6 +70,7 @@ def S(data: list[Rhythm], args: list[int]):
     return Rhythm(final)
 
 def D(data: list[Rhythm], args: list[int]):
+    "I apply delay to your rhythms"
     #el primer argumento es la longitud
     #y el segundo las veces que se repite
     #Definir argumentos
@@ -90,16 +94,19 @@ def D(data: list[Rhythm], args: list[int]):
     return Rhythm(final)
 
 def R(data: list[Rhythm | Group | Tones | Velocity | Times | Melody], args: list[None]):
+    "I reverse the rhythm"
     if len(data) <= 1: return type(data)()
     elif len(data) != 0:
         return data.reverse()
 
 def I(data: list[Rhythm | Tones | int | Note | Group], args: list[None]):
+    "I invert the rhythm, like inverting the color (not gate)"
     if isinstance(data, Group):
         return data[::-1]
     return ~data
 
 def Q(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
+    "Tell me what number you want me to hide"
     if not args: args = [1]
     if not isinstance(data, Rhythm):
         end = []
@@ -125,6 +132,7 @@ def Q(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
 
 
 def Add(data: list[Rhythm], args: list[int]):
+    "I add pulses wherever you tell me"
     if len(args) == 0: return data
     new = list(data.bin)
     for x in args:
@@ -135,6 +143,7 @@ def Add(data: list[Rhythm], args: list[int]):
 
 
 def turn_right(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
+    "I turn the rhythm to the right"
     if len(args) == 0: args = [1]
     if isinstance(data, Rhythm): data = data.bin
     if args == []: args = [1]
@@ -148,6 +157,7 @@ def turn_right(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
 turn_right.__name__ = ">>"
 
 def turn_left(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
+    "I turn the rhythm to the left"
     if not args: args = [1]
     return turn_right(data, [len(data)-args[0]])
 
@@ -155,6 +165,7 @@ turn_left.__name__ = "<<"
 
 
 def abrir(data: list[Rhythm | Tones | Group], args: list[int]):
+    "I let certain bits of the beginning pass"
     if len(data) <= 1:
         return type(data)()
     elif args == []: args = [1]
@@ -168,6 +179,7 @@ abrir.__name__ = "Neither [ nor ]"
 
 
 def cerrar(data: list[Rhythm | Tones | Group], args: list[int]):
+    "I let certain bits of the ending go (I'm cousin of the L effect.)"
     return R(abrir(R(data, 0), args), 0)
 
 cerrar.__name__ = "Neither [ nor ]"
@@ -215,6 +227,7 @@ def Chord(data: list[Tones | Note | Group | int], args: list[int]):
         return Tones(Group(progression))
 
 def Arp(data: list[Tones | Group], args: list[None]):
+    "I'm a big fan of trance music :)"
     end = []
     for x in data:
         if isinstance(x, Group):
@@ -227,6 +240,7 @@ def Arp(data: list[Tones | Group], args: list[None]):
 #efectos de grupo
 
 def G(data: list[list | Rhythm], args: list[int]):
+    "I access an item of an iterable data"
     if len(args) == 0:
         return Group(data)
     elif len(args) == 1:

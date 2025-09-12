@@ -4,7 +4,7 @@ import os
 import io
 
 
-with open("table.css", "r", encoding="utf-8") as file:
+with open("styles.css", "r", encoding="utf-8") as file:
     CSS = file.read()
 
 __P = sync_playwright().start()
@@ -15,10 +15,6 @@ def __del__():
     BROWSER.close()
     __P.stop()
 
-
-
-with open("table.css", "r", encoding="utf-8") as file:
-    CSS = file.read()
 
 title = "Documentación de la API"
 

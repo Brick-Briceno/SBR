@@ -793,7 +793,13 @@ class Instrument:
 
     def __str__(self):
         return f"${self.inst_id} ***${self.name}***"
-        
+
+    def __add__(self, _):
+        return self
+
+    def __sub__(self, _):
+        return self
+
     def path_note(self, cromatic_note: int) -> str:
         path_note = self.path+"\\{:02d}".format(cromatic_note)+".wav"
         if not os.path.exists(path_note):
