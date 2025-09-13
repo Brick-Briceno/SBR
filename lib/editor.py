@@ -1,5 +1,7 @@
 import os
 
+filedialog, messagebox, tk = ..., ..., ...
+
 class TextEditor:
     def __init__(self, root):
         self.root = root
@@ -225,13 +227,14 @@ class TextEditor:
         """Select all text."""
         self.text_area.tag_add("sel", "1.0", tk.END)
 
+
 def main():
+    global filedialog, messagebox, tk
     from tkinter import filedialog, messagebox
     import tkinter as tk
     root = tk.Tk()
     app = TextEditor(root)
     root.protocol("WM_DELETE_WINDOW", app.exit_app)
     root.mainloop()
-
 
 if __name__ == "__main__": main()
