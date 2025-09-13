@@ -1,5 +1,3 @@
-from tkinter import filedialog, messagebox
-import tkinter as tk
 import os
 
 class TextEditor:
@@ -228,6 +226,8 @@ class TextEditor:
         self.text_area.tag_add("sel", "1.0", tk.END)
 
 def main():
+    from tkinter import filedialog, messagebox
+    import tkinter as tk
     root = tk.Tk()
     app = TextEditor(root)
     root.protocol("WM_DELETE_WINDOW", app.exit_app)
