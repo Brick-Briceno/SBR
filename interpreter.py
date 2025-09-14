@@ -81,7 +81,7 @@ def sbr_line(idea: str):
     if imp != []:
         if imp[0] in ("import", "welcome"):
             if len(imp) == 2:
-                wait = "Importing..."
+                wait = "  Importing..."
                 print(wait, end="\r")
                 sbr_import(imp[1])
                 print(" "*len(wait), end="\r")
@@ -108,7 +108,7 @@ def sbr_line(idea: str):
     idea = indentation(idea)
 
     #the code is empety
-    if idea == "": return
+    if idea.strip() == "": return
     #logic to check the type of instruction
     elif "=" in idea:
         idea = clean_code(idea)

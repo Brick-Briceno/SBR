@@ -13,9 +13,9 @@ from pprint import pprint
 from sbr_utils import *
 from variables import *
 from sbr_help import *
+import lib.MidiFile
 import itertools
 import shutil
-import midiutil
 import Bsound
 import Sbyte
 import time
@@ -448,7 +448,7 @@ def obj_to_array(text_sbr_obj: str, meta_data=False):
                 Melody([Tones([[35, 42, 49]]), Rhythm(1)]) #it need a default sample to the Rhythm
             ])
 
-        wait = "Wait..."
+        wait = "  Wait..."
         print(wait, end="\r")
         __meta_data = Bsound.struct_to_metadata(obj_data)
         if meta_data: return __meta_data
@@ -479,7 +479,7 @@ def export(args):
 
     elif separate_path_extension(args[1])[2].lower() in (".mid", ".midi", ".rmi", ".kar"):
         meta_data = obj_to_array(args[0], meta_data=True)
-        mf = midiutil.MIDIFile(1)
+        mf = lib.MidiFile.MIDIFile(1)
         tempo = variables_user["tempo"]
         mf.addTempo(0, 0, tempo)
 

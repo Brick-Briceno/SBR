@@ -26,11 +26,8 @@ import os
 """
 pip install soundfile
 pip install colorama
-pip install midiutil
-pip install wxPython
 pip install pygame
 pip install numpy
-pip install numba
 """
 
 __version__ = "2.0.4"
