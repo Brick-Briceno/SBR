@@ -370,21 +370,39 @@ def sbr_type(args):
                   "a", "e", "i", "o", "h") else " is a ")
 
 
-tokens_tones = ("Jumps", "M", "", "", "", "", "", "", )
-tokens_rhythm = {"E": tuple("E"+",".join([str(z) for z in x])
-                        for x in itertools.permutations(range(1, 18), 3)),
-                 "C": tuple("C"+",".join([str(z) for z in x])
-                        for x in itertools.permutations(range(1, 33), 2)),
-                 "N": tuple("N"+",".join([str(z) for z in x])
-                        for x in itertools.permutations(range(1, 10**3), 1)),
-                 }
+def generate_fn_paramts(fn_name: str, fn_n_range_params: tuple[int]) -> tuple:
+    rang = range(1+fn_n_range_params[0], 1+fn_n_range_params[1])
+    Fn_params = []
+    for x in rang:
+        Fn_params.append(f"{fn_name}{x}")
+        for y in rang:
+            if x > y: continue
+            Fn_params.append(f"{fn_name}{x},{y}")
 
-tokens_effects = ("*,", "L,", "X,", "S,", "Q,", "R,", "I,", ">>,",
-                  "<<,", "[,", "],", "D,", "Add,",)
+    return tuple(Fn_params)
+
+
+def generate_bricks_dicts():
+    max_bricks = 5
+    operators = ("+", "-")
+    _vars = ("son", "bossa")
+    _vars = tuple(f"B{variables_sys[x].bin}" for x in _vars) #compile vars:
+    g_E = generate_fn_paramts(fn_name="E", fn_n_range_params=(1, 16))
+    g_X = ("X2", "X3")
+    #g_Q = generate_fn_paramts(fn_name="Q", fn_n_range_params=())
+    for x in range(1, 1+max_bricks):
+        perms = itertools.permutations(operators+g_X+_vars+g_E, r=x)
+        for perm in perms:
+            _perm = "".join(perm)
+            if (perm[0] in operators or
+                _perm[0] == "X" or
+                _perm[-1:] in operators or
+                any([f"{o}X" in _perm for o in operators])
+                ): continue
+            yield _perm
+            #if "X" in "".join(perm): input()
 
 def brute_force(args):
-    #print("THE COMMAND WILL BE AVAILABLE SOON")
-    #return
     if len(args) != 1:
         raise SBR_ERROR("Put just one argument")
     elif isinstance(args[0], (Rhythm, Tones, Melody)):
@@ -393,14 +411,15 @@ def brute_force(args):
     data = sbr_lines_2(args[0])
 
     if isinstance(data, Rhythm):
-        for x in range(1, 4):
-            for y in itertools.permutations(("+", "-")+
-                                            tokens_rhythm["E"]+
-                                            tokens_rhythm["C"]+
-                                            tokens_rhythm["N"], x):
-                print("".join(y))
-
-        return "E"
+        if not all([x in "01" for x in data.bin]):
+            raise SBR_ERROR("only zeros are allowed in the rhythm :)")
+        leng = len(data)
+        for code in generate_bricks_dicts():
+            code = f"{code}L{leng}"
+            #print(code)
+            _compile = magia(code).bin
+            if _compile == data.bin: return code
+            #print(code, _compile)
 
     elif isinstance(data, Tones):
         return "Jumps0,5"
