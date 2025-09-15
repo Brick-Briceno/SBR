@@ -189,6 +189,21 @@ def prosses_str_array(data):
 
     return new
 
+def there_are_operators_in_groups(code: str):
+    _code = ""
+    if "{" in code and any([y in code for y in syntax_data.math]):
+        for x in code:
+            if "{" == x:
+                _code += "{("
+            elif ";" == x:
+                _code += ");("
+            elif "}" == x:
+                _code += ")}"
+            else: _code += x
+    else: return code
+    return _code.replace("()", "")
+
+
 def insert_multiplication_operators(expression):
     result = ""
     for i, char in enumerate(expression):
@@ -273,24 +288,26 @@ def compiler(instruction):
 
 
 def magia(code):
+    #are there operators in groups?
+    code = there_are_operators_in_groups(code)
     #Check if there're parentesis here
     while "(" in code or ")" in code:
         parent = keys2(code, "()")
         comp = compiler(parent)
         code = code.replace(f"({parent})", str(comp))
-
     #detele spaces by data types view
     code = code.replace(" ", "")
     semi_compiled_code = [] #This will be passed to the operator compiler
     #Operators will split the code
     if only_has(code, syntax_data.math): code = "0"
-    for brick in separate_by_operators(code):
+    for brick in separate_by_operators(code):        
         if brick in syntax_data.math:
             semi_compiled_code.pop()
             semi_compiled_code.append(brick)
             continue
         else:
             for g in prepare_metadata(brick):
+                #g be like [['B', ['101100111001']]]
                 if len(g[0]) == 1: raise SBR_ERROR(f"Invalid argument of the generator {g[0]}")
                 generator, g_arguments, effects_list = g[0][0], g[0][1], g[1:]
                 #convert strings to SBR types

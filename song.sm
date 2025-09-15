@@ -10,7 +10,7 @@ intervals = 0,4,0,-1,-1,
 
 melody = Sm{
    (son Add14 * 3 C3,4*2X2Q4) * 2
-   Jumps {
+   J{
       intervals, -4, intervals, -1, intervals, 1, 1, 1, -4
       intervals, -4, intervals, -1, intervals, 1, 2, -4
       }
@@ -44,8 +44,9 @@ song = Struct{
 --export: chords:: chords.mid
 --drag_n_drop: mp3::melody:: chords:: bass
 --valve_distortion_gain: 50
---play: song--:: true
 --export: song:: song.mp3
 --brute_force: melody
 
 --brute_force: Sm{(son-C4,16)X2; M35}
+
+play: song--:: true

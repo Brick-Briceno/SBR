@@ -449,7 +449,7 @@ def obj_to_array(text_sbr_obj: str, meta_data=False):
 
         #Rhythm
         elif isinstance(obj_data, Rhythm):
-            obj_data = Structure([Instrument(f"{program_directory}\\inst\\Kick.wav", 2**32), Velocity([0]),
+            obj_data = Structure([Instrument(f"{program_directory}/inst/Kick.wav", 2**32), Velocity([0]),
                 Melody([obj_data, Tones([7*7])]) #it need a default sample to the Rhythm
             ])
 

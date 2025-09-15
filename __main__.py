@@ -55,7 +55,7 @@ def error_log():
 program_path = os.path.abspath(__file__)
 program_directory = os.path.dirname(program_path)
 
-try: sbr_line(f"welcome {program_directory.replace(" ", "\xff")}\\main.sm")
+try: sbr_line(f"welcome {program_directory.replace(" ", "\xff")}/main.sm")
 except SBR_ERROR as bad:
     clean_console()
     b_print("Error:", color=color3, end="")

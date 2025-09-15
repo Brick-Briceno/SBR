@@ -801,7 +801,7 @@ class Instrument:
         return self
 
     def path_note(self, cromatic_note: int) -> str:
-        path_note = self.path+"\\{:02d}".format(cromatic_note)+".wav"
+        path_note = self.path+"/{:02d}".format(cromatic_note)+".wav"
         if not os.path.exists(path_note):
             print(f"This file doesn't exist: '{path_note}'")
         else: return path_note

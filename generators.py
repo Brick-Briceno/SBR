@@ -142,15 +142,16 @@ def one_dimention_list_recurtion(group):
     return new
 
 
-def Jumps(args: list[int | Group]):
+def J(args: list[int | Group]):
     "My philosophy is that notes don't matter, intervals produce the emotions"
     if args == []: return Tones()
     #I don't wanted to repeat code pero yo vivo la vida relax xd
     #this for loop is the Arp effect
     notes = []
-    grade = 0
     args = one_dimention_list_recurtion(args)
-    for x in args:
+    if len(args) == 0: raise SBR_ERROR("")
+    grade = args[0]
+    for x in args[1:]:
         notes.append(grade)
         grade += x
     return Tones(notes)
@@ -221,12 +222,12 @@ record = {
     "N": N,
     "A": A,
     "M": M,
+    "J": J,
     "T": T,
     "V": V,
     "$": inst,
     "Sm": Sm,
     "Poly": Poly,
-    "Jumps": Jumps,
     "Range": Range,
     "Struct": Struct,
     "": return_data,
