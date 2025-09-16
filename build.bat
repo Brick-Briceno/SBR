@@ -1,5 +1,5 @@
 @echo off
-echo Ejecute .\dependecies "If u dont do it before"
+echo Ejecute .\dependencies "If u dont do it before"
 mkdir bin
 cd bin
 pyinstaller --noconfirm --onedir --console --icon "..\br256.ico" --name "sm"  "..\__main__.py"

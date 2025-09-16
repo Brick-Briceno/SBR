@@ -1,6 +1,6 @@
 pip install pyinstaller
 pip install numpy
-docs/dependecies
+docs/dependencies
 pip install soundfile
 pip install colorama
 pip install pygame

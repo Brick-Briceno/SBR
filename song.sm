@@ -10,7 +10,7 @@ intervals = 0,4,0,-1,-1,
 
 melody = Sm{
    (son Add14 * 3 C3,4*2X2Q4) * 2
-   J{
+   J0,{
       intervals, -4, intervals, -1, intervals, 1, 1, 1, -4
       intervals, -4, intervals, -1, intervals, 1, 2, -4
       }

@@ -669,10 +669,10 @@ instrument: inst\Synt3
 ```
 See [How to create instruments](how-to-create-instruments.md) 🎸
 
-**valve_distortion_gain** Adds a small tube distortion that simulates the 12AX7 tube
+**valve_gain** Adds a small tube distortion that simulates the 12AX7 tube
 *Example*
 ```sbr
-valve_distortion_gain: 50
+valve_gain: 50
 ```
 
 **brute_force** Reduce the size of your rhythmic, tonal, and melodic data

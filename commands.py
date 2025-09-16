@@ -213,6 +213,7 @@ The total of all the code is called Brick :D""")
             time.sleep(.005)
 
         #input("sísí me vale vrg")
+        b_print("Press enter to continue", color=color5, end="\r")
         input()
         print("""Type 'help:' and the function to study
 For example type:
@@ -525,16 +526,12 @@ def export(args):
 def fn_drag_n_drop(args):
     if not len(args):
         raise SBR_ERROR("Any argument here :O", "mid or mp3 whit:: vars like melody, bass etc")
-    drags = []
     ext = args[0]
     _vars = [x.strip() for x in args[1:]]
     for var_name in _vars:
         file_name = f"temp/{var_name}.{ext}"
         export([var_name, file_name])
-        drags.append(file_name)
-
-    lib.drag_n_drop.main(drags)
-
+        
 
 def set_max_digits(args):
     "Don't looking for the 5th hand's cat"
@@ -679,5 +676,5 @@ record = {
     "set_max_digits": set_max_digits,
     "brute_force": brute_force,
     "del_temp": del_temp,
-    "valve_distortion_gain": valve_distortion_gain,
+    "valve_gain": valve_distortion_gain,
 }

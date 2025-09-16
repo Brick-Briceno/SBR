@@ -238,7 +238,7 @@ class Group(list):
         return pw[:-2]+"}"
 
     def __add__(self, data):
-        if isinstance(data, int):
+        if isinstance(data, (int, float)):
             result = []
             for i in self:
                 result.append(i + data)
@@ -786,7 +786,7 @@ class Instrument:
             self.type = "sampled"
         else: raise SBR_ERROR("Instrument or sample not valid")
         #type of instruments
-        #types =  ("synthesized", "sampled", "recorded", "plugin")
+        types =  ("synthesized", "sampled", "recorded", "plugin")
 
     def __repr__(self):
         return f"${self.inst_id} ***${self.name} {self.type} instrument from '{self.path}'***"
