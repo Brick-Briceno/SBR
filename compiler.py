@@ -216,8 +216,13 @@ def insert_multiplication_operators(expression):
     return result
 
 def maths(expression):
-    try: return eval(insert_multiplication_operators(
+    try:
+        result = eval(insert_multiplication_operators(
         expression.replace("...", "").replace("()", "")))
+        if isinstance(result, float):
+            if result == 0: return 0 #float to int bro! xdd
+            return round(result, 8)
+        return result
     except (SyntaxError, TypeError):
         raise SBR_ERROR(f"Invalid formula or syntax '{expression}'")
     except ZeroDivisionError:
@@ -250,7 +255,7 @@ def arg_to_type(data):
     #len = 11, 12, 17 = int_numbers, float_numbers, group
     #The conditions are placed from highest to lowest, except for the rhythms
     #It's number  or mathematical operation
-    if data in ("+",): raise SBR_ERROR("Invalid syntax")
+    if data == "+": raise SBR_ERROR("Invalid syntax")
     elif only_has(data, syntax_data.numbers_with_operators) and data[:2] not in (
         f"0{x}" for x in range(10)) and not(data in "|" or data in "b" or data in "#"):
         return maths(data)
@@ -321,7 +326,7 @@ def magia(code):
                         e_arg = [arg_to_type(arg) for arg in e_arg] #str to sbr type
                         #convert strings to SBR types
                         if not e in tuple(effects.record):
-                            raise SBR_ERROR(f"This effect does not exist: '{e}'")
+                            raise SBR_ERROR(f"This effect doesn't exist: '{e}'")
                         data = effects.record[e](data, e_arg)
                     semi_compiled_code.append(data)
                     semi_compiled_code.append(None)
@@ -332,7 +337,7 @@ def magia(code):
                     raise SBR_ERROR(
                         f"This variable is not defined: '{generator}'")
                 else: raise SBR_ERROR(
-                        f"This generator does not exist: '{generator}', maybe there's an undefine variable")
+                        f"This generator doesn't exist: '{generator}', maybe there's an undefine variable")
     #process operators
     final_data = mathematical_operators(semi_compiled_code)
     return final_data

@@ -9,10 +9,10 @@ piece_of_code = ""
 open_keys = 0
 
 
-def indentation(code, symbols="{}"):
+def indentation(code):
     global piece_of_code
     global open_keys
-    _open, _close = symbols
+    _open, _close = r"{}"
     for char in code:
         #possible errors
         if open_keys == 0 and char == "}":
@@ -40,6 +40,7 @@ def indentation(code, symbols="{}"):
     end = piece_of_code
     piece_of_code = ""
     return end
+
 
 def clean_code(code):
     #delete spaces
@@ -118,7 +119,7 @@ def sbr_line(idea: str):
         #verificar que sea un nombre de variable correcto
         elif var_name == "":
             raise SBR_ERROR("You are adding something to nothing, there is no variable")
-        elif not only_has(var_name, "abcdefghijklmnñopqrstuvwxyz_0123456789:") or var_name == "b" or (":" in var_name and not var_name[0].isnumeric()):
+        elif not only_has(var_name, "abcdefghijklmnñopqrstuvwxyz_0123456789:") or len(var_name) == 1 or (":" in var_name and not var_name[0].isnumeric()):
             raise SBR_ERROR(f"This is not a valid variable name '{var_name}'")
         elif var_name in variables_sys:
             raise SBR_ERROR(f"This variable '{var_name}' is immutable and cannot be modified, please chose another name")

@@ -4,7 +4,8 @@ by @brick_briceno 2024
 """
 
 from sbr_utils import (separate_path_extension,
-                       convert_unions_to_tuples)
+                       convert_unions_to_tuples,
+                       one_dimention_list_recurtion)
 from typing import get_type_hints
 from errors import *
 import inspect
@@ -87,8 +88,9 @@ class Rhythm:
     def __init__(self, data=""):
         if isinstance(data, Rhythm):
             data = data.bin
-        if isinstance(data, int):
+        elif isinstance(data, (int, str)):
             data = str(data)
+        else: raise SBR_ERROR(f"These are not rhythmic values '{data}'")
         if data.isnumeric() or data == "":
             self.__data = data
         else: raise SBR_ERROR(f"These are not rhythmic values '{data}'")
@@ -186,7 +188,7 @@ class Rhythm:
     def __getitem__(self, key):
         try: return int(self.bin[key])
         except IndexError:
-            raise SBR_ERROR("Rhythm index out of range")
+            raise SBR_ERROR(f"Rhythm index out of range, key: {key}, key max: {len(self)-1}")
 
     def reverse(self):
         return Rhythm(self.__data[::-1])
@@ -234,6 +236,8 @@ class Group(list):
         for obj in self:
             if isinstance(obj, Instrument):
                 pw += f"${obj.inst_id} ***{obj.name}***; "
+            elif isinstance(obj, float):
+                pw += f"{round(obj, 8)}; "
             else: pw += f"{obj}; "
         return pw[:-2]+"}"
 
@@ -243,6 +247,8 @@ class Group(list):
             for i in self:
                 result.append(i + data)
             return Group(result)
+        elif isinstance(data, Group):
+            return Group(list(self)+data)
         else: raise SBR_ERROR("function not yet implemented")
 
     def __sub__(self, data):
@@ -251,6 +257,13 @@ class Group(list):
             for i in self:
                 result.append(i - data)
             return Group(result)
+        elif isinstance(data, Group):
+            if len(data) != len(data):
+                raise SBR_ERROR("Grous must have the same length")
+            else:
+                for i, x in enumerate(self):
+                    data[i] += x
+                return data
         else: raise SBR_ERROR("function not yet implemented")
 
     def __mul__(self, data):
@@ -269,10 +282,12 @@ class Group(list):
     def __invert__(self):
         end = []
         for item in self:
-            if isinstance(item, (int, float, Note, Tones)):
+            if isinstance(item, (Rhythm ,int, Note, Tones, Group)):
                 end.append(~item)
+            if isinstance(item, float):
+                end.append(item-item*2)
             else: raise SBR_ERROR(f"This type cannot be inverted: {item}")
-        return Tones(end)
+        return Group(end)
 
     def __reversed__(self):
         return super().__reversed__()
@@ -280,7 +295,7 @@ class Group(list):
     def __getitem__(self, key):
         try: return super().__getitem__(key)
         except IndexError:
-            raise SBR_ERROR("Index out of range")
+            raise SBR_ERROR(f"Index out of range, key: {key}, key max: {len(self)-1}")
 
     def reverse(self):
         return Group(self[::-1])
@@ -328,6 +343,10 @@ class Note:
     @property
     def bin(self) -> tuple:
         return self.__diatonic_tone, self.__alteration
+    
+    @property
+    def oct(self):
+        return self.__diatonic_tone // 7
 
     @property
     def str_alteration(self):
@@ -369,8 +388,8 @@ class Note:
 
     def __add__(self, valor):
         #You can add or increment values ​​in str or int
-        if isinstance(valor, int):
-            return Note(f"{self.__diatonic_tone + valor+1}{self.str_alteration}")
+        if isinstance(valor, (int, Note)):
+            return Note(f"{self.__diatonic_tone + int(valor)+1}{self.str_alteration}")
         elif isinstance(valor, str):
             if valor.isnumeric():
                 return Note(self.__diatonic_tone + int(valor))
@@ -384,8 +403,9 @@ class Note:
 
     def __sub__(self, valor):
         #You can add or increment values ​​in str or int
-        if isinstance(valor, int):
-            return Note(f"{self.__diatonic_tone - valor+1}{self.str_alteration}")
+        if isinstance(valor, (int, Note)):
+            return Note(f"{self.__diatonic_tone - int(valor)+1}{self.str_alteration}")
+            return Note()
         elif valor.isnumeric():
             return Note(self.__diatonic_tone - int(valor))
         elif valor == "b":
@@ -393,6 +413,48 @@ class Note:
         elif valor == "#":
             return Note(f"{self.__diatonic_tone}{"#"*self.__alteration-valor}")
         else: raise TypeError("This is not a valid value")
+
+    def __lt__(self, n):
+        if isinstance(n, Group):
+            raise SBR_ERROR(f"Use this operator without groups that get in the way '{n}'")
+        t, alt = self.bin
+        t += alt/2
+        return t < n
+
+    def __le__(self, n):
+        if isinstance(n, Group):
+            raise SBR_ERROR(f"Use this operator without groups that get in the way '{n}'")
+        t, alt = self.bin
+        t += alt/2
+        return t <= n
+
+    def __eq__(self, n):
+        if isinstance(n, Group):
+            raise SBR_ERROR(f"Use this operator without groups that get in the way '{n}'")
+        t, alt = self.bin
+        t += alt/2
+        return t == n
+
+    def __ne__(self, n):
+        if isinstance(n, Group):
+            raise SBR_ERROR(f"Use this operator without groups that get in the way '{n}'")
+        t, alt = self.bin
+        t += alt/2
+        return t != n
+
+    def __ge__(self, n):
+        if isinstance(n, Group):
+            raise SBR_ERROR(f"Use this operator without groups that get in the way '{n}'")
+        t, alt = self.bin
+        t += alt/2
+        return t >= n
+
+    def __gt__(self, n):
+        if isinstance(n, Group):
+            raise SBR_ERROR(f"Use this operator without groups that get in the way '{n}'")
+        t, alt = self.bin
+        t += alt/2
+        return t > n
 
     def concatenate(self, data):
         return self+data
@@ -404,9 +466,12 @@ class Note:
         return self-data
 
 
+
 class Tones(Group):
     __name__ = "Tones"
     def __init__(self, data=""):
+        if "." in repr(data):
+            raise SBR_ERROR(f"{self.__name__} don't accept floats itself")
         if isinstance(data, (Group, Tones, list)):
             #verifique if it's chord or note
             for i in data: #organize sets
@@ -428,8 +493,20 @@ class Tones(Group):
         return Tones(super().reverse())
 
     @property
-    def int_list(self):
+    def int_list(self) -> list[int | list]:
         return [self.__int_list(n) for n in self]
+
+    @property
+    def one_dimention_int_list(self) -> list[int]:
+        return one_dimention_list_recurtion(self.int_list)
+
+    @property
+    def min(self):
+        return min(self.one_dimention_int_list)
+
+    @property
+    def max(self):
+        return max(self.one_dimention_int_list)
 
     @property
     def separate_chors(self):
@@ -625,7 +702,8 @@ class Melody():
     def __init__(self, *data):
         if len(data) != 1:
             raise SBR_ERROR(
-                "An argument must be entered" + f", not {len(data)}" if len(data) else "")
+                f"An argument in {__name__} must be entered '1'" +
+                f", not '{len(data)}'" if len(data) else "")
         elif not isinstance(data, (list, Group, tuple)):
             raise SBR_ERROR("argument no valid")
         self.rhythm, self.tones, self.vel, self.times = (
@@ -700,6 +778,10 @@ class Melody():
     def reverse(self):
         return Melody([self.rhythm.reverse(), self.tones.reverse(),
                        self.vel.reverse(), self.times.reverse()])
+
+    def __invert__(self):
+        return Melody([self.rhythm, ~self.tones])
+
 
     def __len__(self):
         return len(self.rhythm)

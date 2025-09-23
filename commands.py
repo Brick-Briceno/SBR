@@ -15,6 +15,7 @@ from variables import *
 from sbr_help import *
 import lib.MidiFile
 import itertools
+import keyboard
 import shutil
 import Bsound
 import Sbyte
@@ -37,6 +38,10 @@ with it and that it helps all of you make better music, hugs <3
 
 @Brick_briceno 2023
 """
+
+def pause_code(_in="\n", end=""):
+    b_print(f"{_in}Press enter to continue{end}", color=color5, end="")
+    input(end)
 
 def clean_code(code):
     #delete spaces
@@ -211,10 +216,8 @@ The total of all the code is called Brick :D""")
             hexa = rbg_to_hex(r, g, b)
             b_print(char, end="", color=hexa, sep="")
             time.sleep(.005)
-
         #input("sísí me vale vrg")
-        b_print("Press enter to continue", color=color5, end="\r")
-        input()
+        pause_code()
         print("""Type 'help:' and the function to study
 For example type:
 help: tutorial
@@ -281,9 +284,10 @@ def sbr_vars(args):
     print_dict(variables_sys, "Constants")
     print_dict(variables_user, "Of Users")
 
-def sbr_exit(_):
+def sbr_exit(args):
     "Never give up, stay hard"
-    print("Use Ctrl+C to exit or cancel any processes")
+    if len(args):
+        print("Use Ctrl+C to exit or cancel any processes")
     raise SystemExit
 
 def code_made(args):
@@ -423,7 +427,7 @@ def brute_force(args):
             #print(code, _compile)
 
     elif isinstance(data, Tones):
-        return "Jumps0,5"
+        return "Jumps0,4"
 
     elif isinstance(data, Melody):
         start = time.time()
@@ -433,6 +437,7 @@ def brute_force(args):
         print(f"melody found in {end:.2f}s")
 
         result = "Sm{"+rh+"; "+tns+"}"
+    else: raise SBR_ERROR("Put a Tones, Rhythm or Melody data")
 
     print(result)
 
@@ -444,7 +449,7 @@ def obj_to_array(text_sbr_obj: str, meta_data=False):
         #%AppData%
         #Melody
         if isinstance(obj_data, Melody):
-            obj_data = Structure([seno, Velocity([0]), obj_data
+            obj_data = Structure([Velocity([0]), seno, obj_data
                                   #it need a default instrument
             ])
 
@@ -547,7 +552,7 @@ history = []
 
 part = ["0"]*32
 
-def record_rhythem(history):
+def record_rhythm(history):
     tempo = variables_user["tempo"]
     global part
     for x in history:
@@ -566,11 +571,51 @@ def rec(_):
     part = ["0"]*32
     history.clear()
     for _ in range(32):
-        print(record_rhythem(history))
+        print(record_rhythm(history))
         d = input()
         history.append(time.time())
         if d.upper() == "D":
             return print()
+
+
+def piano(args):
+    if len(args) not in (0, 1):
+        raise SBR_ERROR("Just one or zero arguments")
+    if len(args) == 1:
+        instr = sbr_lines_2(args[0])
+        if isinstance(instr, Instrument):
+            inst_id = instr.inst_id
+        else: raise SBR_ERROR("This ain't an Instrument!")
+    else: inst_id = seno.inst_id
+    keys = {
+        #5th octve
+        "a": 35, "s": 36, "d": 37, "f": 38,
+        "g": 39, "h": 40, "j": 41, "k": 42,
+        "l": 43, "ñ": 44, "{": 45,
+
+        #4th octve
+        "z": 28, "x": 29, "c": 30, "v": 31,
+        "b": 32, "n": 33, "m": 34, ",": 35,
+        ".": 36, "-": 37,
+
+        #6th octve
+        "q": 42, "w": 43, "e": 44, "r": 45,
+        "t": 46, "y": 47, "u": 48, "i": 49,
+        "o": 50, "p": 51, "´": 52, "+": 53,
+        "}": 54,}
+    b_print("Live piano from SBR... ¡Enjoy!", color=color1)
+    def live_piano(event):
+        key_name = event.name
+        print(key_name, end="\r")
+        if key_name.lower() in keys:
+            n = Note(keys[key_name.lower()])
+            print(f"          Note: {n}\r", end="")
+            play(["Struct{V0;$"+str(inst_id)+";Sm{B1;M"+str(n)+"}}"])
+        #elif key_name == "0": raise KeyboardInterrupt
+
+    keyboard.on_press(live_piano)
+    keyboard.wait()
+
 
 
 def tap(_):
@@ -596,6 +641,64 @@ def sbr_editor(_):
 def sm2(_):
     "A little daw that i was made in 2023 after job :)"
     #import sm2
+
+def sm(args_or_melody: list[str] | Melody):
+    "A little script consol melody preview that i was made in 2024 after job :)"
+    if args_or_melody == []: return
+    elif type(args_or_melody).__name__ not in ("Melody", "list"):
+        raise SBR_ERROR("You must only put data Melody")
+    elif type(args_or_melody).__name__ == "list":
+        args_or_melody = [sbr_lines_2(y) for y in args_or_melody]
+        for x in args_or_melody:
+            sm(x)
+        return
+    #variables
+    charters = ["ˍ", "♪", "²", "³", "⁴", "~", "ӡ", "◄", "⁸", "9"]
+    pulse_forte = "|"
+    melody = args_or_melody
+    rhythm = melody.rhythm
+    #rhythm_charters = [charters[x] for x in rhythm]
+    tones = L(melody.tones, rhythm.metric+1)
+    eye_h, eje_v = shutil.get_terminal_size()
+    eye_h = len(rhythm) if eye_h > len(rhythm) else eye_h
+    _range = tones.max - tones.min +1
+    v_org = 0
+    h_color = rgb_to_hls(*hex_to_rgb(color1)[:3])[0]
+    #generar grafico
+    b_print("sm ", end="")
+    for x in range(eye_h//4):
+        b_print(f"{str(x+1)[-1:]}²³⁴", sep="", end="", color=color2)
+    print()
+    for r in range(_range):
+        actual_note = Note(tones.max-r)
+        b_print(f"{actual_note} ", end="", sep="", color=color1)
+        i_note = 0
+        for forte, fig in enumerate(rhythm, start=1):
+            if fig == 0:
+                b_print(charters[0], end="", sep="", color=color5)
+            else:
+                #personalize color
+                perz_color = rbg_to_hex(*hls_to_rgb(
+                    (h_color + (360/7) * actual_note.bin[0]-1) % 360 # color is defined by the tone
+                    , 1, 1))
+                if isinstance(tones[i_note], Group):
+                    if actual_note in tones[i_note]:
+                        b_print(charters[fig], end="", sep="", color=perz_color)
+                    else: b_print(charters[0], end="", sep="", color=color1)
+                elif actual_note == tones[i_note]:
+                    b_print(charters[fig], end="", sep="", color=perz_color)
+                else: b_print(charters[0], end="", sep="", color=color5)
+                i_note += 1
+        v_org += 1
+        if v_org+4 > eje_v:
+            pause_code(end="")
+            v_org = 0
+        else: print()
+    print(f"Notes: {len(tones.one_dimention_int_list)-1}",
+          f"Metric: {rhythm.metric}",
+          f"Range: {_range}",
+          sep=", ")
+
 
 def sleep(arg):
     "I pause the code for a few secounds"
@@ -661,6 +764,7 @@ record = {
     "play": play,
     "pause": pause,
     "sm2": sm2,
+    "sm": sm,
     "sleep": sleep,
     "export": export,
     "drag_n_drop": fn_drag_n_drop,
@@ -668,6 +772,7 @@ record = {
     "len": sbr_len,
     "phrase": phrase,
     "editor": sbr_editor,
+    "piano": piano,
     "rec": rec,
     "tap": tap,
     "ls": ls,

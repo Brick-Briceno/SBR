@@ -44,7 +44,7 @@ variables_sys = {
     #PROGRESSIONS
     "pop": "M 0,-2,2,-1 Chord1,3,5",
     "soda": "M -2,-1,0 Chord1,3,5",
-    "nacer": "M -2,-3,0 Chord1,3,5",
+    "born": "M -2,-3,0 Chord1,3,5",
     # 67(1'7ma)(4'7ma) m
     "zeus": "(trd+-2) (trd+-1) (sep) (sep+3)",
     # 163(7sus4) m

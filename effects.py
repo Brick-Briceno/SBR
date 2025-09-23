@@ -11,13 +11,16 @@ from sbr_types import *
 
 "efectos de ritmo"
 
-def L(data: list[Rhythm | Tones | Group], args: list[int]):
+def L(data: list[Rhythm | Tones | Melody | Group], args: list[int]):
     "I shorten or repeat a number depending on the case"
     if not len(args): return data
     if isinstance(data, Rhythm):
         data = data.bin
-        if len(data) <= int(args[0]): return Rhythm((data*int(args[0]))[:int(args[0])])
+        if len(data) <= int(args[0]):
+            return Rhythm((data*int(args[0]))[:int(args[0])])
         return Rhythm(data[:int(args[0])])
+    elif isinstance(data, Melody):
+        return Melody((L(data.rhythm, args), L(data.tones, args)))
     if len(data) <= int(args[0]): return type(data)((data*int(args[0]))[:int(args[0])])
     return type(data)(data[:int(args[0])])
 
@@ -99,10 +102,10 @@ def R(data: list[Rhythm | Group | Tones | Velocity | Times | Melody], args: list
     elif len(data) != 0:
         return data.reverse()
 
-def I(data: list[Rhythm | Tones | int | Note | Group], args: list[None]):
+def I(data: list[Rhythm | Tones | int | float | Note | Group | Melody], args: list[None]):
     "I invert the rhythm, like inverting the color (not gate)"
-    if isinstance(data, Group):
-        return data[::-1]
+    if isinstance(data, float):
+        return data-data*2
     return ~data
 
 def Q(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
@@ -115,7 +118,8 @@ def Q(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
                 end.append(item)
         if isinstance(data, Tones): return Tones(end)
         elif isinstance(data, Group): return Group(end)
-    elif isinstance(data, Melody):...
+    elif isinstance(data, Melody):
+        return Melody(Q(data.rhythm, args), Q(data.tones, args))
     else:
         i = 0
         final = ""
@@ -201,6 +205,15 @@ def Round(data: list[int | float | Note | Group], args: list[None]):
     "I like the simplicity of numbers, so I round them ^^"
     return round(data)
 
+def Metric(data: list[Rhythm | Melody], args: list[None]):
+    "Metrics is one of the most important things in music :)"
+    return data.metric
+
+def Len(data: list[Rhythm | Tones | Melody | Group], args: list[None]):
+    "I like to measure sizes and distances :D"
+    return len(data)
+
+
 "efectos de tonales"
 
 def Oct(data: list[Tones | Note | Melody | int], args: list[int]):
@@ -270,8 +283,10 @@ record = {
     "Oct": Oct,
     "Th": Th,
     "G": G,
-    "Round": Round,
     "Chord": Chord,
+    "Round": Round,
+    "Metric": Metric,
+    "Len": Len,
 }
 
 #decorate all effects

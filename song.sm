@@ -1,12 +1,11 @@
 -- creating a Song in SBR
 mode = wind -- minor mode
-tone = c_ -- - 9 -- c tone
-tempo = 125--*.4 -- this is the tempo in bpm
+tone = d_ -- d tone
+tempo = 125 -- this is the tempo in bpm
 
 -- melody
 
-intervals = 0,4,0,-1,-1,
-
+intervals = 0,4,0,-1,-1
 
 melody = Sm{
    (son Add14 * 3 C3,4*2X2Q4) * 2
@@ -35,11 +34,13 @@ song = Struct{
    V0; $Clap; C8 >>4 X2
    V0; $Hat; E13L32 X2
    V-3; $Synt1; Sm{
-      B1000 1101 1000 1101   B1000 1111 1000 1111 C8 * 3;
+      B1000 1101 1000 1101   B1000 1111 1000 1111 C8 * 3
       M0,4,3,2,0,4,3,2,0,4,3,4,3,2,4,3,4,3,2,4,3,2,0 Oct 6
    }
 }
 
+
+sm: melody L(4*16)
 --export: melody:: melody.mid
 --export: chords:: chords.mid
 --drag_n_drop: mp3::melody:: chords:: bass
@@ -49,4 +50,5 @@ song = Struct{
 
 --brute_force: Sm{(son-C4,16)X2; M35}
 
-play: song--:: true
+--print: melody: Sm{(son-C4,16)X2; M35}
+--play: song:: true

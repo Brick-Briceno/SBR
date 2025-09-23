@@ -34,6 +34,10 @@ __version__ = "2.0.5"
 
 # Set to True to enable debug mode, which will raise exceptions instead of logging them
 DEBUG = False
+if any(cm in sys.argv for cm in ("-d", "-dev")):
+    sys.argv.pop(1) if sys.argv[1] in ("-d", "-dev") else 0
+    DEBUG = True
+
 
 def error_log():
     print("SBR has stopped working")
@@ -93,7 +97,8 @@ if __name__ == "__main__":
                     # calculate time of ejecution
                     start = time.time()
                     result = sbr_line(command)
-                    if DEBUG: b_print(format_time(time.time() - start))
+                    if DEBUG and result is not None:
+                        b_print(type(result).__name__, format_time(time.time() - start), end=" ")
                     # print types
                     if result is not None:
                         try:
@@ -130,6 +135,7 @@ if __name__ == "__main__":
                     code_that_has_been_made.append(line)
                     sbr_line(line)
             except SBR_ERROR as bad:
+                if DEBUG: raise bad
                 print(f"Error in line {n}:", bad)
             except (KeyboardInterrupt, SystemExit):
                 b_print("good bye!", color=color5)
@@ -146,6 +152,8 @@ if __name__ == "__main__":
                 sbr_line(line)
         except SBR_ERROR as bad:
             b_print(f"Error in line {n}:", bad)
+        except (KeyboardInterrupt, SystemExit):
+            b_print("good bye!", color=color5)
         except FileNotFoundError:
             b_print(f"This file does not exist '{sys.argv[1]}'")
         except OSError:

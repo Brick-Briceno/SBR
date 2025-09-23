@@ -6,15 +6,21 @@ the only rule is that there are no rules :)
 """
 
 from sbr_types import *
+import numpy as np
 import random
 
 "Efectos ritmicos"
 
 
-def B(args: list[Rhythm | int | str]):
+def B(args: list[Rhythm | int | str | Group]):
     "Here I wrote a joke but I got canceled xD"
     if args == []: return Rhythm()
-    return Rhythm(args[0]) #es la misma vaina no?
+    rhythm = ""
+    for arg in one_dimention_list_recurtion(args):
+        if isinstance(arg, Rhythm):
+            rhythm += arg.bin
+        else: rhythm += str(arg)
+    return Rhythm(rhythm) #es la misma vaina no?
 
 def N(args: list[int]):
     "I really like to dance, I count 3, 3, 2, yeah, 3, 1, 2, 2, (N332 is = B10010010)"
@@ -170,6 +176,26 @@ def T(args: list[Times | int | float]):
     if args == []: return Times()
     return Times(args) #es la misma vaina no?
 
+"Generadores Grupos"
+
+def Seno(args: list[int | float]):
+    "Put me 2 or 3 parameters and then, got a seno array group"
+    # __doc__ is a local variable, don't delete it
+    if len(args) not in (2, 3): raise SBR_ERROR(
+        "You must put 2 or 3 parameters in the 'Seno' generator",
+        "frecuency, length and normalization amplitude")
+    if len(args) == 2:
+        freq, length = args
+        max_array = 1
+    else: freq, length, max_array = args
+
+    if max_array == 0: return Group()
+    time_array = np.linspace(0/max_array, 1, length, endpoint=False)
+    sine_wave = np.sin(2 * np.pi * freq * time_array)
+    array = Group(sine_wave*max_array)
+    return array
+
+
 "Generadores Melodicos"
 
 def Sm(args: list[Group]):
@@ -228,6 +254,7 @@ record = {
     "$": inst,
     "Sm": Sm,
     "Poly": Poly,
+    "Seno": Seno,
     "Range": Range,
     "Struct": Struct,
     "": return_data,

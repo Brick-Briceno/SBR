@@ -327,13 +327,17 @@ def struct_to_metadata(data):
                             audio_data["cromatic_note"].append(croma)
                             audio_data["position"].append(ms)
                             if inst.type == "sampled":
-                                audio_data["files"].append(inst.path)
+                                if inst.name == "seno":
+                                    audio_data["files"].append(chr(croma))
+                                else: audio_data["files"].append(inst.path)
                                 audio_data["afination_cst"].append(
                                     inst.calculate_interval(croma-60)
                                     +random_float()*(random_tunin_cst/100))
                             else:
                                 audio_data["afination_cst"].append(random_float()*(random_tunin_cst/100))
-                                audio_data["files"].append(inst.path_note(croma))
+                                if inst.name == "seno":
+                                    audio_data["files"].append(chr(croma))
+                                else: audio_data["files"].append(inst.path_note(croma))
                             if bit == 3: audio_data["duration"].append(t/80*tempo)
                             elif bit == 6: audio_data["duration"].append(t/160*tempo)
                             elif bit == 2: audio_data["duration"].append(t/7.5*tempo)
