@@ -7,6 +7,7 @@ from compiler import (only_has, replace_variables, compiler,
 #system vars
 piece_of_code = ""
 open_keys = 0
+defines = {}
 
 
 def indentation(code):
@@ -69,16 +70,21 @@ def sbr_import(data):
 
 
 def sbr_line(idea: str):
+    for key, value in defines.items():
+        idea = idea.replace(key, value)
     #multiline code
-    if "\\"*3 in idea:
+    if "\\"*2 in idea:
         lines_data = []
-        for line in idea.split("\\"):
+        for line in idea.split("\\"*2):
             lines_data.append(sbr_line(line))
         #delete None types
         return [x for x in lines_data if x is not None]
 
     #import file
-    imp = idea.split()
+    imp = idea.split(" ")
+    #eliminar items vacios
+    imp = [item for item in imp if item.strip() != ""]
+
     if imp != []:
         if imp[0] in ("import", "welcome"):
             if len(imp) == 2:
@@ -88,6 +94,15 @@ def sbr_line(idea: str):
                 print(" "*len(wait), end="\r")
             else: raise SBR_ERROR("You must import a code file")
             return
+
+        elif imp[0] == "define":
+            if len(imp) == 3:
+                constant_name = imp[1]
+                constant_value = imp[2]
+                defines[constant_name] = constant_value
+                return
+            else: raise SBR_ERROR("Define must have a constant name and a value string")
+
         elif imp[0] == "for":
             # 1=variable, 2=iter object, 3=code
             if len(imp) == 4:
