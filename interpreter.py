@@ -67,11 +67,13 @@ def sbr_import(data):
         raise SBR_ERROR(f"Import error this file doesn't exist '{data}'")
     except PermissionError:
         raise SBR_ERROR(f"The system doesn't have permission to accesss this file '{data}'")
+    except OSError:
+        raise SBR_ERROR(f"Invalid syntax on import '{data}'")
 
 
 def sbr_line(idea: str):
-    for key, value in defines.items():
-        idea = idea.replace(key, value)
+    for key in sorted(defines, key=len, reverse=True):
+        idea = idea.replace(key, defines[key])
     #multiline code
     if "\\"*2 in idea:
         lines_data = []
@@ -86,13 +88,14 @@ def sbr_line(idea: str):
     imp = [item for item in imp if item.strip() != ""]
 
     if imp != []:
-        if imp[0] in ("import", "welcome"):
-            if len(imp) == 2:
-                wait = "  Importing..."
-                print(wait, end="\r")
-                sbr_import(imp[1])
-                print(" "*len(wait), end="\r")
-            else: raise SBR_ERROR("You must import a code file")
+        if idea.split(" ", 1)[0] in ("import", "welcome"):
+            if len(idea.split(" ", 1)) == 1:
+                raise SBR_ERROR("Import a code file")
+            #if len(imp) == 2:
+            wait = "  Importing..."
+            print(wait, end="\r")
+            sbr_import(idea.split(" ", 1)[1])
+            print(" "*len(wait), end="\r")
             return
 
         elif imp[0] == "define":
@@ -139,7 +142,7 @@ def sbr_line(idea: str):
         elif var_name in variables_sys:
             raise SBR_ERROR(f"This variable '{var_name}' is immutable and cannot be modified, please chose another name")
         #all correct
-        instruction = replace_variables(instruction)
+        instruction = replace_variables(str(instruction))
         instruction = compiler(instruction)
         #Check if a specific metric is necessary
         if ":" in var_name:

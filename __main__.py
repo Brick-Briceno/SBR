@@ -30,7 +30,7 @@ pip install pygame
 pip install numpy
 """
 
-__version__ = "2.0.5"
+__version__ = "2.0.6"
 
 # Set to True to enable debug mode, which will raise exceptions instead of logging them
 DEBUG = False
@@ -148,6 +148,7 @@ if __name__ == "__main__":
             with open(sys.argv[1], "r") as _file:
                 _file = _file.read()
             for n, line in enumerate(_file.splitlines(), start=1):
+                b_print(f" Loading.{'.'*(n%3)} line {n}", " "*15, end="\r", color=color1)
                 code_that_has_been_made.append(line)
                 sbr_line(line)
         except SBR_ERROR as bad:

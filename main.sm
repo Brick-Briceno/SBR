@@ -17,8 +17,6 @@ instrument: inst\Viola
 instrument: inst\Xylophone
 
 -- instrumentos de Brick
-instrument: inst\Synt1
-instrument: inst\Synt3
 
 -- Samples
 instrument: inst\Vocal.wav
@@ -28,3 +26,4 @@ instrument: inst\Kick.wav
 instrument: inst\Clap.wav
 instrument: inst\Hat.wav
 instrument: inst\Snare.wav
+instrument: inst\br.wav

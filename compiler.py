@@ -231,22 +231,23 @@ def maths(expression):
     except OverflowError:
         raise SBR_ERROR(f"Result too large '{expression}'")
 
+
 def replace_variables(code):
     #This function processes the variable
     #Sort variables by text length (largest first)
     all_variables = list(variables_sys)+list(variables_user)+list(vars_instruments)
+    for variable in all_variables:
+        if variable in code: break
+    else: return code
+
     all_variables = sorted(all_variables, key=len, reverse=True)
-    # variables_sys_keys = sorted(variables_sys, key=len, reverse=True)
-    # variables_user_keys = sorted(variables_user, key=len, reverse=True)
-    # vars_instruments_keys = sorted(vars_instruments, key=len, reverse=True)
-    #Iterate variables and replace text fragments
     for variable in all_variables:
         if variable in variables_sys:
             code = code.replace(variable, str(variables_sys[variable]))
         elif variable in variables_user:
             code = code.replace(variable, str(variables_user[variable]))
         elif variable in vars_instruments:
-            code = code.replace(variable, str(vars_instruments[variable]))
+            code = code.replace(variable, f"${vars_instruments[variable].inst_id}")
 
     return code
 
@@ -269,7 +270,6 @@ def arg_to_type(data):
     #group
     if "{" in data or "}" in data:
         new = []
-        if "$" in data: data = delete_comments(data)
         for item in prosses_str_array(data):
             if item == "": continue
             new.append(compiler(item))
@@ -282,10 +282,11 @@ def arg_to_type(data):
 
 def compiler(instruction):
     #if it's a instrument
-    if "$" in instruction:
-        instruction = delete_comments(instruction)
+    instruction = replace_variables(instruction)
+    instruction = instruction.replace(" ", "")
+    instruction = delete_comments(instruction)
     #if it's a mathematical operation
-    elif only_has(instruction, syntax_data.numbers_with_operators) and instruction[
+    if only_has(instruction, syntax_data.numbers_with_operators) and instruction[
         :2] != "00" and not(instruction in "|" or instruction in "b" or instruction in "#"):
         return maths(instruction)
     #maybe it's a sbr data

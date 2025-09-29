@@ -35,6 +35,7 @@ def C(args: list[int]):
     "Every x amount of time I spit a 1, args: every x bits, length"
     if not len(args): args = [3, 32]
     elif not len(args)-1: args.append(32)
+    if args[0] < 1: return Rhythm("0"*args[1])
     string = (f"{10**(int(args[0])-1)}"*int(args[1]))[:int(args[1])]
     return Rhythm(string)
 
@@ -46,7 +47,8 @@ def E(args: list[int]):
     a, b, c = args[:3]
     a, b, c = int(a), int(b), int(c)
     if a > b: a = b
-    if a == 0: return ["0" for i in range(c)]
+    if args[0] < 1: return Rhythm("0"*args[1])
+    elif args[1] < 1: return Rhythm()
 
     #Simetrizar
     pattern = []
@@ -134,8 +136,9 @@ def Range(args: list[int]):
 
 def M(args: list[int | Note | Tones | Group]):
     "I'm the tones's abstraction, give me numbers or notes and I'll sing for Ü ;)"
+    for x in one_dimention_list_recurtion(args):
+        if x > 144: raise SBR_ERROR(f"Use 'G' for larger arguments, very large grade '{x}'")
     return Tones(args)
-
 
 def one_dimention_list_recurtion(group):
     new = []
@@ -160,6 +163,12 @@ def J(args: list[int | Group]):
     for x in args[1:]:
         notes.append(grade)
         grade += x
+    return Tones(notes)
+
+def G(args: list[int | Group]):
+    "Just tell me the grades whiout arguments, simple"
+    if args == []: return Tones()
+    notes = [int(g)-1 for g in "".join([str(x) for x in one_dimention_list_recurtion(args)])]
     return Tones(notes)
 
 "Generadores de Velocity"
@@ -249,6 +258,7 @@ record = {
     "A": A,
     "M": M,
     "J": J,
+    "G": G,
     "T": T,
     "V": V,
     "$": inst,

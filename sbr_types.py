@@ -76,7 +76,7 @@ def only_has(data, allowed_characters):
 def L(data, a):
     #This is an optimized version of the SBR "L" effect
     if isinstance(data, Rhythm):
-        data = data.bin
+        data: str = data.bin
         if len(data) <= a: return Rhythm((data*a)[:a])
         return Rhythm(data[:a])
     if len(data) <= a: return type(data)((data*a)[:a])
@@ -708,6 +708,7 @@ class Melody():
             raise SBR_ERROR("argument no valid")
         self.rhythm, self.tones, self.vel, self.times = (
             Rhythm(), Tones(), Velocity(), Times())
+        self.pr = ""
 
         for d in data[0]:
             if type(d) is Rhythm: self.rhythm += d
@@ -722,22 +723,28 @@ class Melody():
         if len(self.vel) == 0: self.vel = Velocity([1])
 
     def __repr__(self):
+        if self.pr != "":
+            return self.pr
+
         pw = ""
         for d in (self.rhythm, self.tones, self.vel, self.times):
             if (len(d) <= 16 and type(d) == Rhythm or
                 "6" in self.rhythm.bin or "3" in self.rhythm.bin): pw += f"{d}; "
             else:
-                print_d = str(d)
-                for x in range(0, 2**10):
-                    if print_d == str(L(L(d, x), len(d))):
-                        if len(d) != x:
-                            if not len(d) % x:
-                                pw += f"{L(d, x)}*{len(d)//x}; "
-                            elif len(d) < x: pw += f"{d}; "
-                            else: pw += f"{L(d, x)}L{x}L{len(d)}; "
+                print_d = d
+                leng = len(d)
+                for x in range(0, 2**5):
+                    if print_d == L(L(d, x), leng):
+                        if leng != x:
+                            if not leng % x:
+                                pw += f"{L(d, x)}*{leng//x}; "
+                            elif leng < x: pw += f"{d}; "
+                            else: pw += f"{L(d, x)}L{x}L{leng}; "
                             break
+                else: pw += f"{d}; "
 
-        return "Sm{"+pw[:-2]+"}"
+        self.pr = "Sm{"+pw[:-2]+"}"
+        return self.pr
 
     def __str__(self):
         return self.__repr__()
@@ -827,6 +834,7 @@ class Polyrhythm(Group):
     def __str__(self):
         return self.__repr__()
 
+
 class Structure(Group):
     __name__ = "Structure"
     def __init__(self, data):
@@ -850,6 +858,12 @@ class Structure(Group):
                 end.append(x*i)
             else: end.append(x)
         return Structure(end)
+
+    def concatenate(self, data):
+        if not isinstance(data, Structure):
+            raise SBR_ERROR("This isn't a struct data")
+        return self+data
+
 
 #avaible path caracters
 abc = "._/\\: abcdefghijklmnñopqrstuvwxyz áéíóú 0123456789"

@@ -2,6 +2,7 @@
 Symmetry Melody Api v2.1
 @Brick_briceno 2023
 """
+
 from variables import variables_user
 from lib.synthesizer import create_tone
 from errors import SBR_ERROR
@@ -12,12 +13,22 @@ try: import soundfile as sf
 except ImportError:
     print("Missing soundfile library")
 
-from pygame import mixer
+if "PYGAME_HIDE_SUPPORT_PROMPT" not in os.environ:
+    os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "1"
+    #thank you pygame for let me use your audio engine
+
+import warnings
+with warnings.catch_warnings():
+    #deprecation warnings from pygame
+    warnings.simplefilter("ignore")
+    from pygame import mixer
+
 import numpy as np
 #import numba as nb
 import random
 import time
-#import os
+import wave
+import io
 
 """
 pip install pygame
@@ -35,14 +46,15 @@ volumen = 1
 
 #motor config
 valve_distortion_gain = 0 #40
+sound, tempo = None, None
 random_stereo_value = .6
 random_tunin_cst = 0
 humanize_ms = 0
+channels = 2
 
-mixer.pre_init(sample_rate, -16, 2, 1024)
+mixer.pre_init(sample_rate, -16, channels, 1024)
 mixer.init()
 
-sound = None
 
 def play_array(audio_data, sleep=False):
     pause()
@@ -56,9 +68,31 @@ def play_array(audio_data, sleep=False):
     #Thread(target=sa.play_buffer, args=(audio_data_int16, 2, 2, sample_rate)).start()
     if sleep: time.sleep((1/sample_rate)*len(audio_data))
 
+
+def play_array2(audio_data: np.ndarray, sleep=False):
+    audio_data = (audio_data * 2**15).astype(np.int16)
+    audio_bytes = audio_data.tobytes()
+    pause()
+    buffer = io.BytesIO()
+    with wave.open(buffer, 'wb') as wf:
+        wf.setnchannels(channels)
+        wf.setsampwidth(2)  # 16 bits = 2 bytes
+        wf.setframerate(sample_rate)
+        wf.writeframes(audio_bytes)
+    buffer.seek(0)
+    mixer.music.load(buffer)
+    mixer.music.play()
+    if sleep: time.sleep((1/sample_rate)*len(audio_data))
+
+
+def get_pos_smcorchea():
+    return mixer.music.get_pos()/1000*tempo/15
+
 def pause():
-    if sound is None: return
-    sound.fadeout(800)
+    ms = 800
+    if sound is not None:
+        sound.fadeout(ms)
+    mixer.music.fadeout(ms)
 
 
 def audio_render_engine(meta_data):
@@ -272,6 +306,7 @@ def struct_to_metadata(data):
         "panning": [], "effect": []}
 
     #temp vars
+    global tempo
     tempo = variables_user["tempo"]
     mode = variables_user["mode"]
     tone = variables_user["tone"]

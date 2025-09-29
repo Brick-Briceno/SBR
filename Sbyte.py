@@ -18,8 +18,8 @@ def tap():
         lista_taps = [0]
     media_bpm = 0
     if ultimo_toque:
+        if len(lista_taps) >= 15: lista_taps.pop(0)
         lista_taps.append(time.time() - ultimo_toque)
         media_bpm = 60/(sum(lista_taps)/len(lista_taps))
     ultimo_toque = time.time()
     if media_bpm: return media_bpm
-

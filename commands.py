@@ -2,7 +2,6 @@
 SBR Commands
 """
 
-#from pprint import pprint
 from compiler import (compiler, replace_variables, magia,
                       effects, generators, pulse_will_be)
 from b_color import (hls_to_rgb, hex_to_rgb, rbg_to_hex, rgb_to_hls,
@@ -17,6 +16,7 @@ import lib.MidiFile
 import itertools
 import keyboard
 import shutil
+import string
 import Bsound
 import Sbyte
 import time
@@ -25,8 +25,8 @@ import sys
 import os
 
 welcome = """
-▒█▀▀▀█ ▒█▀▀█ ▒█▀▀█ 
-░▀▀▀▄▄ ▒█▀▀▄ ▒█▄▄▀ 
+▒█▀▀▀█ ▒█▀▀█ ▒█▀▀█
+░▀▀▀▄▄ ▒█▀▀▄ ▒█▄▄▀
 ▒█▄▄▄█ ▒█▄▄█ ▒█░▒█
 
 The SBR language provides super creative tools
@@ -266,23 +266,35 @@ def instrument(arg):
             print(f"This instrument already exists: {inst.name}")
         vars_instruments[f"${inst.name}"] = inst
 
+
 seno = Instrument("seno", 2**32)
 vars_instruments[f"${seno.name}"] = seno
 
 def phrase(arg):
     print("Hi! how are you :)")
 
-def print_dict(d: dict, name: str):
+def print_dict(d: dict, name: str, is_end=False):
     b_print(name, color=color1)
+    n = 0
+    _, eje_v = shutil.get_terminal_size()
     for k, v in zip(d, d.values()):
         b_print(k, color=color3, end="")
         b_print("=", end="", color=color5)
-        b_print(v, color=color4)
+        b_print(v, color=color4,
+                end="\n" if len(f"{k}{v}") > 5 else "")
+        if n >= eje_v-4:
+            pause_code()
+            n = 0
+        n += 1
+
+    if not is_end: pause_code()
+
 
 def sbr_vars(args):
     print_dict(vars_instruments, "Instruments")
     print_dict(variables_sys, "Constants")
-    print_dict(variables_user, "Of Users")
+    print_dict(variables_user, "Of Users",
+               is_end=True)
 
 def sbr_exit(args):
     "Never give up, stay hard"
@@ -486,6 +498,7 @@ def play(args):
         print("Enter a data to play")
     elif len(args) == 1:
         audio_array = obj_to_array(args[0])
+        leng = len(audio_array)
         Bsound.play_array(audio_array)
     else:
         audio_array = obj_to_array(args[0])
@@ -530,13 +543,18 @@ def export(args):
 
 def fn_drag_n_drop(args):
     if not len(args):
-        raise SBR_ERROR("Any argument here :O", "mid or mp3 whit:: vars like melody, bass etc")
+        raise SBR_ERROR("Any argument here :O", "mid or mp3 etc:: vars like melody, bass etc")
+    elif len(args) == 1:
+        raise SBR_ERROR("Put the extension and the vars", "mid or mp3 etc:: vars like melody, bass etc")
     ext = args[0]
     _vars = [x.strip() for x in args[1:]]
     for var_name in _vars:
         file_name = f"temp/{var_name}.{ext}"
         export([var_name, file_name])
-        
+    os.startfile("temp") if os.name == "nt" else os.system("xdg-open temp")
+    b_print("Files will be deleted after closing", "Press enter to continue", color=color5)
+    input()
+
 
 def set_max_digits(args):
     "Don't looking for the 5th hand's cat"
@@ -616,6 +634,30 @@ def piano(args):
     keyboard.on_press(live_piano)
     keyboard.wait()
 
+def keystrokes(args):
+    print("Loading game...")
+    if len(args) != 2:
+        raise SBR_ERROR("Put 2 arguments: song:: {1,2,3,4}")
+    clean_console()
+    play([args[0]])
+    keys = {"up": '''
+        ''', # 72 scan_code
+        "down": '''
+        
+        ''', # 80 scan_code
+        "left": '''
+        
+        ''', # 75 scan_code
+        "right": '''
+        ''' # 77 scan_code
+        }
+
+    def control(event):
+        number = event.scan_code
+        print(number, end="\r")
+
+    keyboard.on_press(control)
+    keyboard.wait()
 
 
 def tap(_):
@@ -654,9 +696,11 @@ def sm(args_or_melody: list[str] | Melody):
         return
     #variables
     charters = ["ˍ", "♪", "²", "³", "⁴", "~", "ӡ", "◄", "⁸", "9"]
-    pulse_forte = "|"
+    #pulse_forte = "|"
     melody = args_or_melody
     rhythm = melody.rhythm
+    if not all([x in (0, 1) for x in rhythm]):
+        b_print("Args other than 0 and 1 in rhythm can be imprecise".upper(), color="#e00")
     #rhythm_charters = [charters[x] for x in rhythm]
     tones = L(melody.tones, rhythm.metric+1)
     eye_h, eje_v = shutil.get_terminal_size()
@@ -671,9 +715,9 @@ def sm(args_or_melody: list[str] | Melody):
     print()
     for r in range(_range):
         actual_note = Note(tones.max-r)
-        b_print(f"{actual_note} ", end="", sep="", color=color1)
+        b_print(f"{str(actual_note):<4}", end="", sep="", color=color1)
         i_note = 0
-        for forte, fig in enumerate(rhythm, start=1):
+        for _, fig in enumerate(rhythm, start=1):
             if fig == 0:
                 b_print(charters[0], end="", sep="", color=color5)
             else:
@@ -694,9 +738,9 @@ def sm(args_or_melody: list[str] | Melody):
             pause_code(end="")
             v_org = 0
         else: print()
-    print(f"Notes: {len(tones.one_dimention_int_list)-1}",
+    print(f"Grades: {len(set(tones.one_dimention_int_list))}",
           f"Metric: {rhythm.metric}",
-          f"Range: {_range}",
+          f"Compasses: {len(rhythm)/16}",
           sep=", ")
 
 
@@ -776,6 +820,7 @@ record = {
     "rec": rec,
     "tap": tap,
     "ls": ls,
+    "keystrokes": keystrokes,
     "code_made": code_made,
     "instrument": instrument,
     "set_max_digits": set_max_digits,

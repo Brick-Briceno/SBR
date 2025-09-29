@@ -241,18 +241,11 @@ def Chord(data: list[Tones | Note | Group | int], args: list[int]):
 
 def Arp(data: list[Tones | Group], args: list[None]):
     "I'm a big fan of trance music :)"
-    end = []
-    for x in data:
-        if isinstance(x, Group):
-            for y in x:
-                end.append(y)
-        else: end.append(x)
-
-    return Tones(end)
+    return Tones(one_dimention_list_recurtion(data))
 
 #efectos de grupo
 
-def G(data: list[list | Rhythm], args: list[int]):
+def Grp(data: list[list | Rhythm], args: list[int]):
     "I access an item of an iterable data"
     if len(args) == 0:
         return Group(data)
@@ -282,7 +275,7 @@ record = {
     "Arp": Arp,
     "Oct": Oct,
     "Th": Th,
-    "G": G,
+    "Grp": Grp,
     "Chord": Chord,
     "Round": Round,
     "Metric": Metric,
