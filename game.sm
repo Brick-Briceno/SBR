@@ -1,0 +1,33 @@
+***
+mi jueguitooooo uwu
+***
+
+define end exit:
+mode = wind
+tempo = 108
+tone = a_
+
+kick = B{1110 0100 1000 1011
+         0010 0100 1000 1011
+         0010 0100 1000 1011
+         0010 0100 1000 1011
+    }
+
+part_a = C2,16 B1000X3 -- m9 l28
+part_b = B1101 0010 0000 0010 -- m9 l16
+
+rh_content = part_a part_bS4 part_b B1000
+
+tones = M|4
+
+melody = Sm{rh_content; tones}
+
+song = Struct{
+    --V0; $Jazz_Guitar; melody
+    V0; $Clap; C16 >>8 L(melody Len)
+    V0; $Kick; kick L(melody Len)
+    }
+
+keystrokes = {}
+
+play: song:: 1

@@ -25,30 +25,22 @@ bass = Sm{
 
 song = Struct{
   --melody
-   V0; $Synt1; melody
-   V0; $Harp; chords
+   V0; $Music_Box; melody
+   V0; $Music_Box; chords
    -- bass
-   V3; $Jazz_Guitar; bass
+   V3; $Music_Box; bass
    -- drumps
-   V0; $Kick; C4,16 son
+   ***V0; $Kick; C4,16 son
    V0; $Clap; C8 >>4 X2
-   V0; $Hat; E13L32 X2
-   V-3; $Synt1; Sm{
+   V0; $Hat; E13L32 X2***
+   V-3; $Music_Box; Sm{
       B1000 1101 1000 1101   B1000 1111 1000 1111 C8 * 3
       M0,4,3,2,0,4,3,2,0,4,3,4,3,2,4,3,4,3,2,4,3,2,0 Oct 6
    }
 }
 
 
-sm: melody L(4*16)
---export: melody:: melody.mid
---export: chords:: chords.mid
---drag_n_drop: mp3::melody:: chords:: bass
---valve_distortion_gain: 50
---export: song:: song.mp3
---brute_force: melody
+sm: melody --L(4*16)
 
---brute_force: Sm{(son-C4,16)X2; M35}
-
---print: melody: Sm{(son-C4,16)X2; M35}
---play: song:: true
+valve_gain: 200
+play: song --:: true

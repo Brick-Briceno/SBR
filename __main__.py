@@ -38,6 +38,14 @@ if any(cm in sys.argv for cm in ("-d", "-dev")):
     sys.argv.pop(1) if sys.argv[1] in ("-d", "-dev") else 0
     DEBUG = True
 
+program_path = os.path.abspath(__file__)
+program_directory = os.path.dirname(program_path)
+
+# Create 'temp' folder if it does not exist
+temp_dir = os.path.join(program_directory, "temp")
+if not os.path.exists(temp_dir):
+    os.makedirs(temp_dir)
+
 
 def error_log():
     print("SBR has stopped working")
@@ -55,9 +63,6 @@ def error_log():
         f"Python errors:\n\n{format_exc()}\n\n")
     input("Press a key...")
 
-
-program_path = os.path.abspath(__file__)
-program_directory = os.path.dirname(program_path)
 
 try: sbr_line(f"welcome {program_directory.replace(" ", "\xff")}/main.sm")
 except SBR_ERROR as bad:
