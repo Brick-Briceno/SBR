@@ -280,10 +280,11 @@ def arg_to_type(data):
     return magia(data)
 
 
-def compiler(instruction):
-    #if it's a instrument
-    instruction = replace_variables(instruction)
+def compiler(instruction: str):
     instruction = instruction.replace(" ", "")
+    if instruction in variables_user:
+        return variables_user[instruction]
+    instruction = replace_variables(instruction)
     instruction = delete_comments(instruction)
     #if it's a mathematical operation
     if only_has(instruction, syntax_data.numbers_with_operators) and instruction[

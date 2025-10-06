@@ -26,7 +26,7 @@ def convert_unions_to_tuples(x) -> tuple | None:
     else: return t.__args__
 
 
-def separate_path_extension(file_path):
+def separate_path_extension(file_path: str):
     # Get the directory and the filename
     directory, filename = os.path.split(file_path)
     # Separate the filename and the extension

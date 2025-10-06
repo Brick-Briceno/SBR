@@ -30,7 +30,7 @@ pip install pygame
 pip install numpy
 """
 
-__version__ = "2.0.6"
+__version__ = "2.0.7"
 
 # Set to True to enable debug mode, which will raise exceptions instead of logging them
 DEBUG = False

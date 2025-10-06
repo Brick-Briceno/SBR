@@ -192,6 +192,7 @@ def audio_render_engine(meta_data):
 "audio effects"
 
 class audio_effects:
+    #@nb.njit
     def pan_sound(sound, pan):
         # Asegúrate de que el sonido tenga 2 canales
         if sound.shape[1] != 2:

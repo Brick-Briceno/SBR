@@ -1,7 +1,5 @@
 from playwright.sync_api import sync_playwright
 import markdown
-import os
-import io
 
 
 with open("styles.css", "r", encoding="utf-8") as file:
@@ -16,7 +14,7 @@ def __del__():
     __P.stop()
 
 
-title = "Documentación de la API"
+title = "Documentación de SBR"
 
 md = ""
 

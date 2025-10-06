@@ -13,7 +13,7 @@ import os
 
 pulse = 4
 
-def pulse_will_be(new):
+def pulse_will_be(new: int):
     global pulse
     pulse = new
 
@@ -59,11 +59,11 @@ def delete_args(args):
     return args
 
 def quantize(data):
-    data = data.replace("6", "10010010")
-    data = data.replace("3", "1110")
-    data = data.replace("8", "1")
-    data = data.replace("4", "1")
-    data = data.replace("2", "1")
+    data = data.replace("6", "10010010") \
+    .replace("3", "1110") \
+    .replace("8", "1") \
+    .replace("4", "1") \
+    .replace("2", "1")
     return data
 
 def only_has(data, allowed_characters):
@@ -141,6 +141,9 @@ class Rhythm:
 
     def __int__(self):
         return int(self.bin)
+
+    def __hash__(self):
+        return hash(self.bin)+69
 
     def __len__(self):
         n = 0
@@ -226,10 +229,9 @@ class Rhythm:
         return Rhythm(salida)
 
 
-
 class Group(list):
     __name__ = "Group"
-    def __repr__(self):
+    def __repr__(self) -> str:
         if not len(self):
             return "{ }"
         pw = "{"
@@ -470,16 +472,16 @@ class Note:
 class Tones(Group):
     __name__ = "Tones"
     def __init__(self, data=""):
-        if "." in repr(data):
-            raise SBR_ERROR(f"{self.__name__} don't accept floats itself")
         if isinstance(data, (Group, Tones, list)):
             #verifique if it's chord or note
             for i in data: #organize sets
-                if isinstance(i, (Group, list)):
-                    if len(i) == 0: continue
-                    self.append(i)
-                elif isinstance(i, (int, Note)):
+                if isinstance(i, (int, Note)):
                     self.append(Note(i))
+                elif isinstance(i, list):
+                    if len(i) == 0: continue
+                    elif "." in repr(i):
+                        raise SBR_ERROR(f"{self.__name__} don't accept floats itself")
+                    self.append(i)
 
         elif isinstance(data, str):
             if not only_has(data, ",-0123456789b#"):
@@ -541,6 +543,9 @@ class Tones(Group):
                 return self.sub_to_set(s[0])
             else: return s
         else: return s
+
+    def __hash__(self):
+        return hash(str(self))
 
     def __repr__(self):
         #The method takes an average of the pitches,
@@ -691,6 +696,7 @@ class Times(Group):
     def reverse(self):
         return Times(super().reverse())
 
+repr_sm = {}
 
 class Melody():
     """
@@ -708,7 +714,6 @@ class Melody():
             raise SBR_ERROR("argument no valid")
         self.rhythm, self.tones, self.vel, self.times = (
             Rhythm(), Tones(), Velocity(), Times())
-        self.pr = ""
 
         for d in data[0]:
             if type(d) is Rhythm: self.rhythm += d
@@ -722,19 +727,19 @@ class Melody():
         if len(self.times) == 0: self.times = Times([.8])
         if len(self.vel) == 0: self.vel = Velocity([1])
 
-    def __repr__(self):
-        if self.pr != "":
-            return self.pr
+    def __repr__(self, iters=2**0):
+        rp_hash = hash(self.rhythm.bin)+hash(self.tones)
+        if rp_hash in repr_sm:
+            return repr_sm[rp_hash]
 
         pw = ""
         for d in (self.rhythm, self.tones, self.vel, self.times):
             if (len(d) <= 16 and type(d) == Rhythm or
                 "6" in self.rhythm.bin or "3" in self.rhythm.bin): pw += f"{d}; "
             else:
-                print_d = d
                 leng = len(d)
-                for x in range(0, 2**5):
-                    if print_d == L(L(d, x), leng):
+                for x in range(0, iters):
+                    if d == L(L(d, x), leng):
                         if leng != x:
                             if not leng % x:
                                 pw += f"{L(d, x)}*{leng//x}; "
@@ -743,8 +748,8 @@ class Melody():
                             break
                 else: pw += f"{d}; "
 
-        self.pr = "Sm{"+pw[:-2]+"}"
-        return self.pr
+        repr_sm[rp_hash] = "Sm{"+pw[:-2]+"}"
+        return repr(self)
 
     def __str__(self):
         return self.__repr__()

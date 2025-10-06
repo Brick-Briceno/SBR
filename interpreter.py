@@ -51,7 +51,7 @@ def clean_code(code):
     #multiline group
     #is it ascii?
     if not(code.isascii() or "ñ" in code):
-        raise SBR_ERROR("The instruction isn't ascii")
+        raise SBR_ERROR(f"The instruction isn't ascii '{code}'")
     return code
 
 def sbr_import(data):

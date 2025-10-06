@@ -52,7 +52,7 @@ def clean_code(code):
     #there's no multiline group uwu
     #is it ascii?
     if not(code.isascii() or "ñ" in code):
-        raise SBR_ERROR("The instruction isn't ascii")
+        raise SBR_ERROR(f"The instruction isn't ascii '{code}'")
     return code
 
 
@@ -595,7 +595,7 @@ def rec(_):
         if d.upper() == "D":
             return print()
 
-
+alt = ""
 def piano(args):
     if len(args) not in (0, 1):
         raise SBR_ERROR("Just one or zero arguments")
@@ -622,17 +622,23 @@ def piano(args):
         "o": 50, "p": 51, "´": 52, "+": 53,
         "}": 54,}
     b_print("Live piano from SBR... ¡Enjoy!", color=color1)
+    active = True
     def live_piano(event):
+        global alt
+        if not active: return
         key_name = event.name
+        if "1" == key_name: alt = "b"
+        elif "2" == key_name: alt = "#"
         print(key_name, end="\r")
         if key_name.lower() in keys:
             n = Note(keys[key_name.lower()])
-            print(f"          Note: {n}\r", end="")
-            play(["Struct{V0;$"+str(inst_id)+";Sm{B1;M"+str(n)+"}}"])
-        #elif key_name == "0": raise KeyboardInterrupt
+            print(f"          Note: {alt}{n}  \r", end="")
+            play(["Struct{V0;$"+str(inst_id)+";Sm{B1;M"+str(n)+alt+"}}"])
+            alt = ""
 
     keyboard.on_press(live_piano)
-    keyboard.wait()
+    keyboard.wait("enter")
+    active = False
 
 def keystrokes(args):
     print("Loading game...")
