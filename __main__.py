@@ -23,14 +23,8 @@ import time
 import sys
 import os
 
-"""
-pip install soundfile
-pip install colorama
-pip install pygame
-pip install numpy
-"""
 
-__version__ = "2.0.7"
+__version__ = "2.0.8"
 
 # Set to True to enable debug mode, which will raise exceptions instead of logging them
 DEBUG = False

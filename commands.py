@@ -484,6 +484,7 @@ def obj_to_array(text_sbr_obj: str, meta_data=False):
                 obj_data, Velocity([0]),
                 Melody([Tones([[35, 42, 49]]), Rhythm(1)]) #it need a default sample to the Rhythm
             ])
+        #else: raise SBR_ERROR("This isn't a Struct, Tones, Note, Instrument, Rhythm or Melody data")
 
         wait = "  Wait..."
         print(wait, end="\r")

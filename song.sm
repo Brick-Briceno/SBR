@@ -39,7 +39,6 @@ song = Struct{
    }
 }
 
-
 sm: melody --L(4*16)
 
 valve_gain: 200

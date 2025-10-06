@@ -101,4 +101,3 @@ la documentacion debe poder ser descargada en html (y funcionar como si hubiera 
 debe poder ser descargada en pdf, txt y otros formatos más, en pdf las partes donde haya audio el pdf debe avisar que en la pagina si suena en audio, ya que pdf no tiene audio
 
 debe poder estar en español, ingles y portugues, si no existe ese articulo en el idioma selecionado se pone en ingles
-

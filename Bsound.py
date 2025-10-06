@@ -299,7 +299,7 @@ def random_float():
 ms = 0
 def struct_to_metadata(data):
     if not isinstance(data, Structure):
-        raise SBR_ERROR("This isn't a struct data")
+        raise SBR_ERROR("This isn't a struct data, melody or rhythm")
     audio_data = {
         "cromatic_note": [], "afination_cst": [],
         "position": [], "duration": [],

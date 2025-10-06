@@ -3,6 +3,7 @@ from sbr_types import Melody, Rhythm #, Group, Tones
 from compiler import (only_has, replace_variables, compiler,
                       delete_args, variables_sys, variables_user,
                       long_comment, delete_comments, SBR_ERROR)
+import sm2
 
 #system vars
 piece_of_code = ""
@@ -97,6 +98,9 @@ def sbr_line(idea: str):
             sbr_import(idea.split(" ", 1)[1])
             print(" "*len(wait), end="\r")
             return
+
+        elif imp[0] == "sm2":
+            return sm2.main()
 
         elif imp[0] == "define":
             if len(imp) == 3:
