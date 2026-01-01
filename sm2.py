@@ -1,10 +1,13 @@
 from tkinter import Tk, filedialog
+from interpreter import sbr_line
+from sbr_state import get_state
 from errors import SBR_ERROR
 from pathlib import Path
-from nt import error
 import webview
 import os
 
+# Get global state instance
+state = get_state()
 
 
 class MusicEditorAPI:
@@ -14,21 +17,27 @@ class MusicEditorAPI:
         self.window = None
 
     def execute_script(self, code: str):
-        from interpreter import sbr_line
+        # Reset state before executing to clear variables
+        state.reset()
         try:
             for n_line, line in enumerate(code.splitlines(), start=1):
                 sbr_line(line)
         except SBR_ERROR as bad:
-            return {"message": f"Error in line {n_line}: {bad}"}
+            return {
+                "success": False,
+                "message": f"Error in line {n_line}: {bad}"
+                }
 
-        return {"message": "sussefull"}
+        return {
+            "success": True,
+            "message": "sussefull"
+        }
 
 
     def save_script(self, code):
         root = Tk()
         root.withdraw()
         root.attributes('-topmost', True)
-        
         filepath = filedialog.asksaveasfilename(
             title="Guardar Script",
             defaultextension=".sm",
@@ -38,7 +47,6 @@ class MusicEditorAPI:
             ],
             initialdir=self.project_dir
         )
-
         root.destroy()
         
         if not filepath:
@@ -46,14 +54,14 @@ class MusicEditorAPI:
 
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(code)
-        
+
         self.current_file = filepath
         return {
             'success': True,
             'path': os.path.basename(filepath),
             'message': 'Script guardado'
         }
-    
+
     def load_script(self):
         root = Tk()
         root.withdraw()
@@ -85,7 +93,7 @@ class MusicEditorAPI:
     
     def export_midi(self):
         print("notes")
-    
+
     def toggle_fullscreen(self):
         if self.window:
             self.window.toggle_fullscreen()
@@ -102,7 +110,12 @@ def main():
         height=800,
         resizable=True,
         #fullscreen=True,
+        maximized=True,
         min_size=(1000, 600),
     )
     api.window = window
     webview.start()
+
+
+# Register SM2 launcher callback to avoid circular import
+state.register_sm2_callback(main)

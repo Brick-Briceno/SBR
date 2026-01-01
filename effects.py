@@ -24,6 +24,7 @@ def L(data: list[Rhythm | Tones | Melody | Group], args: list[int]):
     if len(data) <= int(args[0]): return type(data)((data*int(args[0]))[:int(args[0])])
     return type(data)(data[:int(args[0])])
 
+
 def X(data: list[Rhythm], args: list[int]):
     "I stretch the rhythmic pattern as symmetrically as possible"
     if not len(args): args = [2]
@@ -188,10 +189,10 @@ def cerrar(data: list[Rhythm | Tones | Group], args: list[int]):
 
 cerrar.__name__ = "Neither [ nor ]"
 
-def mul(data: list[Rhythm | Tones | Group | Melody | int | float], args: list[int]):
+def mul(data: list[Rhythm | Tones | Group | Melody | int | float], args: list[int | float]):
     "I multiplicate notes and fishes"
     if args != []:
-        return data*int(args[0])
+        return data*args[0]
     return data
 
 #lo de arriba parece un pene :D

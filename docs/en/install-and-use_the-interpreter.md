@@ -5,7 +5,7 @@ Windows:
 Source code
 ```bash
 git clone https://github.com/Brick-Briceno/SBR.git
-./dependecies.bat
+./dependencies.sh
 cd SBR
 py .
 ```

@@ -1,28 +1,31 @@
 """
 SBR Commands
+by @brick_briceno 2025
+
 """
 
-from compiler import (compiler, replace_variables, magia,
-                      effects, generators, pulse_will_be)
 from b_color import (hls_to_rgb, hex_to_rgb, rbg_to_hex, rgb_to_hls,
                      color1, color2, color3, color4, color5)
 from b_color import print_color as b_print
+from sbr_types import pulse_will_be
 from threading import Thread
-from pprint import pprint
 from sbr_utils import *
+from sbr_types import *
 from variables import *
 from sbr_help import *
 import lib.MidiFile
 import itertools
+import generators
 import keyboard
+import effects
 import shutil
-import string
 import Bsound
 import Sbyte
 import time
 import lib
 import sys
 import os
+
 
 welcome = """
 ▒█▀▀▀█ ▒█▀▀█ ▒█▀▀█
@@ -42,33 +45,6 @@ with it and that it helps all of you make better music, hugs <3
 def pause_code(_in="\n", end=""):
     b_print(f"{_in}Press enter to continue{end}", color=color5, end="")
     input(end)
-
-def clean_code(code):
-    #delete spaces
-    code = code.replace(" ", "")
-    code = code.replace("\t", "")
-    #delete comments
-    code = delete_comments(code)
-    #there's no multiline group uwu
-    #is it ascii?
-    if not(code.isascii() or "ñ" in code):
-        raise SBR_ERROR(f"The instruction isn't ascii '{code}'")
-    return code
-
-
-off_long_comment = True
-def delete_comments(code):
-    #delete short comment
-    code = code.split("--", 1)[0]
-    new_code = ""
-    global off_long_comment
-    code = code.replace("***", "\xff")
-    for char in code:
-        if char == "\xff":
-            off_long_comment = not off_long_comment
-        elif off_long_comment:
-            new_code += char
-    return new_code.replace("\xff", "")
 
 def sbr_licence(_):
     print("""
@@ -235,25 +211,8 @@ donate: <3
 """)
 
 
-def sbr_lines_2(idea: str):
-    idea = clean_code(idea)
-    #The code is empety
-    if idea == "": raise
-    #Detect and replace variables
-    idea = replace_variables(idea)
-    #delete spaces
-    idea = idea.replace(" ", "").replace("\t", "")
-    #compile, which is actually interpreting xD
-    return compiler(idea)
+sbr_line = None
 
-
-def compile_variables():
-    for var_name, var_content in zip(variables_user.keys(), variables_user.values()):
-        variables_user[var_name] = sbr_lines_2(str(var_content))
-    for var_name, var_content in zip(variables_sys.keys(), variables_sys.values()):
-        variables_sys[var_name] = sbr_lines_2(str(var_content))
-
-compile_variables()
 
 def instrument(arg):
     "I record an instrument"
@@ -297,9 +256,6 @@ def sbr_vars(args):
                is_end=True)
 
 def sbr_exit(args):
-    "Never give up, stay hard"
-    if len(args):
-        print("Use Ctrl+C to exit or cancel any processes")
     raise SystemExit
 
 def code_made(args):
@@ -338,10 +294,10 @@ def ident(args):
     if len(args) == 0: return
     elif len(args) == 1:
         spaces = 4
-        code = sbr_lines_2(args[0])
+        code = sbr_line(args[0])
     else:
         if not args[0].isnumeric(): raise SBR_ERROR("This value must be numeric")
-        code = sbr_lines_2(args[1])
+        code = sbr_line(args[1])
         spaces = int(args[0])
     #ident
     ident_code = ""
@@ -359,7 +315,7 @@ def ident(args):
 def metric(args):
     "How many pulses does any data have"
     for x in args:
-        data = sbr_lines_2(x)
+        data = sbr_line(x)
         if isinstance(data, (Melody, Rhythm)):
             print(f"metric --- {data.metric}")
         else: raise SBR_ERROR(f"Only rhythms and melodies have metric, not {type(data.__name__)}")
@@ -368,19 +324,19 @@ def sbr_len(args):
     "What length is a data"
     for x in args:
         ""
-        data = sbr_lines_2(x)
+        data = sbr_line(x)
         if isinstance(data, (Melody, Rhythm, Group, Tones)):
             print(f"len --- {len(data)}")
         else: raise SBR_ERROR(f"Only rhythms and melodies have len, not {type(data.__name__)}")
 
 def sbr_print(args):
     for x in args:
-        data = sbr_lines_2(x)
+        data = sbr_line(x)
         print(data)
 
 def sbr_type(args):
     for arg in args:
-        result = sbr_lines_2(arg)
+        result = sbr_line(arg)
         result_type = type(result).__name__
         print(result, result_type,
               sep=" is an " if result_type[0].lower() in (
@@ -425,7 +381,7 @@ def brute_force(args):
     elif isinstance(args[0], (Rhythm, Tones, Melody)):
         raise SBR_ERROR("Put just one Rhythms, Tones and Melodies")
     #Brute force
-    data = sbr_lines_2(args[0])
+    data = sbr_line(args[0])
 
     if isinstance(data, Rhythm):
         if not all([x in "01" for x in data.bin]):
@@ -457,7 +413,7 @@ def brute_force(args):
 def obj_to_array(text_sbr_obj: str, meta_data=False):
         program_path = os.path.abspath(__file__)
         program_directory = os.path.dirname(program_path)
-        obj_data = sbr_lines_2(text_sbr_obj)
+        obj_data = sbr_line(text_sbr_obj)
         #%AppData%
         #Melody
         if isinstance(obj_data, Melody):
@@ -499,7 +455,6 @@ def play(args):
         print("Enter a data to play")
     elif len(args) == 1:
         audio_array = obj_to_array(args[0])
-        leng = len(audio_array)
         Bsound.play_array(audio_array)
     else:
         audio_array = obj_to_array(args[0])
@@ -526,7 +481,7 @@ def export(args):
         duration = [dur/4 for dur in meta_data["duration"]]
         cromatic_note = meta_data["cromatic_note"]
         velocity = [int(vel*100) for vel in meta_data["velocity"]]
-        #longit = len(sbr_lines_2(args[0]))//4
+        #longit = len(sbr_line(args[0]))//4
         for when, vel, dur, crom in zip(when_kick, velocity, duration, cromatic_note):
             #if when+dur > longit:
                 #dur = longit-when #nojda chamo, no tengo cabeza pa una simple formula, njd
@@ -561,15 +516,14 @@ def set_max_digits(args):
     "Don't looking for the 5th hand's cat"
     if not len(args):
         return print("set a value please")
-    n = sbr_lines_2(args[0])
+    n = sbr_line(args[0])
     if n < 2**31 and n >= 640:
         sys.set_int_max_str_digits(n)
     else: print("the value of being from '640' 'to 2 147 483 647' or '(2**31)-1'")
 
 
-history = []
-
 part = ["0"]*32
+history = []
 
 def record_rhythm(history):
     tempo = variables_user["tempo"]
@@ -601,7 +555,7 @@ def piano(args):
     if len(args) not in (0, 1):
         raise SBR_ERROR("Just one or zero arguments")
     if len(args) == 1:
-        instr = sbr_lines_2(args[0])
+        instr = sbr_line(args[0])
         if isinstance(instr, Instrument):
             inst_id = instr.inst_id
         else: raise SBR_ERROR("This ain't an Instrument!")
@@ -697,7 +651,7 @@ def sm(args_or_melody: list[str] | Melody):
     elif type(args_or_melody).__name__ not in ("Melody", "list"):
         raise SBR_ERROR("You must only put data Melody")
     elif type(args_or_melody).__name__ == "list":
-        args_or_melody = [sbr_lines_2(y) for y in args_or_melody]
+        args_or_melody = [sbr_line(y) for y in args_or_melody]
         for x in args_or_melody:
             sm(x)
         return
@@ -756,7 +710,7 @@ def sleep(arg):
     if len(arg) == 0:
         raise SBR_ERROR("Enter the time to sleep")
     else:
-        s = sbr_lines_2(arg[0])
+        s = sbr_line(arg[0])
         if isinstance(s, (int, float)):
             time.sleep(s)
         else: raise SBR_ERROR("Only numbers are allowed")
@@ -814,7 +768,6 @@ record = {
     "ident": ident,
     "play": play,
     "pause": pause,
-    "sm2": sm2,
     "sm": sm,
     "sleep": sleep,
     "export": export,

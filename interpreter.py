@@ -1,67 +1,20 @@
+from compiler import compiler
+from errors import SBR_ERROR
+from sbr_parser import *
+from variables import *
 import commands
-from sbr_types import Melody, Rhythm #, Group, Tones
-from compiler import (only_has, replace_variables, compiler,
-                      delete_args, variables_sys, variables_user,
-                      long_comment, delete_comments, SBR_ERROR)
-import sm2
 
-#system vars
-piece_of_code = ""
-open_keys = 0
-defines = {}
-
-
-def indentation(code):
-    global piece_of_code
-    global open_keys
-    _open, _close = r"{}"
-    for char in code:
-        #possible errors
-        if open_keys == 0 and char == "}":
-            piece_of_code = ""
-            raise SBR_ERROR(f"A key was never opened")
-        elif open_keys != 0 and char == "=":
-            piece_of_code = ""
-            open_keys = 0
-            raise SBR_ERROR(f"You cannot assign variables inside an group")
-        elif open_keys != 0 and char == ":":
-            piece_of_code = ""
-            open_keys = 0
-            raise SBR_ERROR(f"You cannot run commands inside an group")
-
-        #continue with the logic
-        elif char is _open:
-            open_keys += 1
-        elif char is _close:
-            open_keys -= 1
-        piece_of_code += char
-
-    if open_keys:
-        piece_of_code += ";"
-        return ""
-    end = piece_of_code
-    piece_of_code = ""
-    return end
-
-
-def clean_code(code):
-    #delete spaces
-    code = code.replace(" ", "")
-    code = code.replace("\t", "")
-    #delete comments
-    #multiline group
-    #is it ascii?
-    if not(code.isascii() or "ñ" in code):
-        raise SBR_ERROR(f"The instruction isn't ascii '{code}'")
-    return code
 
 def sbr_import(data):
     data = data.replace("\xff", " ")
     try:
         with open(data, "r") as _file:
             _file = _file.read()
+        wait = "  Importing..."
+        print(wait, end="\r")
         for n_line, line in enumerate(_file.splitlines(), start=1):
             sbr_line(line)
+        print(" "*len(wait), end="\r")
     except SBR_ERROR as bad:
         raise SBR_ERROR(f"Import error in line {n_line}:", bad)
     except FileNotFoundError:
@@ -72,108 +25,106 @@ def sbr_import(data):
         raise SBR_ERROR(f"Invalid syntax on import '{data}'")
 
 
+def replace_variables(code: str):
+    all_variables = list(variables_sys)+list(variables_user)+list(vars_instruments)
+    for variable in all_variables:
+        if variable in code: break
+    else: return code
+
+    #Sort variables by text length (largest first)
+    all_variables = sorted(all_variables, key=len, reverse=True)
+    for variable in all_variables:
+        if variable in variables_sys:
+            code = code.replace(variable, str(variables_sys[variable]))
+        elif variable in variables_user:
+            code = code.replace(variable, str(variables_user[variable]))
+        elif variable in vars_instruments:
+            code = code.replace(variable, f"${vars_instruments[variable].inst_id}")
+
+    return code
+
+
 def sbr_line(idea: str):
-    for key in sorted(defines, key=len, reverse=True):
-        idea = idea.replace(key, defines[key])
+    """Process a single line of SBR code"""
+    #string
+    idea = multiline_string(idea)
+    if idea == None: return
+
+    #the code is empety
+    elif idea.strip() == "": return
+    #clean code
+    idea = clean_code(idea)
+
     #multiline code
-    if "\\"*2 in idea:
+    split_lines = ";;" #token to split lines
+    if split_lines in idea:
         lines_data = []
-        for line in idea.split("\\"*2):
+        for line in idea.split(split_lines):
             lines_data.append(sbr_line(line))
         #delete None types
         return [x for x in lines_data if x is not None]
 
-    #import file
-    imp = idea.split(" ")
-    #eliminar items vacios
-    imp = [item for item in imp if item.strip() != ""]
-
-    if imp != []:
-        if idea.split(" ", 1)[0] in ("import", "welcome"):
-            if len(idea.split(" ", 1)) == 1:
-                raise SBR_ERROR("Import a code file")
-            #if len(imp) == 2:
-            wait = "  Importing..."
-            print(wait, end="\r")
-            sbr_import(idea.split(" ", 1)[1])
-            print(" "*len(wait), end="\r")
-            return
-
-        elif imp[0] == "sm2":
-            return sm2.main()
-
-        elif imp[0] == "define":
-            if len(imp) == 3:
-                constant_name = imp[1]
-                constant_value = imp[2]
-                defines[constant_name] = constant_value
-                return
-            else: raise SBR_ERROR("Define must have a constant name and a value string")
-
-        elif imp[0] == "for":
-            # 1=variable, 2=iter object, 3=code
-            if len(imp) == 4:
-                iter_obj = sbr_line(imp[2])
-                if isinstance(iter_obj, int):
-                    iter_obj = range(iter_obj)
-                #convert the objet to a group
-                else: iter_obj = sbr_line(f"{imp[2]}G")
-                lines_data = []
-                for x in iter_obj:
-                    sbr_line(f"{imp[1]}={x}")
-                    lines_data.append(sbr_line(imp[3]))
-                return [x for x in lines_data if x is not None]
-            else: raise SBR_ERROR(
-                "For loop must have varible name, iter object and code")
-
-    #delete comments and indentation
-    idea = delete_comments(idea)
+    #groups
     idea = indentation(idea)
 
-    #the code is empety
-    if idea.strip() == "": return
-    #logic to check the type of instruction
+    #just it's a simple variable
+    strip_idea = idea.strip()
+    if strip_idea in variables_user:
+        return variables_user[strip_idea]
+    elif strip_idea in variables_sys:
+        return variables_sys[strip_idea]
+    elif strip_idea in vars_instruments:
+        return vars_instruments[strip_idea]
+
+    #Commands
+    #el primer espacio separa el comando de los datos, el : separa los argumentos
+    command_and_args_with_spaces = idea.strip().split(" ", 1)
+    if command_and_args_with_spaces[0] in commands.record:
+        command = command_and_args_with_spaces[0]
+        if len(command_and_args_with_spaces) == 1:
+            return commands.record[command]([])
+        else:
+            args = delete_args(command_and_args_with_spaces[1].split(":"))
+            return commands.record[command](args)
+
+    #logic to check if it's a variables
     elif "=" in idea:
-        idea = clean_code(idea)
         var_name, instruction = idea.split("=", 1)
-        if instruction == "":
+        var_name, instruction = var_name.strip(), instruction.strip()
+        #is there a = in the string? (this is not a variable definition)
+        if "\"" in var_name: ...
+        elif instruction == "":
             raise SBR_ERROR("You have not added anything to the variable")
         #verificar que sea un nombre de variable correcto
         elif var_name == "":
             raise SBR_ERROR("You are adding something to nothing, there is no variable")
-        elif not only_has(var_name, "abcdefghijklmnñopqrstuvwxyz_0123456789:") or len(var_name) == 1 or (":" in var_name and not var_name[0].isnumeric()):
+        elif not only_has(var_name, "abcdefghijklmnñopqrstuvwxyz_0123456789:") or len(
+                        var_name) == 1 or (":" in var_name and not var_name[0].isnumeric()):
             raise SBR_ERROR(f"This is not a valid variable name '{var_name}'")
         elif var_name in variables_sys:
             raise SBR_ERROR(f"This variable '{var_name}' is immutable and cannot be modified, please chose another name")
-        #all correct
-        instruction = replace_variables(str(instruction))
+
+        #if everything is ok
+        instruction = replace_variables(instruction)
         instruction = compiler(instruction)
-        #Check if a specific metric is necessary
-        if ":" in var_name:
-            metric, var_name = var_name.split(":", 1)
-            metric = compiler(metric)
-            if not isinstance(metric, int):
-                raise SBR_ERROR("The metric must be expressed in integers")
-            if isinstance(instruction, (Melody, Rhythm)):
-                if metric != instruction.metric:
-                    raise SBR_ERROR(f"The metric entered must be {metric} and this data is {instruction.metric}")
-            else: raise SBR_ERROR("This data type has no metric")
         variables_user[var_name] = instruction
 
-    elif ":" in idea:
-        command, instruction = idea.split(":", 1)
-        command = clean_code(command)
-        instruction = instruction.strip()
-        if command == "":
-            raise SBR_ERROR("You need to write a command")
-        elif not command in commands.record:
-            raise SBR_ERROR(f"This command does not exist '{command}'")
-        else: #all correct
-            commands.record[command](delete_args(instruction.split("::")))
     else:
-        idea = clean_code(idea)
-        #Detect and replace variables
-        idea = replace_variables(idea)
-        idea = idea.replace(" ", "")
         #compile, which is actually interpreting xD
-        return compiler(idea)
+        idea = replace_variables(idea)
+        hola = compiler(idea)
+        return hola
+
+#send the function to the commands library
+commands.sbr_line = sbr_line
+
+#compile the variables
+
+def compile_variables():    
+    #ordenar las variables por longitud de nombre de mayor a menor
+    for key in variables_user:
+        variables_user[key] = sbr_line(str(variables_user[key]))
+    for key in variables_sys:
+        variables_sys[key] = sbr_line(str(variables_sys[key]))
+
+compile_variables()

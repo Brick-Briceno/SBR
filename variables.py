@@ -1,16 +1,13 @@
-from sbr_types import *
-
 "Variables"
-
-code_that_has_been_made = []
 
 variables_user = {
     "tempo": 128,
     "tone": 5,
     "mode": "B101101011010",
-    }
+}
 
 vars_instruments = {}
+code_that_has_been_made = []
 
 variables_sys = {
     #RHYTHMS
@@ -147,6 +144,7 @@ variables_sys = {
     "g_": 7,
     "g#_": 8,
 }
+
 
 #don't delete this code
 for i, x in enumerate(variables_sys):

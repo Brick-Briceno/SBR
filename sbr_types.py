@@ -3,9 +3,10 @@ SBR types of data
 by @brick_briceno 2024
 """
 
-from sbr_utils import (separate_path_extension,
+from sbr_utils import (one_dimention_list_recurtion,
                        convert_unions_to_tuples,
-                       one_dimention_list_recurtion)
+                       separate_path_extension,
+                       delete_args)
 from typing import get_type_hints
 from errors import *
 import inspect
@@ -53,11 +54,6 @@ def SBR_Function(function):
     return wrapper
 
 
-def delete_args(args):
-    for _ in range(args.count("")):
-        args.remove("")
-    return args
-
 def quantize(data):
     data = data.replace("6", "10010010") \
     .replace("3", "1110") \
@@ -82,6 +78,11 @@ def L(data, a):
     if len(data) <= a: return type(data)((data*a)[:a])
     return type(data)(data[:a])
 
+
+class StringBR(str):
+    # def __init__(self, data=""):
+    #     self.data = data
+    ...
 
 class Rhythm:
     __name__ = "Rhythm"
@@ -237,7 +238,7 @@ class Group(list):
         pw = "{"
         for obj in self:
             if isinstance(obj, Instrument):
-                pw += f"${obj.inst_id} ***{obj.name}***; "
+                pw += f"${obj.inst_id}"# ***{obj.name}***; "
             elif isinstance(obj, float):
                 pw += f"{round(obj, 8)}; "
             else: pw += f"{obj}; "
@@ -271,6 +272,10 @@ class Group(list):
     def __mul__(self, data):
         if isinstance(data, int):
             return Group(super().__mul__(data))
+        elif isinstance(data, float):
+            new = []
+            for i in self: new.append(i*data)
+            return Group(new)
         else: raise SBR_ERROR("function not yet implemented")
 
     def __round__(self):
@@ -297,6 +302,7 @@ class Group(list):
     def __getitem__(self, key):
         try: return super().__getitem__(key)
         except IndexError:
+            if len(self) == 0: raise SBR_ERROR("Empty Group")
             raise SBR_ERROR(f"Index out of range, key: {key}, key max: {len(self)-1}")
 
     def reverse(self):
@@ -890,10 +896,10 @@ class Instrument:
         types =  ("synthesized", "sampled", "recorded", "plugin")
 
     def __repr__(self):
-        return f"${self.inst_id} ***${self.name} {self.type} instrument from '{self.path}'***"
+        return f"${self.inst_id}"# ${self.name} {self.type} instrument from '{self.path}'"
 
     def __str__(self):
-        return f"${self.inst_id} ***${self.name}***"
+        return f"${self.inst_id}"# \\{self.name}"
 
     def __add__(self, _):
         return self

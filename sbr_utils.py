@@ -17,6 +17,11 @@ def one_dimention_list_recurtion(group):
                 new.append(x)
     return new
 
+def delete_args(args):
+    for _ in range(args.count("")):
+        args.remove("")
+    return args
+
 
 def convert_unions_to_tuples(x) -> tuple | None:
     t = x.__args__[0]

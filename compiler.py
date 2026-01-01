@@ -1,31 +1,20 @@
+from sbr_parser import only_has, split_without_group
 from sbr_types import *
-from variables import *
 from errors import *
 import generators
 import effects
 
-class syntax_data:
-    #operators
-    math = set("+-")
-    #data types caracteres
-    numbers = ".-0123456789"
-    numbers_with_operators = ".0123456789+-*/~^&%()"
-    tones = "|b#-0123456789"
-    rhythms = "0123456789"
-    all_data = set(numbers+tones+rhythms)
 
-long_comment = False
-def delete_comments(code):
-    #delete short comment
-    code = code.split("--", 1)[0]
-    new_code = ""
-    global long_comment
-    code = code.replace("***", "\xff")
-    for char in code:
-        if char == "\xff":
-            long_comment = not long_comment
-        elif not long_comment: new_code += char
-    return new_code.replace("\xff", "")
+class syntax_data:
+    # Operators
+    math = set("+-")
+    # Data types caracteres
+    string = "\"'"
+    rhythms = "0123456789"
+    numbers = ".-0123456789"
+    tones = "|b#-0123456789"
+    all_data = set(numbers+tones+rhythms)
+    numbers_with_operators = ".0123456789+-*/~^&%()"
 
 def something_of_them_in_others(them, others):
     others = set(others)
@@ -37,21 +26,6 @@ def something_of_them_in_others(them, others):
             return True
     return False
 
-def split_without_group(code, split=","):
-    level_key = 0
-    brick = ""
-    result = []
-    for char in code+",":
-        #everything that is inside a keys will be interpreted as an argument data
-        if char == "{": level_key += 1
-        elif char == "}": level_key -= 1
-
-        if char == split and not level_key:
-            result.append(brick)
-            brick = ""
-        else: brick += char
-
-    return result
 
 def separate_brick(code):
     end = []
@@ -62,9 +36,20 @@ def separate_brick(code):
     args = syntax_data.all_data.union(",")
     #keys(code) #throw an error if there is an error in the syntax
     level_key = 0
+
+    string_on_mode = 0 #This variable has 3 modes
+    # 0. There are no open quotes
+    # 1. It's enabled and collecting arguments
+    # 2. Add a quote and say goodbye
+
     for char in code:
+        #If there is an open quotation mark, treat it as an argument
+        if char in syntax_data.string:
+            string_on_mode += 1
+
         #everything that is inside a keys will be interpreted as an argument data
-        if char == "{": level_key += 1
+        #'elif' bucause keys inside quotation mark are arguments
+        elif char == "{": level_key += 1
         elif char == "}":
             level_key -= 1
             brick += "}"
@@ -72,7 +57,10 @@ def separate_brick(code):
 
         #continue with the other logic
         #the complete group (array) is added with all its characters if it's an argument
-        if char in args or level_key:
+        if char in args or level_key or string_on_mode:
+            # reset string mode
+            if string_on_mode == 2:
+                string_on_mode = 0
             if not parmt:
                 result.append(brick)
                 brick = ""
@@ -103,8 +91,11 @@ def create_brick(original_list):
     if current_sublist: split_list.append(current_sublist)
     return split_list
 
+
 def prepare_metadata(brick_code):
-    return create_brick(separate_brick(brick_code))
+    uwu = separate_brick(brick_code)
+    return create_brick(uwu)
+
 
 def separate_by_operators(cadena):
     result = []
@@ -232,41 +223,30 @@ def maths(expression):
         raise SBR_ERROR(f"Result too large '{expression}'")
 
 
-def replace_variables(code):
-    #This function processes the variable
-    #Sort variables by text length (largest first)
-    all_variables = list(variables_sys)+list(variables_user)+list(vars_instruments)
-    for variable in all_variables:
-        if variable in code: break
-    else: return code
-
-    all_variables = sorted(all_variables, key=len, reverse=True)
-    for variable in all_variables:
-        if variable in variables_sys:
-            code = code.replace(variable, str(variables_sys[variable]))
-        elif variable in variables_user:
-            code = code.replace(variable, str(variables_user[variable]))
-        elif variable in vars_instruments:
-            code = code.replace(variable, f"${vars_instruments[variable].inst_id}")
-
-    return code
-
 def arg_to_type(data):
     #Check the data type using the syntax in the characters
     #len = 11, 12, 17 = int_numbers, float_numbers, group
     #The conditions are placed from highest to lowest, except for the rhythms
     #It's number  or mathematical operation
     if data == "+": raise SBR_ERROR("Invalid syntax")
+
+    #strings
+    elif data.startswith("\""):
+        return data
+
     elif only_has(data, syntax_data.numbers_with_operators) and data[:2] not in (
         f"0{x}" for x in range(10)) and not(data in "|" or data in "b" or data in "#"):
         return maths(data)
+
     #rhythms
     elif only_has(data, syntax_data.rhythms):
         return Rhythm(data)
+
     #tones
     elif only_has(data, syntax_data.tones+"."):
         if "." in data: raise SBR_ERROR("Cannot create notes with floats")
         return Note(data)
+
     #group
     if "{" in data or "}" in data:
         new = []
@@ -274,6 +254,7 @@ def arg_to_type(data):
             if item == "": continue
             new.append(compiler(item))
         return Group(new)
+
     #bugs
     elif ";" in data and "{" not in data and "}" not in data:
         raise SBR_ERROR(f"Syntax error '{data}'", advice="You can't use ';' here")
@@ -281,15 +262,21 @@ def arg_to_type(data):
 
 
 def compiler(instruction: str):
-    instruction = instruction.replace(" ", "")
-    if instruction in variables_user:
-        return variables_user[instruction]
-    instruction = replace_variables(instruction)
-    instruction = delete_comments(instruction)
+    #remove spaces that are not in quotation marks
+    result = ""
+    inside_quotes = False
+    for char in instruction:
+        if char in syntax_data.string:
+            inside_quotes = not inside_quotes
+        if char != " " or inside_quotes:
+            result += char
+    instruction = result
+
     #if it's a mathematical operation
     if only_has(instruction, syntax_data.numbers_with_operators) and instruction[
         :2] != "00" and not(instruction in "|" or instruction in "b" or instruction in "#"):
         return maths(instruction)
+
     #maybe it's a sbr data
     return magia(instruction)
 
@@ -302,23 +289,26 @@ def magia(code):
         parent = keys2(code, "()")
         comp = compiler(parent)
         code = code.replace(f"({parent})", str(comp))
-    #detele spaces by data types view
-    code = code.replace(" ", "")
+
     semi_compiled_code = [] #This will be passed to the operator compiler
+
     #Operators will split the code
     if only_has(code, syntax_data.math): code = "0"
-    for brick in separate_by_operators(code):        
+    for brick in separate_by_operators(code):
         if brick in syntax_data.math:
             semi_compiled_code.pop()
             semi_compiled_code.append(brick)
             continue
+
         else:
             for g in prepare_metadata(brick):
-                #g be like [['B', ['101100111001']]]
+                #g be like [['B', ['101100111001']]] or [['E', ['5', '14', '16']], ['L', ['9', '32']]]
                 if len(g[0]) == 1: raise SBR_ERROR(f"Invalid argument of the generator {g[0]}")
                 generator, g_arguments, effects_list = g[0][0], g[0][1], g[1:]
-                #convert strings to SBR types
+
+                #convert python strings to SBR types
                 g_arguments = [arg_to_type(arg) for arg in g_arguments]
+
                 #continue with the logic
                 if generator in tuple(effects.record):
                     raise SBR_ERROR(f"You can't start the brick with an effect: '{generator}'")
@@ -326,6 +316,7 @@ def magia(code):
                     data = generators.record[generator](g_arguments)
                     for e, e_arg in effects_list:
                         e_arg = [arg_to_type(arg) for arg in e_arg] #str to sbr type
+
                         #convert strings to SBR types
                         if not e in tuple(effects.record):
                             raise SBR_ERROR(f"This effect doesn't exist: '{e}'")
@@ -339,7 +330,9 @@ def magia(code):
                     raise SBR_ERROR(
                         f"This variable is not defined: '{generator}'")
                 else: raise SBR_ERROR(
-                        f"This generator doesn't exist: '{generator}', maybe there's an undefine variable")
+                        f"This generator doesn't exist: '{generator}', maybe there's an undefine variable") 
+
     #process operators
     final_data = mathematical_operators(semi_compiled_code)
     return final_data
+

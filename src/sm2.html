@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simmetric Melody 2 💙</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Panel Izquierdo: Editor de Texto -->
+        <div id="editor-panel">
+            <div id="toolbar">
+                <button onclick="executeScript()">▶ Ejecutar Script</button>
+                <button onclick="saveScript()">💾 Guardar</button>
+                <button onclick="loadScript()">📂 Cargar</button>
+                <button onclick="clearEditor()">🗑️ Limpiar</button>
+                <div class="checkbox-container" style="margin-left: auto;">
+                    <input type="checkbox" id="auto-execute-checkbox" onchange="toggleAutoExecute()">
+                    <label for="auto-execute-checkbox">Auto-ejecutar</label>
+                </div>
+            </div>
+            <textarea id="text-editor" placeholder="-- Escribe tu script aquí
+-- Ejemplo:
+
+play: Sm{E; J0,4,-4}
+"></textarea>
+            <div id="output-panel">
+                <div style="color: #858585; font-weight: bold; margin-bottom: 5px;">» Salida del Script:</div>
+            </div>
+        </div>
+
+        <!-- Panel Derecho: Piano Roll -->
+        <div id="pianoroll-panel">
+            <div id="pianoroll-header">
+                <h3>Piano Roll</h3>
+                <div id="pianoroll-controls">
+                    <button onclick="clearPianoRoll()">🗑️ Limpiar Notas</button>
+                    <button onclick="exportMidi()">💾 Exportar MIDI</button>
+                </div>
+            </div>
+            <div id="pianoroll-container">
+                <canvas id="pianoroll-canvas"></canvas>
+            </div>
+            <div class="info-text" style="padding: 10px;">
+                Click izquierdo: añadir nota | Click derecho: eliminar nota
+            </div>
+        </div>
+    </div>
+
+    <div id="status-bar">
+        <span id="status-text">Listo</span>
+        <span id="note-count">Notas: 0</span>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
