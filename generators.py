@@ -6,11 +6,14 @@ the only rule is that there are no rules :)
 """
 
 from sbr_types import *
+from sbr_utils import *
 import numpy as np
 import random
 
+
 "Efectos ritmicos"
 
+sbr_line = ...
 
 def B(args: list[Rhythm | int | str | Group]):
     "Here I wrote a joke but I got canceled xD"
@@ -185,6 +188,32 @@ def T(args: list[Times | int | float]):
     if args == []: return Times()
     return Times(args) #es la misma vaina no?
 
+"Generadores Numericos"
+
+def Random(args: list[int | float]):
+    "I generate random decimal or integer numbers of any range you want, friend"
+    if len(args) == 1:
+        raise SBR_ERROR("Random needs at least 2 or no arguments")
+    elif len(args) == 0: args = [-1, 1.]
+    elif len(args) >= 2: args = [args[0], args[1]]
+
+    if all(isinstance(x, int) for x in args):
+        return random.randint(args[0], args[1])
+    else: return random.uniform(args[0], args[1])
+
+"Generadores Srings"
+
+def Format(args: list[str]):
+    "I apply formatting to strings, for example: age = 24;; \"your age is {age} years\""
+    if len(args) == 0:
+        raise SBR_ERROR("Syntax error, you must put a string after the F, Type 'help F' to see more")
+    _string = args[0]
+    for brick in extract_keys(_string):
+        _string = _string.replace("{"+brick+"}", str(sbr_line(brick)))
+
+    return _string
+
+
 "Generadores Grupos"
 
 def Seno(args: list[int | float]):
@@ -262,10 +291,12 @@ record = {
     "T": T,
     "V": V,
     "$": inst,
+    "F": Format,
     "Sm": Sm,
     "Poly": Poly,
     "Seno": Seno,
     "Range": Range,
+    "Random": Random,
     "Struct": Struct,
     "": return_data,
 }

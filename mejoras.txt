@@ -1,17 +1,20 @@
+=========================================
+Language improvements!!!
+Will be written in Spanish
+but can be translated :D
+=========================================
+
+
 mejorar la sintaxis
 documentación para distintas versiones
 poder guardar variables cerca de ciertas expresiones
 necesita poder crear efectos dentro del mismo codigo
 necesita strings para guardar rutas (quizas esto no haga falta)
 
-quizas sea necesario poder tener strings
 se deberian añadir decoradores a tipos de datos
 de python para reciclarlos en el lenguaje como los int
 o quizas usar el modulo decimal para evitar errores al
 interpretar los numeros
-
-
-meter colores en comandos (solo en casos especiales)
 
 funcion personalizada de impresión 'bprint'
 imprima melodias como se hacia en simetric melody
@@ -52,7 +55,11 @@ debe añadirse en los tonos si la nota es primaria o secundaria esto podria ser 
 COMANDOS:
 
 buerza bruta euclideana
-ritmo o melodia a buscar; *;efectos;;;...
+ritmo o melodia a buscar
+
+EFECTOS Y GENERADORES
+analizador de metricas
+if, for, while
 
 
 MOTOR DE AUDIO E INSTRUMENTOS
@@ -93,7 +100,6 @@ tanto su ritmo como sus harmonias
 
 un tutorial de SBR, desde lo basico hasta lo mas avanzado
 y debe tener ejemplos de codigo, hablar de los generadores, efectos, comandos, sintaxis, etc
-
 
 debe tener un buscador de palabras clave
 

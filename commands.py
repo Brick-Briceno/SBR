@@ -194,21 +194,45 @@ The total of all the code is called Brick :D""")
             time.sleep(.005)
         #input("sísí me vale vrg")
         pause_code()
-        print("""Type 'help:' and the function to study
+        print("""Type 'help' and the function to study
 For example type:
-help: tutorial
-help: effects
-help: generators
-help: commands
-help: operators
-help: syntax
-help: E
+help tutorial
+help effects
+help generators
+help commands
+help operators
+help syntax
+help E
 
-licence:
+licence
 
 invite me a coffee :)
-donate: <3
+donate <3
 """)
+
+
+
+def sbr_import(data):
+    if not len(data):
+        return
+    data = data[0]
+    try:
+        with open(data, "r") as _file:
+            _file = _file.read()
+        wait = "  Importing..."
+        print(wait, end="\r")
+        for n_line, line in enumerate(_file.splitlines(), start=1):
+            sbr_line(line)
+        print(" "*len(wait), end="\r")
+    except SBR_ERROR as bad:
+        raise SBR_ERROR(f"Import error in line {n_line}:", bad)
+    except FileNotFoundError:
+        raise SBR_ERROR(f"Import error this file doesn't exist '{data}'")
+    except PermissionError:
+        raise SBR_ERROR(f"The system doesn't have permission to accesss this file '{data}'")
+    except OSError:
+        raise SBR_ERROR(f"Invalid syntax on import '{data}'")
+
 
 
 sbr_line = None
@@ -451,6 +475,7 @@ def obj_to_array(text_sbr_obj: str, meta_data=False):
         return array
 
 def play(args):
+    "I bring the sense of sound to life in your brain"
     if len(args) == 0:
         print("Enter a data to play")
     elif len(args) == 1:
@@ -469,7 +494,7 @@ def export(args):
     #this export to mp3, wav and mid
     if len(args) < 2:
         raise SBR_ERROR("Enter a data to export and the file name",
-                        "For example: B1000:: uwu.mp3")
+                        "For example: B1000 : uwu.mp3")
 
     elif separate_path_extension(args[1])[2].lower() in (".mid", ".midi", ".rmi", ".kar"):
         meta_data = obj_to_array(args[0], meta_data=True)
@@ -499,9 +524,9 @@ def export(args):
 
 def fn_drag_n_drop(args):
     if not len(args):
-        raise SBR_ERROR("Any argument here :O", "mid or mp3 etc:: vars like melody, bass etc")
+        raise SBR_ERROR("Any argument here :O", "mid or mp3 etc : vars like melody, bass etc")
     elif len(args) == 1:
-        raise SBR_ERROR("Put the extension and the vars", "mid or mp3 etc:: vars like melody, bass etc")
+        raise SBR_ERROR("Put the extension and the vars", "mid or mp3 etc : vars like melody, bass etc")
     ext = args[0]
     _vars = [x.strip() for x in args[1:]]
     for var_name in _vars:
@@ -598,7 +623,7 @@ def piano(args):
 def keystrokes(args):
     print("Loading game...")
     if len(args) != 2:
-        raise SBR_ERROR("Put 2 arguments: song:: {1,2,3,4}")
+        raise SBR_ERROR("Put 2 arguments: 'song : {1,2,3,4}'")
     clean_console()
     play([args[0]])
     keys = {"up": '''
@@ -755,9 +780,35 @@ def valve_distortion_gain(args):
         raise SBR_ERROR("Put me a number please >:)")
     Bsound.valve_distortion_gain = float(args[0])
 
+
+def sbr_if(args):
+    "If you try, you can't fail, failure comes from not trying"
+    ...
+
+def sbr_for(args):
+    "They did it for you, do it for them"
+    ...
+
+def sbr_while(args):
+    "While there is music, there is life, and while there is life, there is music"
+    ...
+
+def sbr_fn(args):
+    "Hello, have a nice day! :D"
+    ...
+
+
 record = {
+    #Keywords
+    "if": sbr_if,
+    "for": sbr_for,
+    "while": sbr_while,
+    "fn": sbr_fn,
+
+    #Tools
     "help": sbr_help,
     "donate": donate,
+    "welcome": sbr_import,
     "exit": sbr_exit,
     "licence": sbr_licence,
     "print": sbr_print,

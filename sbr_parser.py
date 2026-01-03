@@ -19,13 +19,12 @@ COMMENTARY_CHARACTER = "--"
 def clean_code(code: str) -> str:
     # Remove all spaces and comments that are not in quotation marks
     if not open_string:
-        code = code.split(COMMENTARY_CHARACTER, 1)[0] \
-            #.replace(" ", "")
-
+        code = code.split(COMMENTARY_CHARACTER, 1)[0]
     # Validate ASCII (allow ñ as exception)
-    if not(code.isascii() or "ñ" in code):
-        raise SBR_ERROR(f"The instruction isn't ascii '{code}'")
+    #if not (code.isascii() or "ñ" in code and string):
+    #    raise SBR_ERROR(f"The instruction isn't ascii '{code}'")
     return code
+
 
 
 def delete_args(args: list[str]) -> list[str]:
@@ -108,14 +107,17 @@ def split_without_group(code: str, split: str = ",") -> list[str]:
     level_key = 0
     brick = ""
     result = []
+    string_mode = False
     for char in code + ",":
         # Everything inside {} is treated as single argument
         if char == "{":
             level_key += 1
         elif char == "}":
             level_key -= 1
+        elif char == "\"":
+            string_mode = not string_mode
 
-        if char == split and not level_key:
+        if char == split and not level_key and not string_mode:
             result.append(brick)
             brick = ""
         else:

@@ -1,12 +1,13 @@
+testing_random_things.py
 *__pycache__
 desktop.ini
 songs
 bin
+temp
 inst
 bug.log
 bugs.log
 bugs.txt
-test.py
 *.mp3
 *.ogg
 *.mid

@@ -62,3 +62,21 @@ def format_time(seconds: float):
         return f"{seconds * 1e6:.2f} µs"
     else:
         return f"{seconds * 1e9:.2f} ns"
+
+def extract_keys(text: str) -> list[str]:
+    results = []
+    temp = ""
+    inside = False
+    for char in text:
+        if char == "{":
+            inside = True
+            continue
+        elif char == "}":
+            inside = False
+            if temp:
+                results.append(temp)
+                temp = ""
+            continue
+        if inside:
+            temp += char            
+    return results

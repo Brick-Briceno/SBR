@@ -9,7 +9,7 @@ class syntax_data:
     # Operators
     math = set("+-")
     # Data types caracteres
-    string = "\"'"
+    string = "\""
     rhythms = "0123456789"
     numbers = ".-0123456789"
     tones = "|b#-0123456789"
@@ -44,7 +44,7 @@ def separate_brick(code):
 
     for char in code:
         #If there is an open quotation mark, treat it as an argument
-        if char in syntax_data.string:
+        if char == syntax_data.string:
             string_on_mode += 1
 
         #everything that is inside a keys will be interpreted as an argument data
@@ -95,6 +95,9 @@ def create_brick(original_list):
 def prepare_metadata(brick_code):
     uwu = separate_brick(brick_code)
     return create_brick(uwu)
+
+
+print(prepare_metadata('"your age is {age} years, U really like this rhythem {son}"'))
 
 
 def separate_by_operators(cadena):
@@ -266,7 +269,7 @@ def compiler(instruction: str):
     result = ""
     inside_quotes = False
     for char in instruction:
-        if char in syntax_data.string:
+        if char == syntax_data.string:
             inside_quotes = not inside_quotes
         if char != " " or inside_quotes:
             result += char
@@ -288,7 +291,7 @@ def magia(code):
     while "(" in code or ")" in code:
         parent = keys2(code, "()")
         comp = compiler(parent)
-        code = code.replace(f"({parent})", str(comp))
+        code = code.replace(f"({parent})", str(comp).replace(" ", ""))
 
     semi_compiled_code = [] #This will be passed to the operator compiler
 

@@ -23,11 +23,12 @@ from traceback import format_exc
 
 # SBR modules
 from b_color import color1, color2, color3, color4, color5
-from interpreter import sbr_line, sbr_import, SBR_ERROR
+from interpreter import sbr_line, SBR_ERROR
 from sbr_utils import clean_console, format_time
 from variables import code_that_has_been_made
 from b_color import print_color as b_print
 from sbr_parser import get_ident_level
+from commands import sbr_import
 
 # ============================================================================
 # CONSTANTS & CONFIGURATION
@@ -81,7 +82,7 @@ def initialize_main_preset():
                            "or leave it empty to use the default presets\n"
                            "\"\n\n")
             b_print("File created successfully! please try to reload the program", color=color1)
-    try: sbr_import("main.sm")
+    try: sbr_import(["main.sm"])
     except SBR_ERROR as bad:
         b_print("Error:", color=color3, end="")
         b_print(bad, color=color4)

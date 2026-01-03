@@ -2,46 +2,31 @@ from compiler import compiler
 from errors import SBR_ERROR
 from sbr_parser import *
 from variables import *
+import generators
 import commands
 
 
-def sbr_import(data):
-    data = data.replace("\xff", " ")
-    try:
-        with open(data, "r") as _file:
-            _file = _file.read()
-        wait = "  Importing..."
-        print(wait, end="\r")
-        for n_line, line in enumerate(_file.splitlines(), start=1):
-            sbr_line(line)
-        print(" "*len(wait), end="\r")
-    except SBR_ERROR as bad:
-        raise SBR_ERROR(f"Import error in line {n_line}:", bad)
-    except FileNotFoundError:
-        raise SBR_ERROR(f"Import error this file doesn't exist '{data}'")
-    except PermissionError:
-        raise SBR_ERROR(f"The system doesn't have permission to accesss this file '{data}'")
-    except OSError:
-        raise SBR_ERROR(f"Invalid syntax on import '{data}'")
-
-
-def replace_variables(code: str):
+def replace_variables(code: str) -> str:
     all_variables = list(variables_sys)+list(variables_user)+list(vars_instruments)
-    for variable in all_variables:
-        if variable in code: break
-    else: return code
-
-    #Sort variables by text length (largest first)
     all_variables = sorted(all_variables, key=len, reverse=True)
-    for variable in all_variables:
-        if variable in variables_sys:
-            code = code.replace(variable, str(variables_sys[variable]))
-        elif variable in variables_user:
-            code = code.replace(variable, str(variables_user[variable]))
-        elif variable in vars_instruments:
-            code = code.replace(variable, f"${vars_instruments[variable].inst_id}")
+    
+    #Split by quotes and process only the parts outside quotes (even indices)
+    split_code = code.split('"')
+    for i in range(0, len(split_code), 2): #Only process even indices
+        piece_of_code = split_code[i]
+        for variable in all_variables:
+            if variable in variables_sys:
+                piece_of_code = piece_of_code.replace(
+                    variable, str(variables_sys[variable]))
+            elif variable in variables_user:
+                piece_of_code = piece_of_code.replace(
+                    variable, str(variables_user[variable]))
+            elif variable in vars_instruments:
+                piece_of_code = piece_of_code.replace(
+                    variable, f"${vars_instruments[variable].inst_id}")
+        split_code[i] = piece_of_code
 
-    return code
+    return '"'.join(split_code)
 
 
 def sbr_line(idea: str):
@@ -92,14 +77,18 @@ def sbr_line(idea: str):
         var_name, instruction = idea.split("=", 1)
         var_name, instruction = var_name.strip(), instruction.strip()
         #is there a = in the string? (this is not a variable definition)
-        if "\"" in var_name: ...
+        if "\"" in var_name:
+            #compile, which is actually interpreting xD
+            idea = replace_variables(idea)
+            hola = compiler(idea)
+            return hola
         elif instruction == "":
             raise SBR_ERROR("You have not added anything to the variable")
         #verificar que sea un nombre de variable correcto
         elif var_name == "":
             raise SBR_ERROR("You are adding something to nothing, there is no variable")
         elif not only_has(var_name, "abcdefghijklmnñopqrstuvwxyz_0123456789:") or len(
-                        var_name) == 1 or (":" in var_name and not var_name[0].isnumeric()):
+                        var_name) == 1 or (":" in var_name or var_name[0].isnumeric()):
             raise SBR_ERROR(f"This is not a valid variable name '{var_name}'")
         elif var_name in variables_sys:
             raise SBR_ERROR(f"This variable '{var_name}' is immutable and cannot be modified, please chose another name")
@@ -115,8 +104,9 @@ def sbr_line(idea: str):
         hola = compiler(idea)
         return hola
 
-#send the function to the commands library
+#send the function to the commands and generators library
 commands.sbr_line = sbr_line
+generators.sbr_line = sbr_line
 
 #compile the variables
 
