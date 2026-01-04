@@ -453,7 +453,7 @@ class Efectos:
 
         for x in data_2: final += x
 
-        return final, data
+        return final
 
 
     def R(data): return data[::-1]
@@ -509,3 +509,4 @@ class Efectos:
         data = data.replace("4", "1")
         data = data.replace("2", "1")
         return data
+
