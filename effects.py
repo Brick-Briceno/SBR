@@ -189,9 +189,11 @@ def cerrar(data: list[Rhythm | Tones | Group], args: list[int]):
 
 cerrar.__name__ = "Neither [ nor ]"
 
-def mul(data: list[Rhythm | Tones | Group | Melody | int | float], args: list[int | float]):
+def mul(data: list[Rhythm | Tones | Group | Melody | int | float | str], args: list[int | float]):
     "I multiplicate notes and fishes"
     if args != []:
+        if isinstance(data, str):
+            return f'"{data[1:-1]*args[0]}"'
         return data*args[0]
     return data
 

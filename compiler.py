@@ -97,9 +97,6 @@ def prepare_metadata(brick_code):
     return create_brick(uwu)
 
 
-print(prepare_metadata('"your age is {age} years, U really like this rhythem {son}"'))
-
-
 def separate_by_operators(cadena):
     result = []
     part = ""
