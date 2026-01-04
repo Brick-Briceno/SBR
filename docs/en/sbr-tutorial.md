@@ -1,9 +1,24 @@
-# Lenguaje SBR  
+**Lenguaje SBR**  
 Sintaxis Brick Ritmo
 
-*Los siguientes son códigos para generar ritmos y melodías a través de algoritmos, sobre todo en el programa Symmetry Melody 2 creado por @Brick\_briceno*
+*Los siguientes son códigos para generar ritmos y melodías a través de algoritmos, sobre todo en el programa Symmetry Melody 2 creado por [@Brick\_briceno](https://www.instagram.com/brick_briceno/?hl=es)*
 
-*Este mini tutorial estará dividido en 3 partes primero la parte rítmica, seguido de la parte melódica o mejor dicho tonal, y finalmente la parte verdaderamente melódica, cómo unir un poco las piezas y algunas que otras herramientas del control de flujo* 
+*Este mini tutorial estará dividido en 3 partes, primero la parte rítmica, seguido de la parte melódica o mejor dicho tonal, y finalmente la parte verdaderamente melódica, cómo unir un poco las piezas y algunas que otras herramientas del control de flujo, las palabras claves*
+
+*Por cierto lo puedes descargar aquí:*  
+[*Github.com/Brick-Briceno/SBR*](https://github.com/Brick-Briceno/SBR)
+
+Para crear una melodía debemos definir como la sentimos, qué nos produce, y para eso entre otras como el tempo, tonalidad, escalas, acordes, entre otros trozos con los que armaremos la canción
+
+Pero lo principal, es una buena melodía, que nos cuente cosas, hay cosas importantes en una melodía, cuánto dura una nota… qué tan fuerte golpea… pero los 2 elementos principales más importantes en mi opinión son y siempre serán 
+
+Tonos y… ritmo
+
+SBR ofrece su propio estilo y forma de representar y escribir las melodías, es como su propio pentagrama
+
+Pero para entender la filosofía Symmetric melody, “Sm” debemos entender 2 de sus grandes pilares
+
+Tonos y… ritmo
 
 Empecemos por la parte rítmica 
 
@@ -12,7 +27,7 @@ Empecemos por la parte rítmica
 *Nuestras literalmente piezas de Lego serán…*
 
 **Generadores:** C, B, E, A, N  
-**Efectos:** L, X, D, R, I, P, \[, \], S, Q, \*  
+**Efectos:** L, X, D, R, I, \<\<, \>\>, \[, \], S, Q, \*  
 **Operadores:** \+, \-, nada  
 **Parámetros:** 1, 2, 3, 4, 5, 6, 7, 8, 9, 0
 
@@ -77,6 +92,12 @@ B1000L8 \= B10001000
 C3,4 \= B1001  
 C3L4 \= B1001
 
+Por cierto para reproducir el tipo de dato solo ponlo después de “play” nuestra primera palabra clave, con esto puedes reproducir cualquier cosa
+
+play B1000 1000 1001 1010
+
+Te recomiendo que a lo largo de este tutorial vayas probando todo lo que te vayas consiguiendo para que veas como se vé y como suena cada cosa
+
 **N** (otra forma de escribir los números) 
 
 N3 3 2 \= B1001 0100  
@@ -132,7 +153,7 @@ E \= E5
 De aquí podemos experimentar mucho con estos sonidos 
 
 E4 \= B1000 1000 1000 1000  
-E5 \= B1001 0010 0100 1000 (simplemente E)  
+E5 \= E \= B1001 0010 0100 1000  
 E6 \= B1001 0010 1001 0010  
 E7 \= B1010 1001 0101 0010  
 E8 \= B1010 1010 1010 1010  
@@ -318,13 +339,57 @@ A16,7 ≈ B1100 0010 1001 1100
 
 **Los Tonos 🎹**
 
+**Generadores**: M, J  
+**Efectos**: L, X, D, R, I, \<\<, \>\>, \[, \], S, Q, \*, G, Oct  
+**Operadores**: \+, \-, nada  
+**Parámetros**: números y Notes
+
 *Aquí nos basamos en la dimensión vertical en qué tan grave o agudo suena una nota*
 
 *Si quieres conocer sobre teoría musical básica te recomiendo una sección llamada “teoría musical básica” en esta documentación*
 
 ¿Cómo representamos la información Tonal? 🤔
 
-*Pues déjame decirte que SBR es diatónico, O sea aque solamente vamos a jugar con las notas de esa escala, si bien podemos poner notas cromáticas, por temas de practicidad SBR tiene una filosofía y un entorno diatónico*
+*Pues déjame decirte que SBR es diatónico, O sea que solamente vamos a jugar con las notas de esa escala, si bien podemos poner notas cromáticas, por temas de practicidad SBR tiene una filosofía y un entorno diatónico*
+
+**Grupos**  
+{1; 2; 3; 4; 5; 6; 7; 8; 9}
+
+Los grupos o listas por lo general son cajas donde guardas todo tipo de datos al igual que las variables, se separan con punto y coma tal como se vé arriba
+
+Una forma de acceder a su contenido interno (items) es con el efecto “Grp”, para acceder al 1er ítem se empieza desde el 0
+
+{1; 2; 3} Grp 0 \= 1  
+{1; 2; 3} Grp 1 \= 2  
+{1; 2; 3} Grp 1 \= 3
+
+Una forma de generar secuencias de números es con “Range”, se empieza desde el cero por motivos prácticos de los que no vamos a hablar aún
+
+Si le pones un solo argumento irá desde el 0 al 10  
+Range 10 \= {0; 1; 2; 3; 4; 5; 6; 7; 8; 9}
+
+Si le pones 2 argumentos irá de un extremo al otro  
+Range 10, 20 \= {10; 11; 12; 13; 14; 15; 16; 17; 18; 19}
+
+Pero si le pones un 3er argumento se saltará esa cantidad
+
+Range 10, 20, 2 \= {10; 12; 14; 16; 18}
+
+Velo como 1\. desde, 2\. hasta y 3\. ve de x en x (de 2 en 2 en este caso)
+
+Multiplicar  
+{1; 2; 3} \* 2 \= {1; 2; 3; 1; 2; 3}
+
+Hay casos donde puedes llegar a usar las comas que si bien están reservadas para los argumentos de generadores y efectos también es casos muy especiales pueden generar grupos
+
+1, 2, 3 \= {1; 2; 3}  
+{1, 2, 3} \= {{1; 2; 3}}
+
+En este último caso genera un grupo dentro de un grupo, esto es algo muy importante que debes tomar en cuenta al hacer melodías y cosas en SBR
+
+En si quieres aislarlo de otro elementos puedes hacer lo siguiente
+
+(1, 2, 3\) \= {1; 2; 3}
 
 **Notes** (notas)  
 *Grado | Octava*
@@ -342,374 +407,195 @@ Y como “no existe un 8vo grado” entre comillas, que a lo mucho sería… su 
 
 8|5 \= 1|6
 
-Syntax  
-In case of havin purely numeric characters, it will be  
-prossed as a mathematical operation and the order of the  
-operations will be based on the PEMDAS standard (parentesis,  
-exponents, multiplication, addition, subtraction)
+Y si SBR es diatónico esto significa que no tenemos sostenidos y bemoles? Pues sí los tenemos
 
-Examples:
+Solo debemos escribir un “b” minúscula o un corchete “\#” al antes, después o entre el dato de la nota
 
-5+5\*2 \= 15    
-(5+5)\*2 \= 20
+\#1|5 o b1|5
 
-\--You can do this as well    
-(5+5)2 \= 20    
-but... and if it's melodic?
+Esto restará un tono cromático a la nota, independientemente de la escala en la que estés
 
-However, in case of containing generators, effects or any musical data  
-such as notes, tones, rhythms or a groups, everything will be  
-processed left to right in this order
+Por ejemplo si estás en Do major o jónico o modo lidio, un 7|4 sonará igual a b1|5
 
-Examples:
+*Por cierto, también podrías utilizar los enteros como notas, aunque no es una práctica recomendable, ya que es visualmente más complicado de ver aunque quizás te termines acostumbrando*
 
-  ↓↓↓↓all this are an argument, only one    
- B1000 L8 \= B1000 1000    
- ↑     ↑     ↑    
- ↑     ↑     (zeros and ones) these are the rhythm data    
- ↑    (L) repeats the number of bits until x number long (effect)    
-(B) is used to generate the bits (generator)    
-The total of all the code is called Brick :D  
-Other example
+*La idea sería tomar la octava, multiplicarlo por 7 y sumarle el grado menos 1 algo así “octava\*7+grado-1” de modo que 1|5 sería 34*
 
- M0,-2,2,-1    
- ↑     ↑    
- ↑    (0,-2,2,-1) arguments are separated by commas    
-(M) is used to generate the tones    
-Run some of these keywords to take full advantage of the language's potential  
-help: tutorial  
-help: effects \--view all effects  
-help: generators \--view all generators  
-help: keywords \--view all keywords  
-help: operators  
-help: syntax  
-help: E
+*De hecho si pones b34 te sale b1|5 porque el intérprete lo visualiza de esa manera, aunque repito, no es una práctica recomendada*
 
-vars: \--view actual variables
+Y como defino la escala? Pues… la escala es la mezcla de el modo y el tono, solo debes hacer esto
 
-play: Sm{son\*2; Jumps 5,-1,5,-1,5,-1,-2,-1,-1 Oct5}  
-play: Sm{E13S12X2; pop Oct6 Arp}\*4  
-play: Sm{son S4 X2; pop Oct5}\*4
+tone \= e\_
 
-\-- this is a short comment :)
+Esto hace que la tonalidad de la canción sea “Mi”, si quieres que sea “Sol” solo pon “g\_”, para “Si” pon “b\_” y así, para Fa sostenido pon “f\#\_”
 
-\*\*\*  
-this is...  
-a long comment  
-I can write things  
-on the lines I want to  
-write, basically a multi-line comment  
-\*\*\*
+Estas son variables (o más bien constantes porque no se pueden modificar) que almacenan enteros, el Do sería 0 y el Si 11
 
-You can clear the SBR console with these keywords:
+Para el modo debemos meter un dato rítmico, tal así
 
-clear  
-cls  
-...  
-..
+mode \= B101011010101
 
-\-- these are rhythms  
-B1000\*4  
-C3  
-E5,16
+*Los unos sólo en este caso serían las teclas blancas de un piano y las negras los serios, si conoces del mundo se la armonía modal sabrás que con el efecto “\<\<” para los ritmos puede servir en este caso para cambiar de modo siempre y cuando el ritmo toque en un 1*
 
-\-- these are notes  
-1|5 \-- 1st degree of the 5th octave  
-1b|7 \-- 1st degree flat, 7th octave  
-1\#|7 \-- 1st degree flat, 7th octave
+Obviamente para esto hay variables
 
-\-- these are groups  
-\-- you can save things in them
-
-{} \-- empty group
-
-{1; 2; 3; 4; 5 \-- you don't need a ";" here  
-6; 7; 8; 9}
-
-\-- this  
-{B10010010  
-{69}; 18  
-M0,1,2,3,4}  
-\-- this is the same as this  
-{B1001 0010; {69}; 18; M1|, 2|, 3|, 4|, 5|}
-
-\-- these are tones  
-M33,34,35  
-M6|4, 7|4, 1|5
-
-\-- they are like groups but with notes  
-\-- this is a melody
-
-Sm{son\*2; Jumps 4,1,-2,-1,-1,1,-1,-2,1 Oct5}
-
-Sm{-- the melody must have rhythm and tones  
-B1001 0010 0010 1000\*2  
-M1|5, 5|5, 4|5, 2|6, 1|6, 6|6, 5|6, 3|6, 2|6  
-}
-
-play: Sm{son\*2; Jumps 4,1,-2,-1,-1,1,-1,-2,1 Oct5}
-
-How to import Instruments and Sounds  
-You can import an instrument this way I recommend that you load all the instruments and sounds you are going to load in the initial main.sm file to avoid this repetitive task
-
-\--Instruments  
-instrument: inst\\Synt1  
-instrument: inst\\Synt3
-
-\--Samples  
-instrument: inst\\Vocal.wav
-
-\--Percusions  
-instrument: inst\\Kick.wav  
-instrument: inst\\Clap.wav  
-instrument: inst\\Hat.wav  
-instrument: inst\\Snare.wav  
-\-- The instruments are called this way  
-$Synt1  
-$Kick
-
-\-- They will show something like this in the console  
-$12 \*\*\*$Synt1 recorded instrument from 'inst\\Synt1'\*\*\*  
-$15 \*\*\*$Kick sampled instrument from 'inst\\Kick.wav'\*\*\*
-
-The letter V indicates the velocity or force with which a note is hit, but in this case it means the decibels of the track. In melodies it ranges from 0 to 1, but in the case of structures it works from \-∞ to 0
-
-\-- creating a polyrhythm in SBR  
-tempo \= 103  
-i\_dance \= Struct{  
-  V0; $Kick; bossa\*2  
-  V0; $Clap; C8 \>\>4  
-  V0; $Hat; E13L32  
-}
-
-play: i\_dance \* 2  
-\-- creating a melody in SBR  
 mode \= wind  
-tone \= e\_  
-tempo \= 128
+– viento o modo menor  
+mode \= lonic  
+– lonic, jonico o mejor dicho modo mayor
 
-bass \= Sm{  
-   B1010 1011\*2 X8  
-   M1|1, 6|, 7|, 3|1, 2|1  
-}
+Con el comando “vars” se pueden ver otros modos, ritmos, tonos, escalas y más recursos disponibles
 
-play: bass\*2 Oct3
+*Por cierto, a finales de 2023 descubrí experimentando con python en mi teléfono, que los ritmos euclidianos pueden generar las escalas de la música modal de los últimos cientos de años, me explotó la cabeza cuando lo ví*
 
-view the magic  
-\-- creating a Song in SBR  
-mode \= wind \-- minor mode  
-tone \= f\_ \-- f tone  
-tempo \= 128 \-- this is the tempo in bpm
+**M** (es como el B de los tonos)
 
-\-- melody
+“M” es un generador que retorna un objeto iterable ¿Y esto qué quiere decir? que es como un grupo
 
-intervals \= 0,4,0,-1,-1,
+Permite meter tanto enteros como notas
+
+M35, 36, 37 \= M1|5, 2|5, 3|5
+
+También podemos usar el efecto “Oct” que simplemente sube o disminuye octavas
+
+M1|, 2|, 3| Oct5 \= M1|5, 2|5, 3|5
+
+M0, 1, 2 Oct5 \= M1|5, 2|5, 3|5
+
+“J” sirve para generar tonos a partir de intervalos de un grupo o lista pasado como argumento, esto de los grupos lo veremos más adelante
+
+intervals \= 0, 4, 0, \-1, \-1
+
+J0,{  
+   intervals, \-4, intervals, \-1, intervals, 1, 1, 1, \-4  
+   intervals, \-4, intervals, \-1, intervals, 1, 2,    \-4  
+   }
+
+Por motivos prácticos el generador “J” aplica algo llamado recursión, toma los números de los grupos dentro de otros grupos hasta el infinito hasta tener una lista con solo número que después retorna tonos
+
+Ese de arriba es el contenido tonal de una canción que saqué hace tiempo, en 2022  
+[Just do it \- Brick Briceño 🧡💙](https://www.youtube.com/watch?v=FNt8UnD2Jl4)
+
+Una forma que quizas te sea muy facil y muy practica de escribir tonos, usando la “G”, sin necesidad de poner comas y esas cosas ya puedes escribir los grados de tu melodia, en este caso el contenido tonal de cumpleaños feliz
+
+G1121 43 1121 54 Oct5 \= M1|5, 1|5, 2|5, 1|5, 4|5, 3|5, 1|5, 1|5, 2|5, 1|5, 5|5, 4|5
+
+Y comó puedo **hacer acordes**? simple, metele grupos con las notas dentro, de este modo se reproducen las notas de un grupo al mismo tiempo
+
+M{1| ;3| ;5|}, {6|; 1| ;3|}, {3|; 5|; 7|}, {7|; 2|; 4|} Oct4
+
+Si quieres crear acordes a partir del efecto “Chord”, que crea armonías
+
+M0, \-2, 2, \-1 Oct5, Chord 1, 3, 5 \= M{1|5;3|5;5|5},{6|4;1|5;3|5},{3|5;5|5;7|5},{6|4;1|5;3|5}
+
+Puedes crear quintas con “Chord 1, 5” o séptimas con “Chord 1, 3, 5, 7”
+
+Si quieres extraer las notas y dejarlas sin grupos, como por ejemplo si quieres convertir los acordes en un arpegio puedes usar “Arp”
+
+M0, \-2, 2, \-1 Oct5, Chord 1, 3, 5, Arp \= M1|5, 3|5, 5|5, 6|4, 1|5, 3|5, 3|5, 5|5, 7|5, 7|4, 2|5, 4|5
+
+**Melodías** (Y un poco de mezcla)  
+Sm{bossa; G 88857} Oct5 \* 2
+
+Simplemente mete el contenido tonal y rítmico en un una lista o grupo y pasalo como argumento al generador “Sm”, siglas de Symmetrical melody
+
+intervals \= 0,4,0,-1,-1
 
 melody \= Sm{  
-   (son Add14 \* 3 C3,4\*2X2Q4) \* 2  
-   Jumps {  
+   (son Add14 \* 3 C3,4\*2 X2 Q4) \* 2  
+   J0,{  
       intervals, \-4, intervals, \-1, intervals, 1, 1, 1, \-4  
-      intervals, \-4, intervals, \-1, intervals, 1, 2, \-4  
+      intervals, \-4, intervals, \-1, intervals, 1, 2,    \-4  
       }  
 } Oct5
 
 \-- chords  
-chords \= Sm{B1000X4\*8;pop} Oct4
+chords \= Sm{B1000X4 \* 8; pop} Oct4
 
 bass \= Sm{  
    B1010 1011\*2 X8  
    M1|1, 6|, 7|, 3|1, 2|1  
 } Oct3
 
-song \= Struct{  
-  \--melody  
-   V0; $Harp; melody  
-   V0; $Harp; chords  
-   \-- bass  
-   V3; $Jazz\_Guitar; bass  
-   \-- drumps  
-   V0; $Kick; C4,16 son  
-   V0; $Clap; C8 \>\>4 X2  
-   V0; $Hat; E13L32 X2  
-}
+Si no sabes qué son los guiones dobles son para **comentar** el codigo, osea, notas para saber qué porongas fué lo que hiciste ahí y darte una idea de como vá el código
 
-play: song
+E5,14,16 – hola esto es un comentario
 
-\-- This song was made some time before starting SBR  
-\-- https://youtu.be/FNt8UnD2Jl4
+– soy ignorado por el compilador e intérprete para ayudar al compositor a guiarse
 
-You can pass arguments to the executable and open code files to test it  
-sm my\_amazing\_song.sm  
-py . my\_amazing\_song.sm  
-SBR tools and keywords  
-Arguments in keywords are separeted by (::)
+Hablaré más cosas importantes sobre los comentarios más adelante
 
-help: is used to search for documentation
+**Números**  
+2+2 \= 4
 
-donate: if you like this tool, help me keep growing \<3
+Ya que posiblemente los números los aprendiste en la escuela pasaré a la parte sobre los operadores, que por cierto, sabemos que hay tipos de datos flotantes (decimales), y enteros
 
-exit: exits the interpreter
+2 \+ 2 \= 4  
+8 \- 3 \= 5  
+5 \* 5 \= 25  
+(5)5 \= 25  
+5 / 2 \= 2.5  
+5 // 2 \= 2   – división entera, sin decimales  
+\~ 5 \= 5I \= \-6 – sirve para invertir un numero al igual que la “I” (i mayúscula)  
+1 ^ 1 \= 0   – “compuerta Xor” (busca sobre eso)  
+1 & 0 \= 1  – “compuerta and” (busca sobre eso)  
+3 % 2 \= 1 – resto de una división, sirve para muchas cosas, entre ellas saber si un número es par, esto tiene interesantes aplicaciones con los ritmos euclidianos  
+2.85 Round \= 3 – “Round” es un efecto numérico que sirve para redondear números
 
-license: displays the license
+**Strings**  
+"your age is 24 years"
 
-print: displays the data
+No tiene mucha ciencia solo abre y cierras con comillas dobles, del resto puedes poder letras de canciones codigo para sintetizar audio u otras cosas más avanzadas que puedes hacer  
+Como curiosidad existe el F String o String formateado donde puedes meter bloques de código o variables dentro, donde simplemente pones el string con el código entre llaves como argumento del generador “F”
 
-type: displays the type(s) of data Example
+age \= 24  
+F"your age is {age} years"
 
-type: 1:: son:: pop:: $Seno  
-1 is an int  
-B1001 0010 0010 1000 is a Rhythm  
-M{1|;3|;5|},{-1|;1|;3|},{3|;5|;7|},{0|;2|;4|} is a Tones  
-$8 \*\*\*$Seno\*\*\* is an Instrument  
-vars: displays the variables in the system ident: identifies the code play: plays the data you enter Example
+Por cierto en este lenguaje puedes poner saltos de linea con solo las comillas dobles sin más
 
-\-- plays the content  
-play: son
+"  
+Hola esto es una línea  
+y esta es otra línea  
+"
 
-\-- plays the content and pauses playback  
-\--until the audio floats finish playing.  
-play: son:: true  
-sm1: a small piano roll I made in 2022-2023 sleep: pauses the code export: exports the audio of the data in different formats
+También puedes multiplicar y repetir
 
-Example
+"hola " \* 5 \= "hola hola hola hola hola "
 
-export: song:: my\_song.mp3  
-metric: measures the metric of rhythmic data
+**Booleanos**  
+true
 
-editor: a minimalist text editor
+Encendido o apagado, si o no, bueno o malo, así de básico es, no son tipos de datos solo no variables inmutables o constantes guardan un 1 o un 0
 
-rec: records the rhythm you play on the console
+true \= 1  
+false \= 0
 
-tap: calculates the bpm you enter
+Te reto a intentar guardar algo para que veas que no te deja, a continuación te enseñaré a ver todas estas variables, mutables e inmutables
 
-code\_made: displays and saves a history of the keywords you have entered
+**Palabras claves**  
+play song : true
 
-instrument: is used to import an instrument, be it a folder or .wav file
+Sirven para realizar tareas, son literalmente programas dentro de programas que sirven para una infinidad de cosas como reproducir tu canción, exportar el audio para enviarselo a alguien, samplearlo, o exportar el midi para llevar la melodía a una estación de audio digital profesional (DAW), visualizar la melodía, ejecutar el código varias veces, o si cumplen condiciones, pausar el código por un tiempo, grabar un ritmo con el teclado, marcar el tempo que quieres en la canción o cosas tan útiles como tocar el piano
 
+Cada una de estas palabras claves es un mundo, pero para usarlos solo debes poner su nombre y sus argumentos si los requiere separados con doble punto :
 
-## SBR tools and keywords
+En el caso de “play” como primer argumento le pones algun dato rítmico, después un booleano
 
-Arguments in keywords are separeted by (::)
+play M|5 : true
 
-**help:** is used to search for documentation
+Esto pausa el código hasta que se termine de reproducir la última muestra de audio, osea que si el sonido tiene una rever larga va a tardar en continuar el codigo, caso contrario si pones false o un cero, o simplemente nada
 
-**donate**: if you like this tool, help me keep growing <3
+play B1000\*4
 
-**exit**: exits the interpreter
+Una buena forma de buscar ayuda es usando “help” te muestra mucha información sobre el lenguaje, te explicaria pero ese mismo comando o palabra clave habla sobre sí misma y mucho más
 
-**license**: displays the license
+Otra muy buena es “vars” te muestra todas las variables registradas en ese momento
 
-**print**: displays the data
+“export” también te puede servir guardas el dato en formato wav, mp3, ogg, mid entre otros, con este ultimo puedes usar las melodías en otro software de audio profesional para hacer mezcla
 
-**type**: displays the type(s) of data
-*Example*
-```sbr
-type: 1:: son:: pop:: $Seno
-1 is an int
-B1001 0010 0010 1000 is a Rhythm
-M{1|;3|;5|},{-1|;1|;3|},{3|;5|;7|},{0|;2|;4|} is a Tones
-$8 ***$Seno*** is an Instrument
-```
+**Consejos y estándares para escribir código limpio**
 
-**vars**: displays the variables in the system
-**ident**: identifies the code
-**play**: plays the data you enter
-*Example*
-```
--- plays the content
-play: son
-
--- plays the content and pauses playback
---until the audio floats finish playing.
-play: son:: true
-```
-
-**sm2**: a small piano roll I made in 2022-2023
-
-**sleep**: pauses the code
-```sbr
-sleep: .5
--- This pauses the code for half a second<>
-```
-
-**export**: exports the audio of the data in different formats
-*Example*
-```sbr
-
-export: melody:: melody.mid
-
-valve_distortion_gain: 50
-
-export: song:: my_song.mp3
-```
-
-**drag_n_drop** drag files to your DAW or File Explorer
-*Example*
-```sbr
-drag_n_drop: mp3::melody:: chords:: bass
-```
-
-**metric**: measures the metric of rhythmic data
-
-**editor**: a minimalist text editor
-
-**rec**: records the rhythm you play on the console
-
-**tap**: calculates the bpm you enter
-
-**code_made**: displays and saves a history of the keywords you have entered
-
-**instrument**: is used to import an instrument, be it a folder or .wav file
-The instrument route is set :)  
-*Example*
-```sbr
--- Brick's instruments
-instrument: inst\Synt1
-instrument: inst\Synt3
-```
-See [How to create instruments](how-to-create-instruments.md) 🎸
-
-**valve_gain** Adds a small tube distortion that simulates the 12AX7 tube
-*Example*
-```sbr
-valve_gain: 50
-```
-
-**brute_force** Reduce the size of your rhythmic, tonal, and melodic data
-*Example*
-```sbr
-brute_force: melody
-```
-
-#### and many more keywords
-```
-help ........ Everyone asks me for help but, no one asks me how I am  
-donate ...... Help this project continue to grow  
-exit ........ Never give up, stay hard  
-licence ..... There's no description  
-print ....... There's no description  
-type ........ There's no description  
-pulse ....... Change the time signature  
-vars ........ There's no description  
-clock ....... There's no description  
-ident ....... There's no description  
-play ........ There's no description  
-pause ....... Umm i just pause, i don't know what u wanna i say .-.  
-sm2 ......... A little daw that i was made in 2023 after job :)  
-sleep ....... I pause the code for a few secounds  
-export ...... I export addictive substances... the music! I've it in mp3, wav and mid, which do you want?  
-drag_n_drop . There's no description  
-metric ...... How many pulses does any data have  
-len ......... What length is a data  
-phrase ...... There's no description  
-editor ...... A simple text editor  
-rec ......... Kick enter to record the Rhythm faster  
-tap ......... Use me for know the tempo that you are beating  
-ls .......... If you wanna i show you files and folders...  
-code_made ... I remember all you really do it  
-instrument .. I record an instrument  
-set_max_digits  Don't looking for the 5th hand's cat  
-brute_force . There's no description  
-del_temp .... I clear temporal files  
-valve_distortion_gain  Set the gain for the valve distortion effect in master  
-```
+Ritmos  
+Tonos  
+grupos  
+strings  

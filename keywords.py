@@ -797,6 +797,10 @@ def sbr_fn(args):
     "Hello, have a nice day! :D"
     ...
 
+def sbr_raise(args):
+    ...
+
+
 
 record = {
     #Keywords
@@ -804,6 +808,7 @@ record = {
     "for": sbr_for,
     "while": sbr_while,
     "fn": sbr_fn,
+    "raise": sbr_raise,
 
     #Tools
     "help": sbr_help,
