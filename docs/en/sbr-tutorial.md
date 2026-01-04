@@ -376,11 +376,11 @@ Other example
  ↑     ↑    
  ↑    (0,-2,2,-1) arguments are separated by commas    
 (M) is used to generate the tones    
-Run some of these commands to take full advantage of the language's potential  
+Run some of these keywords to take full advantage of the language's potential  
 help: tutorial  
 help: effects \--view all effects  
 help: generators \--view all generators  
-help: commands \--view all commands  
+help: keywords \--view all keywords  
 help: operators  
 help: syntax  
 help: E
@@ -401,7 +401,7 @@ on the lines I want to
 write, basically a multi-line comment  
 \*\*\*
 
-You can clear the SBR console with these commands:
+You can clear the SBR console with these keywords:
 
 clear  
 cls  
@@ -541,8 +541,8 @@ play: song
 You can pass arguments to the executable and open code files to test it  
 sm my\_amazing\_song.sm  
 py . my\_amazing\_song.sm  
-SBR tools and commands  
-Arguments in commands are separeted by (::)
+SBR tools and keywords  
+Arguments in keywords are separeted by (::)
 
 help: is used to search for documentation
 
@@ -582,14 +582,14 @@ rec: records the rhythm you play on the console
 
 tap: calculates the bpm you enter
 
-code\_made: displays and saves a history of the commands you have entered
+code\_made: displays and saves a history of the keywords you have entered
 
 instrument: is used to import an instrument, be it a folder or .wav file
 
 
-## SBR tools and commands
+## SBR tools and keywords
 
-Arguments in commands are separeted by (::)
+Arguments in keywords are separeted by (::)
 
 **help:** is used to search for documentation
 
@@ -657,7 +657,7 @@ drag_n_drop: mp3::melody:: chords:: bass
 
 **tap**: calculates the bpm you enter
 
-**code_made**: displays and saves a history of the commands you have entered
+**code_made**: displays and saves a history of the keywords you have entered
 
 **instrument**: is used to import an instrument, be it a folder or .wav file
 The instrument route is set :)  
@@ -681,7 +681,7 @@ valve_gain: 50
 brute_force: melody
 ```
 
-#### and many more commands
+#### and many more keywords
 ```
 help ........ Everyone asks me for help but, no one asks me how I am  
 donate ...... Help this project continue to grow  

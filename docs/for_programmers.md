@@ -10,7 +10,7 @@ Este archivo maneja la reproducción y procesamiento de audio. Utiliza bibliotec
 3. b_color.py
 Este archivo contiene funciones relacionadas con el manejo de colores, como la conversión entre formatos de color y la generación de paletas de colores aleatorias. Utiliza la biblioteca colorama para imprimir texto en color en la consola.
 
-4. commands.py
+4. keywords.py
 Define comandos para el lenguaje SBR, como play, export, instrument, y metric. También incluye funciones para limpiar y procesar el código SBR.
 
 5. compiler.py

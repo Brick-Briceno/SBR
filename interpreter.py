@@ -3,7 +3,7 @@ from errors import SBR_ERROR
 from sbr_parser import *
 from variables import *
 import generators
-import commands
+import keywords
 
 
 def replace_variables(code: str) -> str:
@@ -61,16 +61,16 @@ def sbr_line(idea: str):
     elif strip_idea in vars_instruments:
         return vars_instruments[strip_idea]
 
-    #Commands
+    #keywords
     #el primer espacio separa el comando de los datos, el : separa los argumentos
-    command_and_args_with_spaces = idea.strip().split(" ", 1)
-    if command_and_args_with_spaces[0] in commands.record:
-        command = command_and_args_with_spaces[0]
-        if len(command_and_args_with_spaces) == 1:
-            return commands.record[command]([])
+    keyword_and_args_with_spaces = idea.strip().split(" ", 1)
+    if keyword_and_args_with_spaces[0] in keywords.record:
+        keyword = keyword_and_args_with_spaces[0]
+        if len(keyword_and_args_with_spaces) == 1:
+            return keywords.record[keyword]([])
         else:
-            args = delete_args(command_and_args_with_spaces[1].split(":"))
-            return commands.record[command](args)
+            args = delete_args(keyword_and_args_with_spaces[1].split(":"))
+            return keywords.record[keyword](args)
 
     #logic to check if it's a variables
     elif "=" in idea:
@@ -104,8 +104,8 @@ def sbr_line(idea: str):
         hola = compiler(idea)
         return hola
 
-#send the function to the commands and generators library
-commands.sbr_line = sbr_line
+#send the function to the keywords and generators library
+keywords.sbr_line = sbr_line
 generators.sbr_line = sbr_line
 
 #compile the variables

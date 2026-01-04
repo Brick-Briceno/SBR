@@ -28,7 +28,7 @@ from sbr_utils import clean_console, format_time
 from variables import code_that_has_been_made
 from b_color import print_color as b_print
 from sbr_parser import get_ident_level
-from commands import sbr_import
+from keywords import sbr_import
 
 # ============================================================================
 # CONSTANTS & CONFIGURATION
@@ -107,7 +107,7 @@ def error_log():
             f"Python version: {platform.python_version()}\n"
             f"Platform: {platform.platform()}\n\n"
             f"Program path: {program_path}\n\n"
-            f"Commands entered by the user:\n{lines}\n"
+            f"keywords entered by the user:\n{lines}\n"
             f"{'*' * 32}\n"
             f"Python errors:\n\n{format_exc()}\n\n"
         )
@@ -131,7 +131,7 @@ def handle_exception(exception: Exception):
 
 
 # ============================================================================
-# COMMAND HANDLERS
+# KEYWORD HANDLERS
 # ============================================================================
 
 def get_prompt_string():
@@ -176,21 +176,21 @@ def run_repl():
     awake = True
     while awake:
         try:
-            command = input(get_prompt_string())
-            # Special commands
-            if command in ("cls", "clear", "..", "..."):
+            keyword = input(get_prompt_string())
+            # Special keywords
+            if keyword in ("cls", "clear", "..", "..."):
                 clean_console()
                 continue
-            elif command == "exit":
+            elif keyword == "exit":
                 print("Use Ctrl+C to exit or cancel any processes")
                 return
-            elif command in ("pause", "\x10", "."):
+            elif keyword in ("pause", "\x10", "."):
                 sbr_line("pause")
                 continue
-            # Execute command
-            code_that_has_been_made.append(command)
+            # Execute keyword
+            code_that_has_been_made.append(keyword)
             start = time.time()
-            result = sbr_line(command)
+            result = sbr_line(keyword)
             # Show debug info
             if DEBUG and result is not None:
                 elapsed = format_time(time.time() - start)
@@ -274,7 +274,7 @@ def show_help(topic: str = None):
 # ============================================================================
 
 def main():
-    """Main entry point - dispatch based on command line arguments"""
+    """Main entry point - dispatch based on keyword line arguments"""
     # Parse flags
     parse_debug_flag()
     # Setup environment
@@ -286,23 +286,23 @@ def main():
         run_repl()
         return
     
-    # Parse command
-    command = sys.argv[1]
-    if command == "-v":
+    # Parse keyword
+    keyword = sys.argv[1]
+    if keyword == "-v":
         show_version()
 
-    elif command in ("-h", "-help"):
+    elif keyword in ("-h", "-help"):
         topic = sys.argv[2] if len(sys.argv) >= 3 else None
         show_help(topic)
     
-    elif command in ("-c", "-code"):
+    elif keyword in ("-c", "-code"):
         if len(sys.argv) >= 3:
             run_code_string(sys.argv[2])
         else:
             b_print("Error: -code requires a code string argument", color=color3)    
     else:
         # Assume it's a file path
-        run_file(command)
+        run_file(keyword)
 
 
 # ============================================================================

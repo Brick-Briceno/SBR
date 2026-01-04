@@ -3,8 +3,8 @@ Symmetry Melody Api v2.1
 @Brick_briceno 2023
 """
 
-from variables import variables_user
 from lib.synthesizer import create_tone
+from variables import variables_user
 from errors import SBR_ERROR
 from sbr_utils import *
 from sbr_types import *
@@ -69,6 +69,7 @@ def play_array(audio_data, sleep=False):
     if sleep: time.sleep((1/sample_rate)*len(audio_data))
 
 
+# I made this other player to synchronize a song using a method that obtains the playback time
 def play_array2(audio_data: np.ndarray, sleep=False):
     audio_data = (audio_data * 2**15).astype(np.int16)
     audio_bytes = audio_data.tobytes()

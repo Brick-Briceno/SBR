@@ -1,5 +1,5 @@
 """
-SBR Commands
+SBR keywords
 by @brick_briceno 2025
 
 """
@@ -91,8 +91,8 @@ def sbr_help(instruction):
             sbr_help(["generators"]), input()
             b_print("and... how many Effects there are?", color=color1)
             sbr_help(["effects"]), input()
-            b_print("the Commands are awsome!", color=color1)
-            sbr_help(["commands"]), input()
+            b_print("the keywords are awsome!", color=color1)
+            sbr_help(["keywords"]), input()
             b_print("check the SBR's Documentation for learn music and more about this increible lenguage ;)", color=color2)
             input()
 
@@ -112,7 +112,7 @@ def sbr_help(instruction):
                 print(keys, value.__doc__ if value.__doc__ else 
                       "There's no description", sep=f" {'.'*((12)-len(keys))} ")
 
-        elif "command" in h.lower():
+        elif "keyword" in h.lower():
             for keys, value in zip(record.keys(), record.values()):
                 print(keys, value.__doc__ if value.__doc__ else 
                       "There's no description", sep=f" {'.'*((12)-len(keys))} ")
@@ -199,7 +199,7 @@ For example type:
 help tutorial
 help effects
 help generators
-help commands
+help keywords
 help operators
 help syntax
 help E
@@ -749,7 +749,7 @@ def donate(_):
 
 def ls(_):
     "If you wanna i show you files and folders..."
-    #ls command in bash
+    #ls keyword in bash
     os.system("dir" if os.name == "nt" else "ls")
 
 

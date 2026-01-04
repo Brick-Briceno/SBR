@@ -83,7 +83,7 @@ def indentation(code: str, _open="{", _close="}", end=";") -> str:
         elif open_char[_open] != 0 and char == ":":
             piece_of_code[_open] = ""
             open_char[_open] = 0
-            raise SBR_ERROR(f"You cannot run commands inside an group")
+            raise SBR_ERROR(f"You cannot run keywords inside an group")
 
         # Continue with the logic
         elif char is _open:

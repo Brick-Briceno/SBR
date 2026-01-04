@@ -59,8 +59,8 @@ class TextEditor:
         # Configure the scrollbar
         self.scrollbar = tk.Scrollbar(self.text_area)
         self.scrollbar.pack(side="right", fill="y")
-        self.scrollbar.config(command=self.text_area.yview)
-        self.text_area.config(yscrollcommand=self.scrollbar.set)
+        self.scrollbar.config(keyword=self.text_area.yview)
+        self.text_area.config(yscrollkeyword=self.scrollbar.set)
 
         # Bind events to update line numbers
         self.text_area.bind("<KeyRelease>", self.update_line_numbers)
@@ -73,22 +73,22 @@ class TextEditor:
 
         # File menu
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0, bg=self.menu_bg_color, fg=self.menu_fg_color)
-        self.file_menu.add_command(label="New", accelerator="Ctrl+N", command=self.new_file)
-        self.file_menu.add_command(label="Open", accelerator="Ctrl+O", command=self.open_file)
-        self.file_menu.add_command(label="Save", accelerator="Ctrl+S", command=self.save_file)
+        self.file_menu.add_keyword(label="New", accelerator="Ctrl+N", keyword=self.new_file)
+        self.file_menu.add_keyword(label="Open", accelerator="Ctrl+O", keyword=self.open_file)
+        self.file_menu.add_keyword(label="Save", accelerator="Ctrl+S", keyword=self.save_file)
         self.file_menu.add_separator()
-        self.file_menu.add_command(label="Exit", command=self.exit_app)
+        self.file_menu.add_keyword(label="Exit", keyword=self.exit_app)
         self.menu_bar.add_cascade(label="File", menu=self.file_menu)
 
         # Edit menu
         self.edit_menu = tk.Menu(self.menu_bar, tearoff=0, bg=self.menu_bg_color, fg=self.menu_fg_color)
-        self.edit_menu.add_command(label="Undo", accelerator="Ctrl+Z", command=self.text_area.edit_undo)
-        self.edit_menu.add_command(label="Redo", accelerator="Ctrl+Y", command=self.text_area.edit_redo)
+        self.edit_menu.add_keyword(label="Undo", accelerator="Ctrl+Z", keyword=self.text_area.edit_undo)
+        self.edit_menu.add_keyword(label="Redo", accelerator="Ctrl+Y", keyword=self.text_area.edit_redo)
         self.edit_menu.add_separator()
-        self.edit_menu.add_command(label="Cut", accelerator="Ctrl+X", command=self.cut_text)
-        self.edit_menu.add_command(label="Copy", accelerator="Ctrl+C", command=self.copy_text)
-        self.edit_menu.add_command(label="Paste", accelerator="Ctrl+V", command=self.paste_text)
-        self.edit_menu.add_command(label="Select All", accelerator="Ctrl+A", command=self.select_all)
+        self.edit_menu.add_keyword(label="Cut", accelerator="Ctrl+X", keyword=self.cut_text)
+        self.edit_menu.add_keyword(label="Copy", accelerator="Ctrl+C", keyword=self.copy_text)
+        self.edit_menu.add_keyword(label="Paste", accelerator="Ctrl+V", keyword=self.paste_text)
+        self.edit_menu.add_keyword(label="Select All", accelerator="Ctrl+A", keyword=self.select_all)
         self.menu_bar.add_cascade(label="Edit", menu=self.edit_menu)
 
         self.root.config(menu=self.menu_bar)

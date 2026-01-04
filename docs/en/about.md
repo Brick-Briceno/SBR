@@ -16,7 +16,7 @@ In fact, it could even help with microtonal music in the future, and I think it 
 
 SBR can generate an infinite number of rhythms that are pleasing to the ear, based on effects that I've personally observed. It's been in the most listened to music of recent years in popular music, and that Some papers from this millennium have found expression in the traditional music of many cultures, which for some reason, perhaps because of its Euclidean symmetry, have prevailed for millennia.
 
-One of its virtues is its documentation. You can find composition techniques, harmony tutorials, and simplified and advanced music theory, and of course, everything about the syntax, effects, generators, commands, operators, and data types available.
+One of its virtues is its documentation. You can find composition techniques, harmony tutorials, and simplified and advanced music theory, and of course, everything about the syntax, effects, generators, keywords, operators, and data types available.
 
 SBR borrows concepts from object-oriented programming, which is based on recycling and modifying melodies with techniques that can't even be counted on the toes. We have the philosophy of polymorphism, where one thing can be recycled to have multiple uses in a song or act differently depending on the context.
 

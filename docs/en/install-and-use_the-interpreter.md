@@ -10,7 +10,7 @@ cd SBR
 py .
 ```
 
-***The program must have a main.sm file to work, in which the data, commands or variables that you want to have loaded whenever you run the interpreter will be stored.***
+***The program must have a main.sm file to work, in which the data, keywords or variables that you want to have loaded whenever you run the interpreter will be stored.***
 
 ## How to use
 
@@ -22,7 +22,7 @@ py .
 ## How to use the interpreter
 
 
-## Run some of these commands to take full advantage of the language's potential
+## Run some of these keywords to take full advantage of the language's potential
 ```sbr
 --Learn SBR
 help:
@@ -38,14 +38,14 @@ play: Sm{son S4 X2; pop Oct5}*4:: true
 
 ```
 
-### You can clear the SBR console with these commands:
+### You can clear the SBR console with these keywords:
 ```
 clear
 cls
 ...
 ..
 ```
-### You can pause the sound on SBR console with these commands:
+### You can pause the sound on SBR console with these keywords:
 ```
 pause: (This is the only one that works outside of interactive mode)
 ctrl + p + enter
