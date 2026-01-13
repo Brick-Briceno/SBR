@@ -1,15 +1,37 @@
+"""
+Interpreter developed by @brick_briceno in 2025
+
+"""
+
+import string
 from compiler import compiler
 from errors import SBR_ERROR
-from sbr_parser import *
+from sbr_utils import *
 from variables import *
 import generators
 import keywords
 
 
+"Variables"
+ident_level = 0
+piece_of_string = ""
+open_string  = False
+piece_of_code_in_groups = ""
+COMMENTARY_CHARACTER = "--"
+SPLIT_LINES = ";;" #token to split lines
+
+
+def get_ident_level() -> int:
+    return ident_level
+
+def get_if_open_string() -> int:
+    return open_string
+
+
 def replace_variables(code: str) -> str:
     all_variables = list(variables_sys)+list(variables_user)+list(vars_instruments)
     all_variables = sorted(all_variables, key=len, reverse=True)
-    
+
     #Split by quotes and process only the parts outside quotes (even indices)
     split_code = code.split('"')
     for i in range(0, len(split_code), 2): #Only process even indices
@@ -29,28 +51,105 @@ def replace_variables(code: str) -> str:
     return '"'.join(split_code)
 
 
+def keys(code: str) -> str:
+    """
+    Handle multiline code with {} brackets
+    Tracks opening and closing braces to allow multiline expressions
+    Code is accumulated until all braces are balanced
+    """
+    global piece_of_code_in_groups, ident_level, open_string
+
+    for char in code:
+        #if he string is open
+        if char == "\"": open_string = not open_string
+        # Possible errors!!!
+        elif ident_level == 0 and char == "}" and not open_string:
+            piece_of_code_in_groups = ""
+            ident_level = 0
+            raise SBR_ERROR(f"A key was never opened")
+
+        elif ident_level != 0 and char == "=" and not open_string:
+            piece_of_code_in_groups = ""
+            ident_level = 0
+            raise SBR_ERROR(f"You cannot assign variables inside an group")
+
+        # Continue with the logic
+        elif char == "{" and not open_string:
+            ident_level += 1
+        elif char == "}"and not open_string:
+            ident_level -= 1
+        piece_of_code_in_groups += char
+
+    if ident_level:
+        # Still have open braces, add semicolon and continue
+        piece_of_code_in_groups += ";"
+        return
+
+    # All braces balanced, return complete expression
+    _end = piece_of_code_in_groups
+    piece_of_code_in_groups = ""
+    return _end
+
+
+def clean_code(code: str) -> str:
+    # Remove all spaces and comments that are not in quotation marks
+    if COMMENTARY_CHARACTER in code:
+        i = 0
+        global open_string
+        code2 = code.replace(COMMENTARY_CHARACTER, "\x00")
+        for char in code2:
+            i += 1
+            if char == "\"":
+                open_string = not open_string
+
+            elif char == "\x00" and not open_string:
+                i += len(COMMENTARY_CHARACTER) - 1
+                return code[:i - len(COMMENTARY_CHARACTER)]
+
+    return code
+
+
+def multiline_string(line: str) -> str | None:
+    global piece_of_string, open_string
+    quotation_is_odd_number = line.count('"') % 2
+    if quotation_is_odd_number:
+        if open_string:
+            open_string = False
+            return piece_of_string + line + "\n"
+        else:
+            open_string = True
+            piece_of_string = line + "\n"
+            # ---> return None <--- 
+    else:
+        if open_string:
+            piece_of_string += line + "\n"
+        else:
+            return line
+
+
 def sbr_line(idea: str):
     """Process a single line of SBR code"""
-    #string
-    idea = multiline_string(idea)
-    if idea == None: return
-
     #the code is empety
-    elif idea.strip() == "": return
-    #clean code
-    idea = clean_code(idea)
+    if idea.strip() == "": return
 
     #multiline code
-    split_lines = ";;" #token to split lines
-    if split_lines in idea:
+    if SPLIT_LINES in idea:
         lines_data = []
-        for line in idea.split(split_lines):
+        for line in idea.split(SPLIT_LINES):
             lines_data.append(sbr_line(line))
         #delete None types
         return [x for x in lines_data if x is not None]
 
-    #groups
-    idea = indentation(idea)
+    #clean code
+    idea = clean_code(idea)
+
+    #string
+    idea = multiline_string(idea)
+    if idea == None: return
+
+    #groups 
+    idea = keys(idea)
+    if idea == None: return
 
     #just it's a simple variable
     strip_idea = idea.strip()
@@ -69,7 +168,7 @@ def sbr_line(idea: str):
         if len(keyword_and_args_with_spaces) == 1:
             return keywords.record[keyword]([])
         else:
-            args = delete_args(keyword_and_args_with_spaces[1].split(":"))
+            args = white_spaces_in_list(keyword_and_args_with_spaces[1].split(":"))
             return keywords.record[keyword](args)
 
     #logic to check if it's a variables
@@ -87,8 +186,8 @@ def sbr_line(idea: str):
         #verificar que sea un nombre de variable correcto
         elif var_name == "":
             raise SBR_ERROR("You are adding something to nothing, there is no variable")
-        elif not only_has(var_name, "abcdefghijklmnñopqrstuvwxyz_0123456789:") or len(
-                        var_name) == 1 or (":" in var_name or var_name[0].isnumeric()):
+        elif not only_has(var_name, "abcdefghijklmnñopqrstuvwxyz_0123456789") or len(
+                        var_name) == 1 or var_name[0].isnumeric():
             raise SBR_ERROR(f"This is not a valid variable name '{var_name}'")
         elif var_name in variables_sys:
             raise SBR_ERROR(f"This variable '{var_name}' is immutable and cannot be modified, please chose another name")

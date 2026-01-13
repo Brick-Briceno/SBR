@@ -22,12 +22,11 @@ from datetime import datetime
 from traceback import format_exc
 
 # SBR modules
+from interpreter import sbr_line, SBR_ERROR, get_if_open_string, get_ident_level
 from b_color import color1, color2, color3, color4, color5
-from interpreter import sbr_line, SBR_ERROR
 from sbr_utils import clean_console, format_time
 from variables import code_that_has_been_made
 from b_color import print_color as b_print
-from sbr_parser import get_ident_level
 from keywords import sbr_import
 
 # ============================================================================
@@ -54,7 +53,7 @@ def parse_debug_flag():
     global DEBUG
     if any(cm in sys.argv for cm in ("-d", "-dev")):
         if len(sys.argv) > 1 and sys.argv[1] in ("-d", "-dev"):
-            sys.argv.pop(1)
+            sys.argv.pop(1) 
         DEBUG = True
 
 
@@ -136,12 +135,11 @@ def handle_exception(exception: Exception):
 
 def get_prompt_string():
     """Generate appropriate prompt string based on state"""
-    if not get_ident_level():
-        consol = "> "
+    if not (get_ident_level() or get_if_open_string()):
+         consol = "> " if not DEBUG else "(dev) > "
     else:
-        indent_chars = 2
+        indent_chars = 4
         consol = "  " + (" " * indent_chars * get_ident_level())
-    if DEBUG: consol = "(dev) " + consol
     return consol
 
 
@@ -192,17 +190,19 @@ def run_repl():
             start = time.time()
             result = sbr_line(keyword)
             # Show debug info
-            if DEBUG and result is not None:
+            if DEBUG and type(result) is not None:
                 elapsed = format_time(time.time() - start)
-                b_print(f"{type(result).__name__} {elapsed}", end=" ")
-
+                if type(result) in (None, list):
+                    b_print(f"{type(result).__name__} {elapsed}", end=" ")
             # Print result
             print_result(result)
-            
+
         except SBR_ERROR as bad:
             handle_sbr_error(bad)
         except (KeyboardInterrupt, EOFError, SystemExit):
             awake = False
+        except MemoryError:
+            handle_sbr_error(SBR_ERROR("There is not enough RAM to perform this operation"))
         except Exception as e:
             if DEBUG: raise e
             awake = error_log()  # Returns None, so loop exits
@@ -237,6 +237,8 @@ def run_file(filepath: str):
         )
     except (KeyboardInterrupt, SystemExit):
         b_print("good bye!", color=color5)
+    except MemoryError:
+        handle_sbr_error(SBR_ERROR("There is not enough RAM to perform this operation"))
     except Exception as e:
         handle_exception(e)
 
@@ -253,6 +255,8 @@ def run_code_string(code: str):
         handle_sbr_error(bad, n)
     except (KeyboardInterrupt, SystemExit):
         b_print("good bye!", color=color5)
+    except MemoryError:
+        handle_sbr_error(SBR_ERROR("There is not enough RAM to perform this operation"))
     except Exception as e:
         handle_exception(e)
 

@@ -20,3 +20,24 @@ with it and that it helps all of you make better music, hugs 💙
 
 - [Click here to learn more about SBR 🎹](docs/en/about.md)
 - [Or click here to learn everything SBR has to offer 😉](docs/en/README.md)
+
+
+### Compile in Windows
+
+```bash
+.\build.bat
+
+```
+
+### Compile in Android
+
+```bash
+cd sbr_apk
+# prepare venv and sdk android
+sudo bash prepare_build_android.sh
+source venv/bin/activate
+# compile app
+buildozer -v android debug
+
+```
+

@@ -1,12 +1,19 @@
 "Variables"
 
-variables_user = {
+default_variables_user = {
     "tempo": 128,
     "tone": 5,
     "mode": "B101101011010",
 }
 
+default_vars_instruments = {}
+
 vars_instruments = {}
+variables_user = {}
+
+vars_instruments = default_vars_instruments.copy()
+variables_user = default_variables_user.copy()
+
 code_that_has_been_made = []
 
 variables_sys = {

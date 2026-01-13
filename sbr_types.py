@@ -6,7 +6,7 @@ by @brick_briceno 2024
 from sbr_utils import (one_dimention_list_recurtion,
                        convert_unions_to_tuples,
                        separate_path_extension,
-                       delete_args)
+                       white_spaces_in_list)
 from typing import get_type_hints
 from errors import *
 import inspect
@@ -493,7 +493,7 @@ class Tones(Group):
             if not only_has(data, ",-0123456789b#"):
                 raise SBR_ERROR(f"Invalid data {data} is {type(data).__name__} type")
             else:
-                for i in delete_args(data.split(",")):
+                for i in white_spaces_in_list(data.split(",")):
                     self.append(Note(i))
         else: raise SBR_ERROR(f"Invalid data {data} is {type(data).__name__} type")
 
@@ -521,7 +521,7 @@ class Tones(Group):
         new = []
         inter = repr(self.int_list).replace(
             "[" , "").replace("]" , "").replace(" " , "")
-        for x in delete_args(inter.split(",")):
+        for x in white_spaces_in_list(inter.split(",")):
             if only_has(x, "-0123456789"):
                 new.append(int(x))
         return new

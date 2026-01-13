@@ -122,7 +122,7 @@ class Smetric():
             sila = self.separar_silabas(self.simplificar_sonido(palabra))[-2][1::]
             sila += self.separar_silabas(self.simplificar_sonido(palabra))[-1]
         else: return []
-        
+
 
         for x in self.data_base:
             if not len(self.separar_silabas(self.simplificar_sonido(x))) < 2:

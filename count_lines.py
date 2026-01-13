@@ -60,13 +60,13 @@ def main():
     if not os.path.exists(repo_root):
         print(f"Error: Directory not found: {repo_root}")
         sys.exit(1)
-    
+
     line_counts, total_lines, file_count = scan_repository(repo_root)
-    
+
     print("\n" + "="*50)
     print("LINE COUNT SUMMARY")
     print("="*50)
-    
+
     # Print counts by file extension
     for ext, count in sorted(line_counts.items(), key=lambda x: x[1], reverse=True):
         print(f"{ext or 'no_extension'}: {count} lines")

@@ -17,10 +17,22 @@ def one_dimention_list_recurtion(group):
                 new.append(x)
     return new
 
-def delete_args(args):
+def white_spaces_in_list(args):
     for _ in range(args.count("")):
         args.remove("")
     return args
+
+
+def white_spaces_in_list(args: list[str]) -> list[str]:
+    return [arg for arg in args if arg.strip() != ""]
+
+
+def only_has(data: str, allowed_characters: str) -> bool:
+    "Check if string only contains allowed characters"
+    for char in data:
+        if char not in allowed_characters:
+            return False
+    return True
 
 
 def convert_unions_to_tuples(x) -> tuple | None:
@@ -45,8 +57,8 @@ def format_time(seconds: float):
     MICROSECONDS = 1e-6
     MILLISECONDS = 1e-3
     MINUTES = 60
-    HOURS = 3600
-    DAYS = 86400
+    HOURS = MINUTES * 60
+    DAYS = HOURS * 24
 
     if seconds >= DAYS:
         return f"{seconds / DAYS:.2f} days"
@@ -80,3 +92,36 @@ def extract_keys(text: str) -> list[str]:
         if inside:
             temp += char            
     return results
+
+
+def word_counter(text: str) -> str:
+    len_text = len(text)
+    spaces = text.count(" ")
+    words = len(text.split())
+    sentences = (
+          text.count("?")
+        + text.count("!")
+        + text.count(". ") #the spaces are in case there are ellipses
+        + text.count(".\n")
+        )
+
+    return f"""
+Text Features:
+Words {words}
+Reading Time {format_time(words * 60 / 250)}
+Characters {len_text}
+Characters without spaces {len_text - spaces}
+Paragraphs {len(text.split("\n"))}
+Sentences {sentences + 1}
+""".strip()
+
+
+def this_is_in_quotation(thing: str, text: str) -> bool:
+    _string_is_open = False
+    for char in text.replace(thing, "\x00"):
+        if char == "\"":
+            _string_is_open = not _string_is_open   
+        elif char == "\x00" and _string_is_open:
+            return True
+    return False
+

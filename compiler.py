@@ -1,9 +1,11 @@
-from sbr_parser import only_has, split_without_group
+from sbr_utils import only_has
 from sbr_types import *
 from errors import *
 import generators
 import effects
 
+
+open_string = False
 
 class syntax_data:
     # Operators
@@ -25,6 +27,31 @@ def something_of_them_in_others(them, others):
         if gen in others:
             return True
     return False
+
+
+def split_without_group(code: str, split: str = ",") -> list[str]:
+    "Split code by delimiter while respecting {} groups"
+    level_key = 0
+    brick = ""
+    result = []
+    string_mode = False
+    for char in code + ",":
+        # Everything inside {} is treated as single argument
+        if char == "{":
+            level_key += 1
+        elif char == "}":
+            level_key -= 1
+        elif char == "\"":
+            string_mode = not string_mode
+
+        if char == split and not level_key and not string_mode:
+            result.append(brick)
+            brick = ""
+        else:
+            brick += char
+
+    return result
+
 
 
 def separate_brick(code):
@@ -49,7 +76,9 @@ def separate_brick(code):
 
         #everything that is inside a keys will be interpreted as an argument data
         #'elif' bucause keys inside quotation mark are arguments
-        elif char == "{": level_key += 1
+        #elif string_on_mode: ...
+        elif char == "{":
+            level_key += 1
         elif char == "}":
             level_key -= 1
             brick += "}"
@@ -66,12 +95,17 @@ def separate_brick(code):
                 brick = ""
             brick += char
             parmt = True
+
         else:
             if parmt:
-                result.append(delete_args(split_without_group(brick)))
+                result.append(
+                    white_spaces_in_list(
+                        split_without_group(brick
+                            )))
                 brick = ""
             brick += char
             parmt = False
+
     for i in range(0, len(result), 2):
         end.append(result[i:i+2])
     return end
@@ -92,24 +126,28 @@ def create_brick(original_list):
     return split_list
 
 
-def prepare_metadata(brick_code):
+def prepare_metadata(brick_code: str) -> list:
     uwu = separate_brick(brick_code)
     return create_brick(uwu)
 
 
-def separate_by_operators(cadena):
+def separate_by_operators(cadena: str) -> list:
     result = []
     part = ""
-    if cadena[0] in syntax_data.math and cadena[1] not in syntax_data.numbers:
+    open_string = False
+    if (cadena[0] in syntax_data.math and cadena[1] not in
+                            syntax_data.numbers and not open_string):
         raise SBR_ERROR(f"You can't start the brick with an operator")
-    for caracter, will in zip(cadena, cadena[1:]+"\xff"):
-        if (caracter in syntax_data.math and not(
+    for char, will in zip(cadena, cadena[1:]+"\xff"):
+        if char == "\"": open_string = not open_string
+
+        if not open_string and char in syntax_data.math and not(
             #There's a diference between sub operator and negative number
-            caracter == "-" and will in syntax_data.numbers)):
+            char == "-" and will in syntax_data.numbers):
             result.append(part)
-            result.append(caracter)
+            result.append(char)
             part = ""
-        else: part += caracter
+        else: part += char
 
     result.append(part.strip())
     return [x for x in result if x]
@@ -167,30 +205,38 @@ def prosses_str_array(data):
     level = 0
     item = ""
     new = []
+    open_string = False
     for char in data[1:-1]+";":
-        if char == "{":
+        if char == "{" and not open_string:
             level += 1
-        elif char == "}":
+        elif char == "}" and not open_string:
             level -= 1
-        if char == ";" and not level:
+        elif char == "\"":
+            open_string = not open_string
+
+        if char == ";" and not level and not open_string:
             new.append(item)
             item = ""
             continue
         item += char
-
     return new
 
 def there_are_operators_in_groups(code: str):
     _code = ""
+    open_string = False
     if "{" in code and any([y in code for y in syntax_data.math]):
-        for x in code:
-            if "{" == x:
+        for char in code:
+            if char == "\"":
+                open_string = not open_string
+            if open_string:
+                _code += char
+            elif "{" == char:
                 _code += "{("
-            elif ";" == x:
+            elif ";" == char:
                 _code += ");("
-            elif "}" == x:
+            elif "}" == char:
                 _code += ")}"
-            else: _code += x
+            else: _code += char
     else: return code
     return _code.replace("()", "")
 
@@ -212,7 +258,7 @@ def maths(expression):
         expression.replace("...", "").replace("()", "")))
         if isinstance(result, float):
             if result == 0: return 0 #float to int bro! xdd
-            return round(result, 8)
+            #return round(result, 8)
         return result
     except (SyntaxError, TypeError):
         raise SBR_ERROR(f"Invalid formula or syntax '{expression}'")
@@ -278,10 +324,15 @@ def compiler(instruction: str):
         return maths(instruction)
 
     #maybe it's a sbr data
-    return magia(instruction)
+    data = magia(instruction)
+    # wtf??? "hola"55 and {"}"
+    if isinstance(data, str):
+        if not (data.endswith("\"") and data.startswith("\"")):
+            raise SBR_ERROR(f"Invalid syntax '{instruction}'")
+    return data
 
 
-def magia(code):
+def magia(code: str):
     #are there operators in groups?
     code = there_are_operators_in_groups(code)
     #Check if there're parentesis here
@@ -303,7 +354,9 @@ def magia(code):
         else:
             for g in prepare_metadata(brick):
                 #g be like [['B', ['101100111001']]] or [['E', ['5', '14', '16']], ['L', ['9', '32']]]
-                if len(g[0]) == 1: raise SBR_ERROR(f"Invalid argument of the generator {g[0]}")
+                if g[0] == [""]:
+                    raise SBR_ERROR("Syntax error")
+                elif len(g[0]) == 1: raise SBR_ERROR(f"Invalid argument of the generator {g[0]}")
                 generator, g_arguments, effects_list = g[0][0], g[0][1], g[1:]
 
                 #convert python strings to SBR types

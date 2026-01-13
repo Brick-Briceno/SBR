@@ -4,6 +4,7 @@ by @brick_briceno 2025
 
 """
 
+from signal import default_int_handler
 from b_color import (hls_to_rgb, hex_to_rgb, rbg_to_hex, rgb_to_hls,
                      color1, color2, color3, color4, color5)
 from b_color import print_color as b_print
@@ -18,13 +19,17 @@ import itertools
 import generators
 import keyboard
 import effects
+import base64
 import shutil
 import Bsound
 import Sbyte
 import time
+import gzip
 import lib
 import sys
 import os
+
+
 
 
 welcome = """
@@ -212,10 +217,10 @@ donate <3
 
 
 
-def sbr_import(data):
-    if not len(data):
+def sbr_import(args):
+    if not len(args):
         return
-    data = data[0]
+    data = args[0]
     try:
         with open(data, "r") as _file:
             _file = _file.read()
@@ -313,6 +318,7 @@ def code_made(args):
 
 def clock(args):...
 
+
 def ident(args):
     #organize arguments
     if len(args) == 0: return
@@ -336,27 +342,30 @@ def ident(args):
 
     print(ident_code)
 
+
 def metric(args):
     "How many pulses does any data have"
-    for x in args:
-        data = sbr_line(x)
+    for arg in args:
+        data = sbr_line(arg)
         if isinstance(data, (Melody, Rhythm)):
             print(f"metric --- {data.metric}")
         else: raise SBR_ERROR(f"Only rhythms and melodies have metric, not {type(data.__name__)}")
 
-def sbr_len(args):
+
+def sbr_len(args):  
     "What length is a data"
-    for x in args:
+    for arg in args:
         ""
-        data = sbr_line(x)
+        data = sbr_line(arg)
         if isinstance(data, (Melody, Rhythm, Group, Tones)):
-            print(f"len --- {len(data)}")
+            print(f"Its length is --- {len(data)}")
         else: raise SBR_ERROR(f"Only rhythms and melodies have len, not {type(data.__name__)}")
 
 def sbr_print(args):
     for x in args:
         data = sbr_line(x)
         print(data)
+
 
 def sbr_type(args):
     for arg in args:
@@ -625,7 +634,7 @@ def keystrokes(args):
     if len(args) != 2:
         raise SBR_ERROR("Put 2 arguments: 'song : {1,2,3,4}'")
     clean_console()
-    play([args[0]])
+    #play([args[0]])
     keys = {"up": '''
         ''', # 72 scan_code
         "down": '''
@@ -782,11 +791,12 @@ def valve_distortion_gain(args):
 
 
 def sbr_if(args):
+    print(args)
     "If you try, you can't fail, failure comes from not trying"
     ...
 
 def sbr_for(args):
-    "They did it for you, do it for them"
+    "They did it for you, you do it for them"
     ...
 
 def sbr_while(args):
@@ -801,6 +811,69 @@ def sbr_raise(args):
     ...
 
 
+def info(args):
+    for arg in args:
+        data = sbr_line(arg)
+        type_name = type(data).__name__
+
+        if "str" == type_name:
+            print(word_counter(data[1:-1]))
+
+        elif type_name in ("Rhythm", "Group"):
+            sbr_type([arg])
+            Metric([arg])
+            sbr_len([arg])
+
+        elif type_name in ("Tones", "Melody"):
+            sm([arg])
+            sbr_type([arg])
+            sbr_len([arg])
+
+        else:
+            sbr_type([arg])
+
+
+def share(args):
+    "Share your song as QR or base 64 code"
+    if len(args) == 0:
+        return
+    data = sbr_line(args[0])
+    if isinstance(data, str):
+        data = data[1:-1].strip()
+        if data == "": return
+
+    bytes_encode = str(data).encode()
+    bytes_compress = gzip.compress(bytes_encode)
+    base64_code = base64.encodebytes(bytes_compress).decode()
+
+    factor = (len(base64_code) / len(bytes_encode))
+    factor = round((len(bytes_encode) / len(base64_code) -1) * 100)
+
+    print("before", len(bytes_encode), "after", len(base64_code),
+                    "factor", f"{factor}%")
+    print(base64_code)
+
+
+def recive(args):
+    "I recive your song as base 64 code"
+    if len(args) == 0:
+        return
+    base64_code = args[0]
+
+    try:
+        bytes_compress = base64.b64decode(base64_code)
+        code = gzip.decompress(bytes_compress).decode()
+        print(code)
+    except (base64.binascii.Error, gzip.BadGzipFile):
+        raise SBR_ERROR("Wrong code")
+
+
+def reset(args):
+    "Reset all"
+    global vars_instruments, variables_user
+    vars_instruments = default_vars_instruments.copy()
+    variables_user = default_variables_user.copy()
+
 
 record = {
     #Keywords
@@ -809,14 +882,19 @@ record = {
     "while": sbr_while,
     "fn": sbr_fn,
     "raise": sbr_raise,
+    "reset": reset,
+    "quit": sbr_exit,
+    "exit": sbr_exit,
 
     #Tools
     "help": sbr_help,
     "donate": donate,
     "welcome": sbr_import,
-    "exit": sbr_exit,
     "licence": sbr_licence,
     "print": sbr_print,
+    "share": share,
+    "recive": recive,
+    "info": info,
     "type": sbr_type,
     "pulse": fn_pulse,
     "vars": sbr_vars,

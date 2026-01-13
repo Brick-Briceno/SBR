@@ -20,7 +20,7 @@ funcion personalizada de impresión 'bprint'
 imprima melodias como se hacia en simetric melody
 recicla ese codigo :D se verá visualmente mejor
 
-mejora el comando de identación
+mejora herramienta de identación
 
 no te olvides de la fuerza bruta!
 
@@ -52,7 +52,7 @@ se debe crear algo como instrucciones, cambiar tempo, escalas, trasponer a otros
 en cierta parte de las canciones
 debe añadirse en los tonos si la nota es primaria o secundaria esto podria ser mediante un punto con doble ||
 
-COMANDOS:
+PALABRAS CLAVE:
 
 buerza bruta euclideana
 ritmo o melodia a buscar
@@ -99,7 +99,7 @@ seciones de analisis de generos musicales, jazz, rock, y mas generos
 tanto su ritmo como sus harmonias
 
 un tutorial de SBR, desde lo basico hasta lo mas avanzado
-y debe tener ejemplos de codigo, hablar de los generadores, efectos, comandos, sintaxis, etc
+y debe tener ejemplos de codigo, hablar de los generadores, efectos, palabras clave, sintaxis, etc
 
 debe tener un buscador de palabras clave
 

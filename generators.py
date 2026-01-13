@@ -204,7 +204,7 @@ def Random(args: list[int | float]):
 "Generadores Srings"
 
 def Format(args: list[str]):
-    "I apply formatting to strings, for example: age = 24;; \"your age is {age} years\""
+    "I apply formatting to strings, for example: age = 24;; F\"your age is {age} years\""
     if len(args) == 0:
         raise SBR_ERROR("Syntax error, you must put a string after the F, Type 'help F' to see more")
     _string = args[0]
