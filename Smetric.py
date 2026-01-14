@@ -1,7 +1,10 @@
 """
 Symmetry Melody Api v2.1
 @Brick_briceno 2023
+
 """
+
+TEXT_FILE = "src/words_es.txt"
 
 class Smetric():
     def __init__(self):
@@ -10,9 +13,9 @@ class Smetric():
 
     def act_data_base(self):
         try:
-            a = open("palabras.txt", encoding="utf-8").read() + "\n"
+            a = open(TEXT_FILE, encoding="utf-8").read() + "\n"
         except UnicodeDecodeError:
-            a = open("palabras.txt", encoding="ansi").read() + "\n"
+            a = open(TEXT_FILE, encoding="ansi").read() + "\n"
         self.data_base = a.split()
     
     def eliminar_numeros(txt):

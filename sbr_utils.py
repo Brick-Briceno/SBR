@@ -98,6 +98,7 @@ def word_counter(text: str) -> str:
     len_text = len(text)
     spaces = text.count(" ")
     words = len(text.split())
+    paragraphs = len(text.split("\n"))
     sentences = (
           text.count("?")
         + text.count("!")
@@ -111,7 +112,7 @@ Words {words}
 Reading Time {format_time(words * 60 / 250)}
 Characters {len_text}
 Characters without spaces {len_text - spaces}
-Paragraphs {len(text.split("\n"))}
+Paragraphs {paragraphs}
 Sentences {sentences + 1}
 """.strip()
 

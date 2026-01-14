@@ -33,7 +33,7 @@ from keywords import sbr_import
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-__version__ = "2.0.10"
+__version__ = "2.0.11"
 
 # Debug mode flag
 DEBUG = False

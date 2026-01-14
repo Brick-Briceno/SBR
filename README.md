@@ -11,6 +11,12 @@ with it and that it helps all of you make better music, hugs 💙
 
 @Brick\_briceno 2023
 
+## Tutorial
+
+- [Tutorial SBR 😉](docs/en/README.md)
+- [Click here to learn more about SBR 🎹](docs/en/about.md)
+
+
 ## Key Features ✨
 
 - **Intuitive Syntax**: Designed to be easy to learn and use.
@@ -18,26 +24,32 @@ with it and that it helps all of you make better music, hugs 💙
 
 *Check the SBR data types module*
 
-- [Click here to learn more about SBR 🎹](docs/en/about.md)
-- [Or click here to learn everything SBR has to offer 😉](docs/en/README.md)
 
-
-### Compile in Windows
+### Compile in Windows 💻
 
 ```bash
+# 1. Download
+git clone https://github.com/Brick-Briceno/SBR.git
+cd SBR
+# 2. Install dependencies ()
+Get-Content ./dependencies.sh | Out-String | Invoke-Expression
+# 3. Compile exe
 .\build.bat
 
 ```
 
-### Compile in Android
+### Compile in Android 📱
 
 ```bash
-cd sbr_apk
-# prepare venv and sdk android
-sudo bash prepare_build_android.sh
-source venv/bin/activate
-# compile app
-buildozer -v android debug
+# 1. Clone and enter the folder
+git clone https://github.com/Brick-Briceno/SBR.git
+%cd SBR
+
+# 2. Give permissions and prepare (this creates the venv and buildozer.spec)
+chmod +x prepare_build_android.sh
+./prepare_build_android.sh
+
+# 3. COMPILE (Using the absolute path to buildozer from the venv)
+./venv/bin/buildozer -v android debug
 
 ```
-

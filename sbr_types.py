@@ -371,7 +371,7 @@ class Note:
         while degree > 7:
             octave += 1
             degree -= 7
-        return f"{self.str_alteration}{degree}|{octave if octave else ""}"
+        return f"{self.str_alteration}{degree}|{octave if octave else ''}"
 
     def __str__(self):
         return repr(self)
@@ -402,9 +402,9 @@ class Note:
             if valor.isnumeric():
                 return Note(self.__diatonic_tone + int(valor))
             elif valor == "b":
-                return Note(f"{self.__diatonic_tone}{"b"*abs(self.__alteration-valor)}")
+                return Note(f"{self.__diatonic_tone}{'b'*abs(self.__alteration-valor)}")
             elif valor == "#":
-                return Note(f"{self.__diatonic_tone}{"#"*self.__alteration-valor}")
+                return Note(f"{self.__diatonic_tone}{'#'*self.__alteration-valor}")
             else: raise SBR_ERROR(f"This is not a valid value {valor} is {type(valor).__name__}")
         else:
             raise SBR_ERROR("function not yet implemented")
@@ -417,9 +417,9 @@ class Note:
         elif valor.isnumeric():
             return Note(self.__diatonic_tone - int(valor))
         elif valor == "b":
-            return Note(f"{self.__diatonic_tone}{"b"*abs(self.__alteration-valor)}")
+            return Note(f"{self.__diatonic_tone}{'b'*abs(self.__alteration-valor)}")
         elif valor == "#":
-            return Note(f"{self.__diatonic_tone}{"#"*self.__alteration-valor}")
+            return Note(f"{self.__diatonic_tone}{'#'*self.__alteration-valor}")
         else: raise TypeError("This is not a valid value")
 
     def __lt__(self, n):

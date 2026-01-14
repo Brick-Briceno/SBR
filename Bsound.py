@@ -12,6 +12,8 @@ from sbr_types import *
 try: import soundfile as sf
 except ImportError:
     print("Missing soundfile library")
+    print("Playing certain instruments could cause errors in this system")
+    input("To continue, press any key")
 
 if "PYGAME_HIDE_SUPPORT_PROMPT" not in os.environ:
     os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "1"

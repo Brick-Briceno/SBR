@@ -4,7 +4,6 @@ by @brick_briceno 2025
 
 """
 
-from signal import default_int_handler
 from b_color import (hls_to_rgb, hex_to_rgb, rbg_to_hex, rgb_to_hls,
                      color1, color2, color3, color4, color5)
 from b_color import print_color as b_print
@@ -17,7 +16,6 @@ from sbr_help import *
 import lib.MidiFile
 import itertools
 import generators
-import keyboard
 import effects
 import base64
 import shutil
@@ -29,7 +27,12 @@ import lib
 import sys
 import os
 
-
+try: import keyboard
+except ImportError:
+    print("Missing keyboard library")
+    print("Some features, such as games or playing"
+            "the piano, may cause errors on this system")
+    input("To continue, press any key")
 
 
 welcome = """
@@ -679,16 +682,25 @@ def sm2(_):
     "A little daw that i was made in 2023 after job :)"
     #import sm2
 
-def sm(args_or_melody: list[str] | Melody):
+def sm(args_or_melody: list[str] | Melody | Rhythm | Tones):
     "A little script consol melody preview that i was made in 2024 after job :)"
     if args_or_melody == []: return
-    elif type(args_or_melody).__name__ not in ("Melody", "list"):
+    type_data = type(args_or_melody)
+    if type_data is Tones:
+        tones = args_or_melody
+        melody = Melody([
+            Rhythm("1000" * len(tones)), tones])
+        sm(melody)
+        return
+    elif type_data not in (Melody, list):
         raise SBR_ERROR("You must only put data Melody")
-    elif type(args_or_melody).__name__ == "list":
+
+    elif type_data is list and type_data is not Tones:
         args_or_melody = [sbr_line(y) for y in args_or_melody]
         for x in args_or_melody:
             sm(x)
         return
+
     #variables
     charters = ["ˍ", "♪", "²", "³", "⁴", "~", "ӡ", "◄", "⁸", "9"]
     #pulse_forte = "|"
@@ -744,10 +756,12 @@ def sleep(arg):
     if len(arg) == 0:
         raise SBR_ERROR("Enter the time to sleep")
     else:
-        s = sbr_line(arg[0])
-        if isinstance(s, (int, float)):
-            time.sleep(s)
-        else: raise SBR_ERROR("Only numbers are allowed")
+        seconds = sbr_line(arg[0])
+        if isinstance(seconds, (int, float)):
+            time.sleep(seconds)
+        else:
+            raise SBR_ERROR("Only numbers are allowed")
+
 
 def donate(_):
     "Help this project continue to grow"
@@ -821,7 +835,7 @@ def info(args):
 
         elif type_name in ("Rhythm", "Group"):
             sbr_type([arg])
-            Metric([arg])
+            metric([arg])
             sbr_len([arg])
 
         elif type_name in ("Tones", "Melody"):
@@ -858,7 +872,7 @@ def recive(args):
     "I recive your song as base 64 code"
     if len(args) == 0:
         return
-    base64_code = args[0]
+    base64_code = args[0].strip()
 
     try:
         bytes_compress = base64.b64decode(base64_code)

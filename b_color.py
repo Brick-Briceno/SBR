@@ -1,6 +1,7 @@
 """
 Everything related to color and design
 @Brick_briceno 2024
+
 """
 
 import random
