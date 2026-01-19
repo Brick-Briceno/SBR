@@ -8,7 +8,7 @@ Este archivo genera combinaciones de caracteres y las compara con una cadena bin
 Este archivo maneja la reproducción y procesamiento de audio. Utiliza bibliotecas como pygame, soundfile, numpy y numba para manipular datos de audio. Implementa funciones para reproducir audio, aplicar efectos y renderizar audio a partir de metadatos.
 
 3. b_color.py
-Este archivo contiene funciones relacionadas con el manejo de colores, como la conversión entre formatos de color y la generación de paletas de colores aleatorias. Utiliza la biblioteca colorama para imprimir texto en color en la consola.
+Este archivo contiene funciones relacionadas con el manejo de colores, como la conversión entre formatos de color y la generación de paletas de colores aleatorias
 
 4. keywords.py
 Define comandos para el lenguaje SBR, como play, export, instrument, y metric. También incluye funciones para limpiar y procesar el código SBR.
@@ -55,8 +55,6 @@ Documentación y Comentarios: La mayoría de los archivos tienen comentarios y d
 Modularidad: El proyecto está bien modularizado, con diferentes archivos manejando diferentes aspectos del lenguaje SBR y su ejecución.
 
 Manejo de Errores: Se utiliza una clase de excepción personalizada SBR_ERROR para manejar errores específicos del lenguaje, lo cual es una buena práctica.
-
-Dependencias: El proyecto depende de varias bibliotecas externas (pygame, soundfile, numpy, numba, colorama). Asegúrate de que todas las dependencias estén claramente listadas en un archivo requirements.txt.
 
 Pruebas: No se proporcionan pruebas unitarias o de integración. Sería beneficioso agregar pruebas para asegurar que las diferentes partes del sistema funcionen correctamente y para facilitar el mantenimiento futuro.
 

@@ -1,6 +1,7 @@
 """
 Symmetry Melody Api v2.1
 @Brick_briceno 2023
+
 """
 
 from lib.synthesizer import create_tone
@@ -54,8 +55,12 @@ random_tunin_cst = 0
 humanize_ms = 0
 channels = 2
 
-mixer.pre_init(sample_rate, -16, channels, 1024)
-mixer.init()
+try:
+    mixer.pre_init(sample_rate, -16, channels, 1024)
+    mixer.init()
+except Exception:
+    print("Couldn't open audio device")
+    input("To continue, press any key")
 
 
 def play_array(audio_data, sleep=False):

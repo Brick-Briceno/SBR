@@ -4,10 +4,12 @@ Everything related to color and design
 
 """
 
+import os, sys
 import random
-from colorama import init
 
-init()
+
+if sys.platform == "win32":
+    os.system("")
 
 def hex_to_rgb(hexa):
     if len(hexa) == 7:

@@ -674,10 +674,6 @@ def tap(_):
         else: print("Try again")
 
 
-def sbr_editor(_):
-    "A simple text editor"
-    Thread(target=lib.editor.main).start()
-
 def sm2(_):
     "A little daw that i was made in 2023 after job :)"
     #import sm2
@@ -847,6 +843,7 @@ def info(args):
             sbr_type([arg])
 
 
+
 def share(args):
     "Share your song as QR or base 64 code"
     if len(args) == 0:
@@ -923,12 +920,11 @@ record = {
     "metric": metric,
     "len": sbr_len,
     "phrase": phrase,
-    "editor": sbr_editor,
     "piano": piano,
     "rec": rec,
     "tap": tap,
     "ls": ls,
-    "keystrokes": keystrokes,
+    #"keystrokes": keystrokes,
     "code_made": code_made,
     "instrument": instrument,
     "set_max_digits": set_max_digits,

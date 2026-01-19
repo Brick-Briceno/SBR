@@ -3,7 +3,6 @@ Interpreter developed by @brick_briceno in 2025
 
 """
 
-import string
 from compiler import compiler
 from errors import SBR_ERROR
 from sbr_utils import *
@@ -17,8 +16,8 @@ ident_level = 0
 piece_of_string = ""
 open_string  = False
 piece_of_code_in_groups = ""
-COMMENTARY_CHARACTER = "--"
-SPLIT_LINES = ";;" #token to split lines
+COMMENTARY_TOKEN = "--"
+SPLIT_LINES_TOKEN = ";;"
 
 
 def get_ident_level() -> int:
@@ -93,18 +92,18 @@ def keys(code: str) -> str:
 
 def clean_code(code: str) -> str:
     # Remove all spaces and comments that are not in quotation marks
-    if COMMENTARY_CHARACTER in code:
+    if COMMENTARY_TOKEN in code:
         i = 0
         global open_string
-        code2 = code.replace(COMMENTARY_CHARACTER, "\x00")
+        code2 = code.replace(COMMENTARY_TOKEN, "\x00")
         for char in code2:
             i += 1
             if char == "\"":
                 open_string = not open_string
 
             elif char == "\x00" and not open_string:
-                i += len(COMMENTARY_CHARACTER) - 1
-                return code[:i - len(COMMENTARY_CHARACTER)]
+                i += len(COMMENTARY_TOKEN) - 1
+                return code[:i - len(COMMENTARY_TOKEN)]
 
     return code
 
@@ -133,15 +132,16 @@ def sbr_line(idea: str):
     if idea.strip() == "": return
 
     #multiline code
-    if SPLIT_LINES in idea:
+    if SPLIT_LINES_TOKEN in idea:
         lines_data = []
-        for line in idea.split(SPLIT_LINES):
+        for line in idea.split(SPLIT_LINES_TOKEN):
             lines_data.append(sbr_line(line))
         #delete None types
         return [x for x in lines_data if x is not None]
 
     #clean code
     idea = clean_code(idea)
+    if idea == "": return
 
     #string
     idea = multiline_string(idea)

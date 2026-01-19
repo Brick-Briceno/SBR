@@ -20,7 +20,8 @@ instrument inst\Xylophone
 
 
 --Samples
-instrument inst\Vocal.wav
+instrument inst/Vocal.wav
+instrument inst/br2.wav
 
 --Percusiones
 instrument inst\Kick.wav

@@ -55,13 +55,13 @@ la **C** es un **Generador**, los generadores pueden admitir varios parámetros,
 
 Puede haber un generador sin parámetros y con un valor preestablecido, puede también tener parámetros, puede tener efectos y estos pueden o no tener parámetros, al fin y al cabo en un bloque no puede haber 2 generadores, pero si en un código unimos varios bloques simplemente se pegan sin más complejidad
 
-Pero… ¿Y qué es un efecto?
+Pero… ¿Y cuales efectos hay?
 
 **L** (definir la **L**ongitud)
 
 la L es nuestro primer efecto
 
-Si quieres que la longitud de un dato o ritmo sea 8 lo escribes así tambien
+Si quieres que la longitud de un dato o ritmo sea 8 lo escribes así también
 
 Se repite el bucle hasta finalizar las 8 semicorcheas o bits, pero recuerda que estamos en base a 16 por lo si no ponemos el valor L seguirá hasta llegar a 16
 
@@ -152,12 +152,12 @@ E \= E5
 
 De aquí podemos experimentar mucho con estos sonidos 
 
-E4 \= B1000 1000 1000 1000  
-E5 \= E \= B1001 0010 0100 1000  
-E6 \= B1001 0010 1001 0010  
-E7 \= B1010 1001 0101 0010  
-E8 \= B1010 1010 1010 1010  
-E9 \= B1010 1011 0101 0110  
+E4  \= B1000 1000 1000 1000  
+E5  \= B1001 0010 0100 1000 \= E  
+E6  \= B1001 0010 1001 0010  
+E7  \= B1010 1001 0101 0010  
+E8  \= B1010 1010 1010 1010  
+E9  \= B1010 1011 0101 0110  
 E10 \= B1011 0110 1011 0110
 
 y así…
@@ -168,7 +168,7 @@ Varios de ellos los he escuchado en música pop, sobre todo en hits de los 80 y 
 
 Ejemplo
 
-E5,14,16 \= B1001 0010 0100 1010  
+E5,14,16  \= B1001 0010 0100 1010  
 E10,15,16 \= B1101 1011 0110 1101
 
 ¿Has escuchado estos ritmos en alguna melodía de alguna canción? A mí se me vienen a la mente 3, ejemplos, Ariana grande, Shakira, y AC DC
@@ -201,13 +201,13 @@ E3,8-E4,8 \= 00010010
 
 **R** (revierte el ritmo)
 
-E1,10,16 \= 1000000000100000  
+E1,10,16  \= 1000000000100000  
 E1,10,16R \= 0000010000000001
 
 **I** (invierte el ritmo)  
 *A esto se le llama compuerta not*
 
-E5,14,16 \= 1001001001001010
+E5,14,16  \= 1001001001001010
 
 E5,14,16I \= 0110110110110101
 
@@ -219,7 +219,7 @@ B0101\<\< \= B1010
 
 B0101\>\> \= B1010
 
-E5\>\> \= B0100 1001 0010 0100   
+E5\>\>  \= B0100 1001 0010 0100  
 E5\>\>2 \= B0010 0100 1001 0010  
 E5\>\>3 \= B0001 0010 0100 1001
 
@@ -227,7 +227,7 @@ E5\>\>3 \= B0001 0010 0100 1001
 
 **()** paréntesis
 
-(C3L8\<\<+B0111L8)I \= B1000 1000 
+(C3L8\<\< \+ B0111L8)I \= B1000 1000 
 
 Imaginemos que queremos invertir, revertir o aplicar cualquier otro efecto a un conjunto grande de otros ritmos, pues para eso nos sirven los paréntesis  
 \* (Multiplica y repite datos)
@@ -260,8 +260,8 @@ E,S3 \= B1001 0010 0000 0000
 **Q** (quito pulsos)  
 *En muchas canciones es muy común tener un ritmo de la melodía o del ritmo y quitar notas y ponerlas después para sorprender por presencia o por su ausencia*
 
-E,Q \= E,Q1  
-E \= B1001 0010 0100 1000  
+E,Q  \= E,Q1  
+E    \= B1001 0010 0100 1000  
 E,Q1 \= B0001 0010 0100 1000   
 E,Q2 \= B1000 0010 0100 1000   
 E,Q3 \= B1001 0000 0100 1000
@@ -275,7 +275,7 @@ B1001 0010 Add 4 \= B1001 1010
 **\[** y **\]** (Contar el ritmo por pedazos)
 
 Supongamos que queremos repetir una melodía o un ritmo para crear un poco de familiaridad  
-B10011010\[4 \= B1010   
+B10011010\[4 \= B1010  
 B10011010\]4 \= B1001
 
 *mostrará desde el primer bit hasta el cuarto, si queremos repetir esto…*
@@ -288,7 +288,7 @@ un dato como el **“1”** y el **“0”**, el **“3”** significa tresillo 
 
 ¿Qué pasa si sumamos el 3 a un patrón? se suma igual
 
-B3     1010 \= B3    1010 
+B3     1010 \= B3    1010
 
 esto tiene una duración de una negras ya que el 3 ocupa 4 espacios en la dimensión temporal
 
@@ -306,8 +306,8 @@ B3X2 \= B6
 
 Distribuirá de forma **simétrica** en la duración de ese pulso y después lo superpondrá con este
 
-B6-B0000 \= B1001 0010  
-B6-B0000 \= E3,8
+B6 \- B0000 \= B1001 0010  
+B6 \- B0000 \= E3,8
 
 Es como que el 3 viene por defecto en el primer parámetro del comando **E** y el segundo parametro seria la X
 
@@ -368,7 +368,8 @@ Una forma de generar secuencias de números es con “Range”, se empieza desde
 Si le pones un solo argumento irá desde el 0 al 10  
 Range 10 \= {0; 1; 2; 3; 4; 5; 6; 7; 8; 9}
 
-Si le pones 2 argumentos irá de un extremo al otro  
+Si le pones 2 argumentos irá de un extremo al otro
+
 Range 10, 20 \= {10; 11; 12; 13; 14; 15; 16; 17; 18; 19}
 
 Pero si le pones un 3er argumento se saltará esa cantidad
@@ -382,12 +383,12 @@ Multiplicar
 
 Hay casos donde puedes llegar a usar las comas que si bien están reservadas para los argumentos de generadores y efectos también es casos muy especiales pueden generar grupos
 
-1, 2, 3 \= {1; 2; 3}  
+1, 2, 3   \= {1; 2; 3}  
 {1, 2, 3} \= {{1; 2; 3}}
 
 En este último caso genera un grupo dentro de un grupo, esto es algo muy importante que debes tomar en cuenta al hacer melodías y cosas en SBR
 
-En si quieres aislarlo de otro elementos puedes hacer lo siguiente
+En si quieres aislarlo de otros elementos puedes hacer lo siguiente
 
 (1, 2, 3\) \= {1; 2; 3}
 
@@ -476,7 +477,7 @@ Por motivos prácticos el generador “J” aplica algo llamado recursión, toma
 Ese de arriba es el contenido tonal de una canción que saqué hace tiempo, en 2022  
 [Just do it \- Brick Briceño 🧡💙](https://www.youtube.com/watch?v=FNt8UnD2Jl4)
 
-Una forma que quizas te sea muy facil y muy practica de escribir tonos, usando la “G”, sin necesidad de poner comas y esas cosas ya puedes escribir los grados de tu melodia, en este caso el contenido tonal de cumpleaños feliz
+Una forma que quizás te sea muy fácil y muy práctica de escribir tonos, usando la “G”, sin necesidad de poner comas y esas cosas ya puedes escribir los grados de tu melodía, en este caso el contenido tonal de cumpleaños feliz
 
 G1121 43 1121 54 Oct5 \= M1|5, 1|5, 2|5, 1|5, 4|5, 3|5, 1|5, 1|5, 2|5, 1|5, 5|5, 4|5
 
@@ -562,15 +563,33 @@ También puedes multiplicar y repetir
 
 "hola " \* 5 \= "hola hola hola hola hola "
 
+Me parece relevante mencionar la herramienta “info” que sirve para varios tipos de datos entre ellos texto, en el caso de los strings te muestra cierta información relevante, si pones
+
+info "hola como estás? espero muy bien"
+
+Te muestra lo siguiente
+
+Text Features:  
+Words 6  
+Reading Time 1.44 s  
+Characters 32  
+Characters without spaces 27  
+Paragraphs 1  
+Sentences 2
+
+Tiempo de lectura, párrafos, palabras, entre otros
+
 **Booleanos**  
 true
 
-Encendido o apagado, si o no, bueno o malo, así de básico es, no son tipos de datos solo no variables inmutables o constantes guardan un 1 o un 0
+Encendido o apagado, si o no, bueno o malo, así de básico es, no son tipos de datos, solo no variables inmutables o constantes (no se pueden modificar) que guardan un 1 o un 0
 
 true \= 1  
 false \= 0
 
-Te reto a intentar guardar algo para que veas que no te deja, a continuación te enseñaré a ver todas estas variables, mutables e inmutables
+A continuación te enseñaré a ver todas estas variables, mutables e inmutables
+
+Usa “vars”, una herramienta muy simple que te muestra las variables
 
 **Palabras claves**  
 play song : true
@@ -595,7 +614,73 @@ Otra muy buena es “vars” te muestra todas las variables registradas en ese m
 
 **Consejos y estándares para escribir código limpio**
 
-Ritmos  
-Tonos  
-grupos  
-strings  
+Mira, muchos proyectos o canciones pueden tener su propio estilo de codificación (formas de ordenar el código), y lo que diré aquí no es una verdad absoluta, debido a que es un lenguaje nuevo y de momento el único que lo conoce soy yo y algunos conocen un poco, cada quien puede descubrir nuevas formas de codificar pero me inspiro en varios lenguajes y estándares como el pep 8 de Python [peps.python.org/pep-0008](http://peps.python.org/pep-0008) (en ingles) me parece una buena forma de inspiración
+
+**Buenos nombres de variables**  
+Que sean descriptivos
+
+a ❌  
+melody ⚠️  
+drop\_vocal\_rh\_part\_a ✅
+
+“drop” indica que es el coro, “vocal” significa que es la melodía de la voz, si es electronica o musica instrumental lo puedes llamar “lead”, “rh” puede ser una contracción de rhythm osea ritmo en ingles, osea el contenido rítmico de la melodia, y como la melodía tiene varias partes “part\_a” significa que es la parte A y que hay otras partes, B, C o quizas D, etc
+
+Pero… ¿Es necesario ser tan descriptivo? Si estás empezando la canción y quieres algo simple, quizás una letra o un par de ellas te sirvan por practicidad para los nombres de variables, pero, si la canción va tomando forma y va creciendo, es casi imposible no organizarse
+
+**Ritmos**  
+Es bueno cuando los ritmos los separas por pulsos para poder leerlos de mejor forma, en este caso cada 4 semicorcheas
+
+B1001001001001000    ❌  
+B1001 0010 0100 1000 ✅
+
+Tonos
+
+Creo que al ver y sentir el ritmo puedes cantar los tonos, pero si lo requieres puedes poner espacios para acomodar las notas al ritmo
+
+Grupos
+
+En el caso de los acordes es más legible cuando usas el efecto “Chord” en vez de los acordes compilados
+
+estrofa\_chords\_tones \= M{1|5;3|5;5|5},{6|4;1|5;3|5},{3|5;5|5;7|5},{7|4;2|5;4|5} ⚠️
+
+Al ver el primer número de cada grupo “marcado en rojo” puedes ver el grado que el acorde está tocando, pero sigue habiendo información irrelevante
+
+estrofa\_chords\_tones \= 0 ,-2, 2, \-1 Chord 1,3,5 Oct5
+
+**Comentarios**
+
+En ocasiones el código es bastante claro y es innecesario y hasta molestoso un código sobre comentado con cosas super obvias como “-- esto es un ritmo que hace tun pa pa tun pa”, no hace falta, añade comentarios a cosas que se te pueden olvidar o le ahorraría a la persona o a ti 10 segundos en entender algo que no se capta a simple vista
+
+A veces los comentarios son necesarios, por ejemplo, al igual que en este tutorial remarco y separo los temas por títulos, lo mismo hago en un código de sbr
+
+Y no solo me refiero a que hagas todo el contenido rítmico de todas las melodias y armonias de la canción en una zona, y que los tonos y los intervalos de estas en otra zona muy a parte, si no que también me refiero a partes dentro de partes muy pequeñitas en la canción
+
+                            "  ...  Rhythmic  ...  "
+
+\--                part A               part B  
+drop\_vocal\_rh\_a \= B1010 0010 1000 1010 0000 0000 1010 1010  \-- metric 10  
+drop\_vocal\_rh\_b \= B1000\*2  B 1010\*2  B 1000\*2    B1X8       \-- metric 9  
+\--                  part A              part B  
+drop\_vocal\_rh\_c \= B{1000 0000 0000 1010 0000 0000 1000 1000 \-- part C-A  
+                    0000 1000 0000 0000 0000 0000 0000 0000 \-- part C-B  
+                  }  
+                  \-- curioso que los sonidos no se superponen  
+                  \-- parte c dura el doble
+
+                     \-- A B A B C C  
+rh\_content \= B{drop\_vocal\_rh\_a drop\_vocal\_rh\_b  
+               drop\_vocal\_rh\_a drop\_vocal\_rh\_b  
+               drop\_vocal\_rh\_c drop\_vocal\_rh\_c  
+            }
+
+Como puedes observar, los string que no se guardan en ninguna variable o pasan por alguna característica del lenguaje y solo se ejecuta al aire sin más, podemos perfectamente tomarla como un comentario, más que todo como decoración y separador de responsabilidades, osea, de este lado me encargo de esto y de este lado lo otro
+
+Los comentarios tienen un montón de espacios para y justo en el sitio de sus partes y te indican la métrica de estas
+
+En la variable “drop\_vocal\_rh\_b” podemos ver como se usan espacios para sincronizar las distintas partes una encima de la otra así como se usan signos de multiplicación para repetir mismas partes varias veces
+
+Dependiendo de tu técnica de composición quizás no sea necesario ser tán específico siempre quizás poner cosas como “manzana” o “i\_luv\_u” para repetir esas partes de la forma más irregular posible te pueda dar mejores resultados
+
+Algo que te recomiendo hacer es alternar un poco de ambos mundos como todo en la música hay que ser abierto de mente
+
+**No uses más de 70 caracteres** por línea, esto hace que las personas con pantalla pequeña lo puedan ver mejor, además que tampoco queremos tener una línea infinita que rompa por completo el scroll horizontal
