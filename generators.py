@@ -201,6 +201,7 @@ def Random(args: list[int | float]):
         return random.randint(args[0], args[1])
     else: return random.uniform(args[0], args[1])
 
+
 "Generadores Srings"
 
 def Format(args: list[str]):

@@ -1,1 +1,1 @@
-import lib.synthesizer, lib.generate_libraries, lib.MidiFile
+import lib.games, lib.synthesizer, lib.generate_libraries, lib.MidiFile

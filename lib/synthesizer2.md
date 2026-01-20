@@ -120,18 +120,24 @@ Main{
 ## Tipos de datos
 
 1. floats (numeros)
-2. arrays (envolventes o wave tables)
-3. referencias (son como punteros)
+2. arrays (envolventes o wave tables) quizas tanmbien generadores de vectores con curvas
+3. referencias (son como punteros que toman un id de qué se quiere automatizar)
 
 ```json
 
 {
+    "lfos": {
+        "": 0,
+    },
     "main": {
-        // effectos para el main
+        // effectos para el main, se aplican a todos los osciladores
         "effects": {
-            // delay, attak, hold, sustain, release
-            "ADLS": [0, .1, .9, .8, .3],
-            "glide": .5 // puede tambien ser otro objeto, puede ser false tambien
+            "ADLS": {"delay": .1, "attack": .9, "hold": .8, "sustain": .2},
+            "glide": .5, // puede tambien ser otro objeto, puede ser false tambien
+            "isophonic curve": true,
+            "Eq": [
+                {"Hz": 440, "Db": -3, "Q": 1.2},
+            ], //
             },
         // osciladores
         "osl1": {
@@ -139,10 +145,22 @@ Main{
             seno y triángulo, de .3333 a .6666 de triángulo a cuadrada,
             de .6666 a 1 hasta diente de sierra */
             "wave": 1, // en este caso es un diente de cierra
+            //"wave": "id_sample", // tambien puede ser un sample
+            // si solo, volume y muted en algún oscilador son 0 y o false lado automaticamente no suena nada
+            "volume": 1,
             "muted": false,
-            "solo": false, // si solo y muted en algún lado automaticamente no suena nada
+            "solo": false,
+            // effectos para el oscilador
             "effects": {
-                "harmonic_stretch": .5 
+                "harmonic stretch": .5,
+                "pulse": .75,
+                },
+        }
+    }
+}
+
+
+```
 
 El estiramiento de armónicos
 
@@ -169,14 +187,6 @@ Phaser
 Ecualizador
 
 
-},
-        }
-
-    }
-}
-
-
-```
 
 ## Backend
 

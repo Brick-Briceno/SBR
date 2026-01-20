@@ -921,12 +921,14 @@ class Instrument:
         octave = 0
         if isinstance(diatonic_tone, Note):
             diatonic_tone, alteration = diatonic_tone.bin
-        else: diatonic_tone, alteration = diatonic_tone, 0
+        else:
+            diatonic_tone, alteration = diatonic_tone, 0
         grado = diatonic_tone + 1
         while grado > 7:
             octave += 1
             grado -= 7
         else:
-            if grado <= 0: raise SBR_ERROR("Grade out of range")
+            if grado <= 0:
+                raise SBR_ERROR("Grade out of range")
             croma = mode[grado-8]+(octave*12)+tone-1
             return croma+alteration

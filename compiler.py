@@ -290,6 +290,7 @@ def arg_to_type(data):
 
     #tones
     elif only_has(data, syntax_data.tones+"."):
+        print(data)
         if "." in data: raise SBR_ERROR("Cannot create notes with floats")
         return Note(data)
 

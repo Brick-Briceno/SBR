@@ -1,20 +1,21 @@
+#directories
 /testing_random_things.py
 *__pycache__
 desktop.ini
 /.buildozer
-/sbr_apk
 /songs
 /venv
 /bin
 /temp
 /inst
-/bug.log
 /bugs.log
 /bugs.txt
 words_es.txt
+
 # formats
 *.mp3
 *.ogg
 *.mid
 *.wav
 *.inst
+*.spec

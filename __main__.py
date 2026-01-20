@@ -95,11 +95,11 @@ def initialize_main_preset():
 def error_log():
     """Create a bug log file with error details"""
     print("SBR has stopped working")
-    print("Send bug.log file to the creator of this program")
+    print("Send bugs.log file to the creator of this program")
     
     lines = "\n".join(code_that_has_been_made)
     
-    with open("bug.log", "a") as _file:
+    with open("bugs.log", "a") as _file:
         _file.write(
             f"system time {datetime.now()}\n"
             f"SBR version: {__version__}\n"

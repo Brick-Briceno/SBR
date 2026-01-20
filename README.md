@@ -67,7 +67,6 @@ Get-Content ./dependencies.sh | Out-String | Invoke-Expression
 
 ```bash
 # You need to be on Linux to compile the APK
-# In Colap, it's not necessary to create Venv
 
 # Download
 git clone --depth 1 https://github.com/Brick-Briceno/SBR.git

@@ -5,6 +5,7 @@ Interpreter developed by @brick_briceno in 2025
 
 from compiler import compiler
 from errors import SBR_ERROR
+from sbr_types import Rhythm
 from sbr_utils import *
 from variables import *
 import generators
@@ -192,25 +193,35 @@ def sbr_line(idea: str):
         elif var_name in variables_sys:
             raise SBR_ERROR(f"This variable '{var_name}' is immutable and cannot be modified, please chose another name")
 
-        #if everything is ok
+        #if everything is ok... for the moments
         instruction = replace_variables(instruction)
-        instruction = compiler(instruction)
+        _object = compiler(instruction)
+
+        #Mmm...
+        if var_name == "tempo" and not isinstance(_object, (int, float)):
+            raise SBR_ERROR("The tempo must be a number data", advice=f"float or integer, not {type(_object).__name__}")
+        if var_name == "mode" and type(_object) is not Rhythm:
+            raise SBR_ERROR(f"The mode of the scale should be a rhythm, not a {type(_object).__name__}")
+        if var_name == "tone" and type(_object) is not int:
+            raise SBR_ERROR(f"The tone of the scale should be a whole number, not a {type(_object).__name__}")
+
+        #define variable ¡:D!
         variables_user[var_name] = instruction
 
     else:
         #compile, which is actually interpreting xD
         idea = replace_variables(idea)
-        hola = compiler(idea)
-        return hola
+        xD = compiler(idea)
+        return xD
 
-#send the function to the keywords and generators library
+#send function to the keywords and generators library
 keywords.sbr_line = sbr_line
 generators.sbr_line = sbr_line
 
-#compile the variables
+#compile variables >:D
 
 def compile_variables():    
-    #ordenar las variables por longitud de nombre de mayor a menor
+    #sort the variables by name length from longest to shortest
     for key in variables_user:
         variables_user[key] = sbr_line(str(variables_user[key]))
     for key in variables_sys:

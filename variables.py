@@ -1,4 +1,9 @@
-"Variables"
+"""
+SBR Variables
+by @brick_briceno in 2023
+"""
+
+# DEFAULT
 
 default_variables_user = {
     "tempo": 128,
@@ -8,9 +13,12 @@ default_variables_user = {
 
 default_vars_instruments = {}
 
-vars_instruments = {}
-variables_user = {}
+default_defines = {}
 
+
+# VARIABLES
+
+defines = default_defines.copy()
 vars_instruments = default_vars_instruments.copy()
 variables_user = default_variables_user.copy()
 

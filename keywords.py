@@ -4,11 +4,12 @@ by @brick_briceno 2025
 
 """
 
+import b_color
+from b_color import print_color as b_print
 from b_color import (hls_to_rgb, hex_to_rgb, rbg_to_hex, rgb_to_hls,
                      color1, color2, color3, color4, color5)
-from b_color import print_color as b_print
 from sbr_types import pulse_will_be
-from threading import Thread
+#from threading import Thread
 from sbr_utils import *
 from sbr_types import *
 from variables import *
@@ -55,6 +56,7 @@ def pause_code(_in="\n", end=""):
     input(end)
 
 def sbr_licence(_):
+    "Show license"
     print("""
 BSD 3-Clause License
 
@@ -93,15 +95,23 @@ def sbr_help(instruction):
         if h.lower() == "tutorial":
             b_print("This is how we do this Syntax", color=color1)
             sbr_help(["syntax"]), input()
+
             b_print("but what is the Operators", color=color1)
             sbr_help(["operators"]), input()
+
             b_print("and how many Generators there are?", color=color1)
             sbr_help(["generators"]), input()
+
             b_print("and... how many Effects there are?", color=color1)
             sbr_help(["effects"]), input()
+
             b_print("the keywords are awsome!", color=color1)
             sbr_help(["keywords"]), input()
-            b_print("check the SBR's Documentation for learn music and more about this increible lenguage ;)", color=color2)
+            clean_console()
+
+            b_print("Check the SBR's Documentation for learn music and more about this increible lenguage ;)", color=color2)
+            b_print("An explosion of music, available in several languages, Visit it now! Click, click!")
+            b_print("github.com/Brick-Briceno/SBR/blob/main/docs/en/README.md", color="#fff")
             input()
 
         elif "effect" in h.lower():
@@ -221,6 +231,7 @@ donate <3
 
 
 def sbr_import(args):
+    "I import external resources into the project"
     if not len(args):
         return
     data = args[0]
@@ -282,13 +293,18 @@ def print_dict(d: dict, name: str, is_end=False):
 
 
 def sbr_vars(args):
+    """I show you all the variables and others things"""
     print_dict(vars_instruments, "Instruments")
     print_dict(variables_sys, "Constants")
-    print_dict(variables_user, "Of Users",
+    print_dict(variables_user, "Vars Users")
+    print_dict(defines, "Defines",
                is_end=True)
 
+
 def sbr_exit(args):
+    "I exit the program"
     raise SystemExit
+
 
 def code_made(args):
     "I remember all you really do it"
@@ -323,6 +339,7 @@ def clock(args):...
 
 
 def ident(args):
+    "I ident ur code babe :-3"
     #organize arguments
     if len(args) == 0: return
     elif len(args) == 1:
@@ -365,12 +382,14 @@ def sbr_len(args):
         else: raise SBR_ERROR(f"Only rhythms and melodies have len, not {type(data.__name__)}")
 
 def sbr_print(args):
+    "I show things on the console, and... that's it"
     for x in args:
         data = sbr_line(x)
         print(data)
 
 
 def sbr_type(args):
+    "I display the data type of what you give me"
     for arg in args:
         result = sbr_line(arg)
         result_type = type(result).__name__
@@ -412,6 +431,7 @@ def generate_bricks_dicts():
             #if "X" in "".join(perm): input()
 
 def brute_force(args):
+    "I use brute force to discover data combinations, compressing and summarizing musical information"
     if len(args) != 1:
         raise SBR_ERROR("Put just one argument")
     elif isinstance(args[0], (Rhythm, Tones, Melody)):
@@ -502,7 +522,7 @@ def pause(args):
     Bsound.pause()
 
 def export(args):
-    "I export addictive substances... the music! I've it in mp3, wav and mid, which do you want?"
+    "I export addictive substances... the music!!! I've it in mp3, wav and mid, which do you want?"
     #this export to mp3, wav and mid
     if len(args) < 2:
         raise SBR_ERROR("Enter a data to export and the file name",
@@ -550,7 +570,7 @@ def fn_drag_n_drop(args):
 
 
 def set_max_digits(args):
-    "Don't looking for the 5th hand's cat"
+    "Don't looking for the 5th hand's cat, I'm not so interesting"
     if not len(args):
         return print("set a value please")
     n = sbr_line(args[0])
@@ -559,7 +579,7 @@ def set_max_digits(args):
     else: print("the value of being from '640' 'to 2 147 483 647' or '(2**31)-1'")
 
 
-part = ["0"]*32
+part = ["0"] * 32
 history = []
 
 def record_rhythm(history):
@@ -573,13 +593,15 @@ def record_rhythm(history):
     return Rhythm("".join(part))
 
 def rec(_):
-    "Kick enter to record the Rhythm faster"
-    print("Kick enter to record the Rhythm faster")
+    "Hit a enter key on the console and I'll record your rhythm B)"
+    global history, part
+    print("Hit a enter key on the console and I'll record your rhythm B)")
     print("Listen to the tempo first and then start recording :D")
     play(["C4"])
-    global history, part
-    part = ["0"]*32
+
+    part = ["0"] * 32
     history.clear()
+
     for _ in range(32):
         print(record_rhythm(history))
         d = input()
@@ -587,8 +609,10 @@ def rec(_):
         if d.upper() == "D":
             return print()
 
+
 alt = ""
 def piano(args):
+    "I'm a piano on a console, what can I say?"
     if len(args) not in (0, 1):
         raise SBR_ERROR("Just one or zero arguments")
     if len(args) == 1:
@@ -632,30 +656,14 @@ def piano(args):
     keyboard.wait("enter")
     active = False
 
-def keystrokes(args):
-    print("Loading game...")
-    if len(args) != 2:
-        raise SBR_ERROR("Put 2 arguments: 'song : {1,2,3,4}'")
-    clean_console()
-    #play([args[0]])
-    keys = {"up": '''
-        ''', # 72 scan_code
-        "down": '''
-        
-        ''', # 80 scan_code
-        "left": '''
-        
-        ''', # 75 scan_code
-        "right": '''
-        ''' # 77 scan_code
-        }
 
-    def control(event):
-        number = event.scan_code
-        print(number, end="\r")
-
-    keyboard.on_press(control)
-    keyboard.wait()
+def games(args):
+    "I'm a menu with several musical games 4 you ;D"
+    # inject the necessary modules
+    lib.games.sbr_line = sbr_line
+    lib.games.b_color = b_color
+    # load the games menu
+    lib.games.game_menu(args)
 
 
 def tap(_):
@@ -675,11 +683,12 @@ def tap(_):
 
 
 def sm2(_):
-    "A little daw that i was made in 2023 after job :)"
+    "A little daw that i made in 2023 after job :)"
     #import sm2
 
+
 def sm(args_or_melody: list[str] | Melody | Rhythm | Tones):
-    "A little script consol melody preview that i was made in 2024 after job :)"
+    "A little script console melody preview that i made in 2024 after work :)"
     if args_or_melody == []: return
     type_data = type(args_or_melody)
     if type_data is Tones:
@@ -748,7 +757,7 @@ def sm(args_or_melody: list[str] | Melody | Rhythm | Tones):
 
 
 def sleep(arg):
-    "I pause the code for a few secounds"
+    "I pause the code for a few seconds"
     if len(arg) == 0:
         raise SBR_ERROR("Enter the time to sleep")
     else:
@@ -766,9 +775,9 @@ def donate(_):
     print("Binance ID: 482 345 114 (recomended)")
     print("Thank you for your donation <3")
 
+
 def ls(_):
     "If you wanna i show you files and folders..."
-    #ls keyword in bash
     os.system("dir" if os.name == "nt" else "ls")
 
 
@@ -781,8 +790,9 @@ def fn_pulse(new_pulse):
         print(f"Now pulse is {new_pulse[0]} times")
     else: print("Pulse must be an int")
 
+
 def del_temp(args):
-    "I clear temporal files"
+    "I clear temporary files"
     path = "temp"
     for item in os.listdir(path):
         item_path = os.path.join(path, item)
@@ -790,6 +800,7 @@ def del_temp(args):
             os.remove(item_path)
         elif os.path.isdir(item_path):
             shutil.rmtree(item_path)
+
 
 def valve_distortion_gain(args):
     "Set the gain for the valve distortion effect in master"
@@ -801,27 +812,31 @@ def valve_distortion_gain(args):
 
 
 def sbr_if(args):
-    print(args)
     "If you try, you can't fail, failure comes from not trying"
     ...
+
 
 def sbr_for(args):
     "They did it for you, you do it for them"
     ...
 
+
 def sbr_while(args):
     "While there is music, there is life, and while there is life, there is music"
     ...
 
+
 def sbr_fn(args):
     "Hello, have a nice day! :D"
     ...
+
 
 def sbr_raise(args):
     ...
 
 
 def info(args):
+    "I do several things depending on the type of data you give me"
     for arg in args:
         data = sbr_line(arg)
         type_name = type(data).__name__
@@ -841,7 +856,6 @@ def info(args):
 
         else:
             sbr_type([arg])
-
 
 
 def share(args):
@@ -865,8 +879,8 @@ def share(args):
     print(base64_code)
 
 
-def recive(args):
-    "I recive your song as base 64 code"
+def receive(args):
+    "I receive your song as base64 code"
     if len(args) == 0:
         return
     base64_code = args[0].strip()
@@ -879,11 +893,20 @@ def recive(args):
         raise SBR_ERROR("Wrong code")
 
 
+
 def reset(args):
     "Reset all"
-    global vars_instruments, variables_user
+    global vars_instruments, variables_user, defines
     vars_instruments = default_vars_instruments.copy()
     variables_user = default_variables_user.copy()
+    defines = defines.copy()
+
+def define(args):
+    "Define like in C"
+    global defines
+    if len(args) != 2:
+        raise SBR_ERROR("Put two arguments")
+    defines[args[0].strip()] = args[1].strip()
 
 
 record = {
@@ -893,22 +916,23 @@ record = {
     "while": sbr_while,
     "fn": sbr_fn,
     "raise": sbr_raise,
+    "define": define,
     "reset": reset,
     "quit": sbr_exit,
     "exit": sbr_exit,
 
     #Tools
     "help": sbr_help,
+    "vars": sbr_vars,
     "donate": donate,
     "welcome": sbr_import,
     "licence": sbr_licence,
     "print": sbr_print,
     "share": share,
-    "recive": recive,
+    "receive": receive,
     "info": info,
     "type": sbr_type,
     "pulse": fn_pulse,
-    "vars": sbr_vars,
     "clock": clock,
     "ident": ident,
     "play": play,
@@ -924,7 +948,7 @@ record = {
     "rec": rec,
     "tap": tap,
     "ls": ls,
-    #"keystrokes": keystrokes,
+    "games": games,
     "code_made": code_made,
     "instrument": instrument,
     "set_max_digits": set_max_digits,
