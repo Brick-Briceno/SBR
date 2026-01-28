@@ -48,7 +48,7 @@ With all my heart I hope that good things can be
 made with this tool, I hope that people have fun experimenting
 with it and that it helps all of you make better music, hugs <3
 
-@Brick_briceno 2023
+@Brick_briceno 2022
 """
 
 def pause_code(_in="\n", end=""):
@@ -289,7 +289,10 @@ def print_dict(d: dict, name: str, is_end=False):
             n = 0
         n += 1
 
-    if not is_end: pause_code()
+    if not is_end:
+        pause_code()
+        print("\n")
+
 
 
 def sbr_vars(args):
@@ -487,7 +490,7 @@ def obj_to_array(text_sbr_obj: str, meta_data=False):
         elif isinstance(obj_data, (Tones, Note)):
             if isinstance(obj_data, Note): obj_data = Tones([obj_data])
             obj_data = Structure([seno, Velocity([0]),
-                Melody([obj_data, Rhythm('10000000'*len(obj_data))]) #it need a default sample to the Rhythm
+                Melody([obj_data, Rhythm('1000'*len(obj_data))]) #it need a default sample to the Rhythm
             ])
 
         #Instrument
@@ -813,12 +816,25 @@ def valve_distortion_gain(args):
 
 def sbr_if(args):
     "If you try, you can't fail, failure comes from not trying"
-    ...
+    if len(args) < 2:
+        raise SBR_ERROR(
+            "Syntax error: you must include the condition and code",
+            "Example: if true : play son"
+            )
+    if sbr_line(args[0]):
+        sbr_line(":".join(args[1:]))
 
 
 def sbr_for(args):
     "They did it for you, you do it for them"
-    ...
+    if len(args) < 3:
+        raise SBR_ERROR(
+            "Syntax error: you must include the variable to iterate over and the code",
+            "Example: for degree : Range 1, 11 : play degree|4 : true"
+            )
+    for x in sbr_line(args[1]):
+        sbr_line(f"{args[0]}={x}")
+        sbr_line(":".join(args[2:]))
 
 
 def sbr_while(args):
@@ -893,7 +909,6 @@ def receive(args):
         raise SBR_ERROR("Wrong code")
 
 
-
 def reset(args):
     "Reset all"
     global vars_instruments, variables_user, defines
@@ -901,19 +916,13 @@ def reset(args):
     variables_user = default_variables_user.copy()
     defines = defines.copy()
 
+
 def define(args):
     "Define like in C"
     global defines
     if len(args) != 2:
         raise SBR_ERROR("Put two arguments")
     defines[args[0].strip()] = args[1].strip()
-
-
-def the_sbr_line(args):
-    "Compile SBR line from a string"
-    if len(args) == 0:
-        raise SBR_ERROR("Put at least one argument")
-    return sbr_line(args[0][1:-1])
 
 
 record = {
@@ -935,7 +944,6 @@ record = {
     "welcome": sbr_import,
     "licence": sbr_licence,
     "print": sbr_print,
-    "sbr_line": the_sbr_line,
     "share": share,
     "receive": receive,
     "info": info,

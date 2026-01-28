@@ -56,7 +56,7 @@ def main():
     # If a path is provided as argument, use it
     if len(sys.argv) > 1:
         repo_root = os.path.abspath(sys.argv[1])
-    
+
     if not os.path.exists(repo_root):
         print(f"Error: Directory not found: {repo_root}")
         sys.exit(1)

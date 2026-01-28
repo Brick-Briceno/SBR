@@ -15,7 +15,7 @@ ISOPHONIC_CURVE = {
 def create_tone(note_number: int, duration_seconds: float = 1.0,
                 SAMPLE_RATE = 44100) -> np.ndarray:
     freq = 440 * 2**((note_number-69) / 12)
-    
+
     # 2. Obtain the amplitude factor of the isophonic curve
     # We use linear interpolation for frequencies not in the dictionary
     keys = sorted(ISOPHONIC_CURVE.keys())

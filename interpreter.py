@@ -28,6 +28,12 @@ def get_if_open_string() -> int:
     return open_string
 
 
+def replace_defines(code: str) -> str:
+    for define in sorted(defines, key=len, reverse=True):
+        code = code.replace(define, defines[define])
+    return code
+
+
 def replace_variables(code: str) -> str:
     all_variables = list(variables_sys)+list(variables_user)+list(vars_instruments)
     all_variables = sorted(all_variables, key=len, reverse=True)
@@ -131,6 +137,8 @@ def sbr_line(idea: str):
     """Process a single line of SBR code"""
     #the code is empety
     if idea.strip() == "": return
+
+    idea = replace_defines(idea)
 
     #multiline code
     if SPLIT_LINES_TOKEN in idea:

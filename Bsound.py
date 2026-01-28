@@ -10,6 +10,7 @@ from errors import SBR_ERROR
 from sbr_utils import *
 from sbr_types import *
 
+
 try: import soundfile as sf
 except ImportError:
     print("Missing soundfile library")

@@ -1,5 +1,23 @@
 # Aura
 
+
+Posibles nombres:
+Aura
+Aural
+SoundBr
+LALALASound
+Chlorine
+Symmetrical Sound
+Symmetrical Wave
+Beautiful Sound
+Bsound
+SoundScape
+SpectraSynth
+Oscura (juego entre OSC + aura)
+AuralScape
+Ambientum
+
+
 Ok necesito hacer el backend de un sintetizador, y para empezar los presets, o la información que se tiene que sintetizar estará estructurados de la siguiente manera en json
 
 Existirá mierda que se llamará generador que puede tener un argumento del 0 al 1, de 0 a .3333 será un rango entre seno y triángulo, de .3333 a .6666 de triángulo a cuadrada, de .6666 a 1 hasta diente de sierra

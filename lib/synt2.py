@@ -23,7 +23,6 @@ def play_array(audio_data, sleep=False):
     if sleep: time.sleep((1/sample_rate)*len(audio_data))
 
 
-
 class StereoReverb:
     def __init__(self, sample_rate=44100, room_size = 0.8, wet_level = 0.3, dry_level = 0.7):
         self.fs = sample_rate

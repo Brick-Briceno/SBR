@@ -5,7 +5,7 @@ Sintaxis Brick Ritmo
 
 *SBR es un lenguaje de programación con fines de entretenimiento enfocado a música y composición algorítmica, donde puedes hacer pop, rock, electrónica, diseño sonoro, drums de batería, ritmos africanos, facilidad para hacer melodías memorables bajo la filosofía simetric melody y un conjunto de herramientas para tener nuevas formas de ver la música donde puedes combinar tanto improvisación como una extrema planificación*
 
-*Si lees este tutorial completo podrás experimentar, entretenerte y expresar todos tus pensamientos mediante la música*
+*Si lees este tutorial completo podrás experimentar, entretenerte y expresar todos tus pensamientos mediante la música, SBR no es un generador de melodías, quizás lo sea, pero solo es una manera que te facilita expresarte*
 
 *Este mini tutorial estará dividido en 3 partes, primero la parte rítmica, seguido de la parte melódica o mejor dicho tonal, y finalmente la parte verdaderamente melódica, cómo unir un poco las piezas y algunas que otras herramientas del control de flujo, las palabras claves*
 
@@ -611,17 +611,28 @@ Ya que posiblemente los números los aprendiste en la escuela pasaré a la parte
 
 2.85 Round \= 3 – “Round” es un efecto numérico que sirve para redondear números
 
-Random –  te dará enteros aleatorios salvo le metas flotantes, por defecto te arroja floats de \-1 a 1 pero puedes definir de dónde a dónde puede ir ese rango
+Random –  te dará enteros aleatorios salvo le metas flotantes, por defecto te arroja floats de \-1 a 1 pero puedes definir de dónde a dónde puede ir ese rango, también puedes seleccionar elementos de una lista
 
-Random \= 0.4284344219472829  
-Random \= \-0.09917189446713803  
-Random \= 0.7384207824723916  
-Random \= 0.6221342406808659  
-Random 50, 100 \= 56  
-Random 50, 100 \= 97  
-Random 50, 100 \= 77  
-Random 50, 100 \= 70  
-Random 50, 100 \= 53
+Random ≈ 0.4284344219472829  
+Random ≈ \-0.09917189446713803  
+Random ≈ 0.7384207824723916  
+Random 50, 100 ≈ 56  
+Random 50, 100 ≈ 97  
+Random 50, 100 ≈ 70  
+Random 50, 100 ≈ 53
+
+Random {1; 3; 5} ≈ 5  
+Random {1; 3; 5} ≈ 1  
+Random {1; 3; 5} ≈ 3
+
+Random{"apple"; "mango"; son; lonic; 5\*5} ≈ 25  
+Random{"apple"; "mango"; son; lonic; 5\*5} ≈ B1010 1101 0101  
+Random{"apple"; "mango"; son; lonic; 5\*5} ≈ B1001 0010 0010 1000  
+Random{"apple"; "mango"; son; lonic; 5\*5} ≈ B1010 1101 0101  
+Random{"apple"; "mango"; son; lonic; 5\*5} ≈ "mango"  
+Random{"apple"; "mango"; son; lonic; 5\*5} ≈ B1010 1101 0101  
+Random{"apple"; "mango"; son; lonic; 5\*5} ≈ "mango"  
+Random{"apple"; "mango"; son; lonic; 5\*5} ≈ "apple"
 
 **Strings**  
 "your age is 24 years"
@@ -641,7 +652,7 @@ y esta es otra línea
 
 También puedes multiplicar y repetir
 
-"hola " \* 5 \= "hola hola hola hola hola "
+"hola " \* 5 \= "hola hola hola hola hola " – el hola aquí lleva un espacio al final
 
 Me parece relevante mencionar la herramienta “info” que sirve para varios tipos de datos entre ellos texto, en el caso de los strings te muestra cierta información relevante, si pones
 
@@ -684,7 +695,7 @@ play M|5 : true
 
 Esto pausa el código hasta que se termine de reproducir la última muestra de audio, osea que si el sonido tiene una rever larga va a tardar en continuar el codigo, caso contrario si pones false o un cero, o simplemente nada
 
-play B1000\*4
+play B1000 \* 4
 
 Una buena forma de buscar ayuda es usando “help” te muestra mucha información sobre el lenguaje, te explicaria pero ese mismo comando o palabra clave habla sobre sí misma y mucho más
 
@@ -695,6 +706,8 @@ Otra muy buena es “vars” te muestra todas las variables registradas en ese m
 **Consejos y estándares para escribir código limpio**
 
 Mira, muchos proyectos o canciones pueden tener su propio estilo de codificación (formas de ordenar el código), y lo que diré aquí no es una verdad absoluta, debido a que es un lenguaje nuevo y de momento el único que lo conoce soy yo y algunos conocen un poco, cada quien puede descubrir nuevas formas de codificar pero me inspiro en varios lenguajes y estándares como el pep 8 de Python [peps.python.org/pep-0008](http://peps.python.org/pep-0008) (en ingles) me parece una buena forma de inspiración
+
+Por cierto, la prioridad es que funcione, que la canción sea buena, si no es así mejor que esté desordenando
 
 **Buenos nombres de variables**  
 Que sean descriptivos
@@ -813,6 +826,8 @@ valve\_gain .. Set the gain for the valve distortion effect in master
 
 Puedes encontrar más sobre esto en el intérprete, que por cierto de momento estará todo en ingles, prueba y experimenta con ellos
 
+Otras herramientas podrían ser el generador “SBR” que ejecuta un string como si fuera código, o el efecto “Metric” o “Len” herramientas simples pero con mucho potencial, que te devuelven esas caracteristicas de datos musicales para automatizar otras cosas
+
 **Diseño de sonido** (timbres)
 
 El diseño de sonido es muy utilizado en música electrónica, lo que no se dice es que también puede ser usado en cualquier otro estilo de música como el rock por ejemplo 
@@ -822,3 +837,6 @@ También se usa en el cine para hacer foleys o sonidos de ambient, también pued
 También se suele usar obviamente en la electrónica como por ejemplo en el dubstep con sonidos explosivos y muy complejos de hacer, como por ejemplo en la obra “First of the Year (Equinox)” de Skrillex donde los sonidos algunos fuera de escalar parecen el solo de una guitarra eléctrica justo antes de que un meteorito golpee la tierra o mientras
 
 O los sonidos de la actual música “ambient” con sonidos suaves y atmosféricos que nos producen la nostalgia de momentos o alguna persona que fué importante en el pasado mientras hay colores fríos o ambientes nostálgico estilo arte “dream core”
+
+Próximamente terminaré este tutorial  
+

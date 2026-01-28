@@ -83,11 +83,6 @@ el interprete debe ser extremandamente facilmente portable
 correr en windows, linux, android, ipone, debe correr en todos los daw
 y si es posible debe correr hasta en una lavadora
 
-la documentación debe tener VARIOS MODULOS:
-
-teoria musical basica (aqui pongo el mini libro que hice en 2023)
-debe tener ejemplos con codigo
-
 debe tener ejercicios para entrenar tu oido ritmico y sobre tonos
 por ejemplo solfeo y ver si un acorde es mayor, menor, aumentado o disminuido
 la pagina debe venir con audio incluido

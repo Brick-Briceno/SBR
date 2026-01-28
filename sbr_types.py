@@ -736,9 +736,12 @@ class Melody():
             raise SBR_ERROR("Melody has empty tone data")
 
         if self.rhythm.metric != len(self.tones):
+            data_to_be_lengthened = Rhythm if self.rhythm.metric < len(self.tones) else Tones
             raise SBR_ERROR(
-                f"The rhythmic metric is {self.rhythm.metric} "
-                f"and the tonal metric is {len(self.tones)}, "
+                f"Rhythmic metric is {self.rhythm.metric} "
+                f"and Tonal metric is {len(self.tones)}, "
+                f"add {abs(self.rhythm.metric - len(self.tones))} "
+                f"units to the {data_to_be_lengthened.__name__}, "
                 f"they must be the same to avoid confusion"
                 )
 
@@ -748,7 +751,8 @@ class Melody():
         if len(self.vel) == 0:
             self.vel = Velocity([.8])
 
-    def __repr__(self, iters=2**0): # mosca con esta vaina njd
+
+    def __repr__(self, iters=2**0): # mosca con esta vaina njd xDDD
         rp_hash = hash(self.rhythm.bin)+hash(self.tones)
         if rp_hash in repr_sm:
             return repr_sm[rp_hash]

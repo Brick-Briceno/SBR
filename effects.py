@@ -53,6 +53,7 @@ def X(data: list[Rhythm], args: list[int]):
 
     return Rhythm(data)
 
+
 def S(data: list[Rhythm], args: list[int]):
     "I only let a certain amount of pulses through"
     if not len(args): args = [7, 0]
@@ -73,11 +74,12 @@ def S(data: list[Rhythm], args: list[int]):
     if modo: return Rhythm(final[::-1])
     return Rhythm(final)
 
+
 def D(data: list[Rhythm], args: list[int]):
     "I apply delay to your rhythms"
     #el primer argumento es la longitud
     #y el segundo las veces que se repite
-    #Definir argumentos
+    # definir argumentos
     data = quantize(data.bin)
     longitud = len(data)
     if not len(args): args = [3, 3]
@@ -97,17 +99,20 @@ def D(data: list[Rhythm], args: list[int]):
     for x in data_2: final += x
     return Rhythm(final)
 
+
 def R(data: list[Rhythm | Group | Tones | Velocity | Times | Melody], args: list[None]):
     "I reverse the rhythm"
     if len(data) <= 1: return type(data)()
     elif len(data) != 0:
         return data.reverse()
 
+
 def I(data: list[Rhythm | Tones | int | float | Note | Group | Melody], args: list[None]):
     "I invert the rhythm, like inverting the color (not gate)"
     if isinstance(data, float):
         return data-data*2
     return ~data
+
 
 def Q(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
     "Tell me what number you want me to hide"
@@ -136,6 +141,7 @@ def Q(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
         return Rhythm(final)
 
 
+
 def Add(data: list[Rhythm], args: list[int]):
     "I add pulses wherever you tell me"
     if len(args) == 0: return data
@@ -145,6 +151,7 @@ def Add(data: list[Rhythm], args: list[int]):
             raise SBR_ERROR("Add: The argument is too big")
         new[x] = "1"
     return Rhythm("".join(new))
+
 
 
 def turn_right(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
@@ -160,6 +167,7 @@ def turn_right(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
     return type(data)(data[-args:]+data[:-args])
 
 turn_right.__name__ = ">>"
+
 
 def turn_left(data: list[Rhythm | Tones | Group | Melody], args: list[int]):
     "I turn the rhythm to the left"
@@ -189,6 +197,7 @@ def cerrar(data: list[Rhythm | Tones | Group], args: list[int]):
 
 cerrar.__name__ = "Neither [ nor ]"
 
+
 def mul(data: list[Rhythm | Tones | Group | Melody | int | float | str], args: list[int | float]):
     "I multiplicate notes and fishes"
     if args != []:
@@ -204,13 +213,16 @@ mul.__name__ = "*"
 
 "efectos numericos"
 
+
 def Round(data: list[int | float | Note | Group], args: list[None]):
     "I like the simplicity of numbers, so I round them ^^"
     return round(data)
 
+
 def Metric(data: list[Rhythm | Melody], args: list[None]):
-    "Metrics is one of the most important things in music :)"
+    "Metrics is one of the most ant things in music :)"
     return data.metric
+
 
 def Len(data: list[Rhythm | Tones | Melody | Group], args: list[None]):
     "I like to measure sizes and distances :D"
@@ -219,13 +231,16 @@ def Len(data: list[Rhythm | Tones | Melody | Group], args: list[None]):
 
 "efectos de tonales"
 
+
 def Oct(data: list[Tones | Note | Melody | int], args: list[int]):
     "I change the octave of the notes, if you don't put an argument I'll return the same data"
     if len(args) == 0: return data
     return data+args[0]*7
 
+
 def Th(data: list[Tones | Note | Melody | int], args: list[int]):
     return Oct(data, args)-1
+
 
 def Chord(data: list[Tones | Note | Group | int], args: list[int]):
     "I love the armonies, so I create chords with the notes you give me"
@@ -242,11 +257,13 @@ def Chord(data: list[Tones | Note | Group | int], args: list[int]):
             progression.append(Group(Chord(note, args)))
         return Tones(Group(progression))
 
+
 def Arp(data: list[Tones | Group], args: list[None]):
     "I'm a big fan of trance music :)"
     return Tones(one_dimention_list_recurtion(data))
 
 #efectos de grupo
+
 
 def Grp(data: list[list | Rhythm], args: list[int]):
     "I access an item of an iterable data"

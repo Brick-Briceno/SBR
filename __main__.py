@@ -6,7 +6,7 @@ With all my heart I hope that good things can be
 made with this tool I hope that people have fun experimenting
 with it and that it helps them make better music, hugs <3
 
-@Brick_briceno 2023
+@Brick_briceno 2022
 """
 
 # ============================================================================
@@ -119,7 +119,7 @@ def handle_sbr_error(error: SBR_ERROR, line_number: int = None):
     if line_number:
         b_print(f"Error in line {line_number}:", color=color3, end=" ")
     else:
-        b_print("Error:", color=color3, end=" ")
+        b_print("Error:", color=color3, end="")
     b_print(error, color=color4)
 
 

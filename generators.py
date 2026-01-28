@@ -25,6 +25,7 @@ def B(args: list[Rhythm | int | str | Group]):
         else: rhythm += str(arg)
     return Rhythm(rhythm) #es la misma vaina no?
 
+
 def N(args: list[int]):
     "I really like to dance, I count 3, 3, 2, yeah, 3, 1, 2, 2, (N332 is = B10010010)"
     salida = ""
@@ -34,6 +35,7 @@ def N(args: list[int]):
         salida += str(10**(int(x)-1))
     return Rhythm(salida)
 
+
 def C(args: list[int]):
     "Every x amount of time I spit a 1, args: every x bits, length"
     if not len(args): args = [3, 32]
@@ -41,6 +43,7 @@ def C(args: list[int]):
     if args[0] < 1: return Rhythm("0"*args[1])
     string = (f"{10**(int(args[0])-1)}"*int(args[1]))[:int(args[1])]
     return Rhythm(string)
+
 
 def E(args: list[int]):
     "I love symmetry, args: pulses, lenght, L, I'm the algorithm that started it all, in peace rest Godfried T <3"
@@ -89,6 +92,7 @@ def E(args: list[int]):
 
     return Rhythm(final_pattern) #Yeii :D
 
+
 def A(args: list[int]): #Argumentos: longitud, cantidad, empezar por 1?
     "I'm so indecisive, I generate random rhythms every time I'm back, args: lenght, quantity, start with 1?"
     #crear argumentos en caso de que no los haya
@@ -126,6 +130,7 @@ def A(args: list[int]): #Argumentos: longitud, cantidad, empezar por 1?
 
     return Rhythm(final)
 
+
 "Generadores Numericos"
 
 def Range(args: list[int]):
@@ -135,6 +140,7 @@ def Range(args: list[int]):
     elif len(args) == 2: return Group(range(args[0], args[1]))
     elif len(args) == 3: return Group(range(args[0], args[1], args[2]))
 
+
 "Generadores Tonales"
 
 def M(args: list[int | Note | Tones | Group]):
@@ -142,16 +148,6 @@ def M(args: list[int | Note | Tones | Group]):
     for x in one_dimention_list_recurtion(args):
         if x > 7*10: raise SBR_ERROR(f"Use 'G' for larger arguments, very large grade '{x}'")
     return Tones(args)
-
-def one_dimention_list_recurtion(group):
-    new = []
-    for item in group:
-        if not isinstance(item, list):
-            new.append(item)
-        else:
-            for x in one_dimention_list_recurtion(item):
-                new.append(x)
-    return new
 
 
 def J(args: list[int | Group]):
@@ -168,11 +164,13 @@ def J(args: list[int | Group]):
         grade += x
     return Tones(notes)
 
+
 def G(args: list[int | Group]):
     "Just tell me the grades whiout arguments, simple"
     if args == []: return Tones()
     notes = [int(g)-1 for g in "".join([str(x) for x in one_dimention_list_recurtion(args)])]
     return Tones(notes)
+
 
 "Generadores de Velocity"
 
@@ -181,6 +179,7 @@ def V(args: list[Velocity | int | float]):
     if args == []: return Velocity()
     return Velocity(args) #es la misma vaina no?
 
+
 "Generadores de Longitud de notas"
 
 def T(args: list[Times | int | float]):
@@ -188,12 +187,16 @@ def T(args: list[Times | int | float]):
     if args == []: return Times()
     return Times(args) #es la misma vaina no?
 
+
 "Generadores Numericos"
 
-def Random(args: list[int | float]):
-    "I generate random decimal or integer numbers of any range you want, friend"
+def Random(args: list[int | float | Group]):
+    ("I generate random decimal or integer numbers of any range"
+    "you want friend, I can also help you choose elements from a group")
     if len(args) == 1:
-        raise SBR_ERROR("Random needs at least 2 or no arguments")
+        if type(args[0]) == Group:
+            return random.choice(args[0])
+        raise SBR_ERROR("Random needs at least 2 or no arguments, unless it's a group")
     elif len(args) == 0: args = [-1, 1.]
     elif len(args) >= 2: args = [args[0], args[1]]
 
@@ -215,6 +218,14 @@ def Format(args: list[str]):
     return _string
 
 
+def sbr_compile(args: list[str]):
+    "Give me a string and I'll execute it as if it were code"
+    if len(args):
+        return sbr_line(args[0][1:-1])
+
+sbr_compile.__name__ = "SBR"
+
+
 "Generadores Grupos"
 
 def Seno(args: list[int | float]):
@@ -223,15 +234,19 @@ def Seno(args: list[int | float]):
     if len(args) not in (2, 3): raise SBR_ERROR(
         "You must put 2 or 3 parameters in the 'Seno' generator",
         "frecuency, length and normalization amplitude")
+
     if len(args) == 2:
         freq, length = args
         max_array = 1
-    else: freq, length, max_array = args
+    else:
+        freq, length, max_array = args
 
-    if max_array == 0: return Group()
-    time_array = np.linspace(0/max_array, 1, length, endpoint=False)
+    if max_array == 0:
+        return Group()
+    time_array = np.linspace(0/max_array, 1, round(length), endpoint=False)
     sine_wave = np.sin(2 * np.pi * freq * time_array)
     array = Group(sine_wave*max_array)
+
     return array
 
 
@@ -239,7 +254,7 @@ def Seno(args: list[int | float]):
 
 def Sm(args: list[Group]):
     "Symmetric Melody, I keep every detail of the melody"
-    if not len(args): raise SBR_ERROR("Sm needs at least one argument")
+    if not len(args): raise SBR_ERROR("Sm needs a '{}'")
     return Melody(args[0])
 
 "Generadores Poliritmicos"
@@ -271,6 +286,7 @@ def inst(args: list[int]):
         "type 'vars:' to see the available instruments")
     return Instrument(vars_instruments[name].path, obj.inst_id)
 
+
 #in case only one group has been sent
 def return_data(args: list[None]):
     if len(args) == 0:
@@ -279,6 +295,7 @@ def return_data(args: list[None]):
         return args[0]
     elif len(args) >= 2:
         return Group(args)
+
 
 record = {
     "B": B,
@@ -299,6 +316,7 @@ record = {
     "Range": Range,
     "Random": Random,
     "Struct": Struct,
+    "SBR": sbr_compile,
     "": return_data,
 }
 
