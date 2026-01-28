@@ -206,8 +206,7 @@ def sbr_line(idea: str):
             raise SBR_ERROR(f"The tone of the scale should be a whole number, not a {type(_object).__name__}")
 
         #define variable ¡:D!
-        variables_user[var_name] = instruction
-
+        variables_user[var_name] = compiler(instruction)
     else:
         #compile, which is actually interpreting xD
         idea = replace_variables(idea)

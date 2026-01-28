@@ -155,7 +155,7 @@ class Rhythm:
         return n
 
     @property
-    def metric(self):
+    def metric(self) -> int:
         n = 0
         for b in self:
             if b in (1, 5, 7, 9): n += 1
@@ -728,12 +728,27 @@ class Melody():
             elif type(d) is Times: self.times += d
             else: raise SBR_ERROR(
                 f"Melody doesn't accept '{type(d).__name__}' as data type '{d}'")
+
+        if self.rhythm.metric == 0:
+            raise SBR_ERROR("Melody has empty rhythm data")
+
         if len(self.tones) == 0:
             raise SBR_ERROR("Melody has empty tone data")
-        if len(self.times) == 0: self.times = Times([.8])
-        if len(self.vel) == 0: self.vel = Velocity([1])
 
-    def __repr__(self, iters=2**0):
+        if self.rhythm.metric != len(self.tones):
+            raise SBR_ERROR(
+                f"The rhythmic metric is {self.rhythm.metric} "
+                f"and the tonal metric is {len(self.tones)}, "
+                f"they must be the same to avoid confusion"
+                )
+
+        if len(self.times) == 0:
+            self.times = Times([.75])
+
+        if len(self.vel) == 0:
+            self.vel = Velocity([.8])
+
+    def __repr__(self, iters=2**0): # mosca con esta vaina njd
         rp_hash = hash(self.rhythm.bin)+hash(self.tones)
         if rp_hash in repr_sm:
             return repr_sm[rp_hash]

@@ -19,3 +19,9 @@ words_es.txt
 *.wav
 *.inst
 *.spec
+
+# binaries
+*.so
+*.dll
+*.dylib
+*.exe

@@ -140,7 +140,7 @@ def Range(args: list[int]):
 def M(args: list[int | Note | Tones | Group]):
     "I'm the tones's abstraction, give me numbers or notes and I'll sing for Ü ;)"
     for x in one_dimention_list_recurtion(args):
-        if x > 144: raise SBR_ERROR(f"Use 'G' for larger arguments, very large grade '{x}'")
+        if x > 7*10: raise SBR_ERROR(f"Use 'G' for larger arguments, very large grade '{x}'")
     return Tones(args)
 
 def one_dimention_list_recurtion(group):

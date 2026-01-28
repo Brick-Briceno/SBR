@@ -6,15 +6,16 @@ but can be translated :D
 
 
 mejorar la sintaxis
-documentación para distintas versiones
+documentación para distintas versiones (en un futuro, el lenguaje aun es joven)
 poder guardar variables cerca de ciertas expresiones
-necesita poder crear efectos dentro del mismo codigo
-necesita strings para guardar rutas (quizas esto no haga falta)
+se necesita poder crear efectos dentro del mismo codigo
 
+en el nucleo se podria(
 se deberian añadir decoradores a tipos de datos
 de python para reciclarlos en el lenguaje como los int
 o quizas usar el modulo decimal para evitar errores al
 interpretar los numeros
+)
 
 funcion personalizada de impresión 'bprint'
 imprima melodias como se hacia en simetric melody

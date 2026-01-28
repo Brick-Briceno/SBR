@@ -51,29 +51,54 @@ def separate_path_extension(file_path: str):
     return directory, name, extension
 
 
-def format_time(seconds: float):
+def format_time(seconds: float) -> str:
     if seconds < 0:
         return f"{seconds} Time can't be negative"
+    
+    # Time constants in seconds
     MICROSECONDS = 1e-6
     MILLISECONDS = 1e-3
     MINUTES = 60
     HOURS = MINUTES * 60
     DAYS = HOURS * 24
+    WEEKS = DAYS * 7
+    MONTHS = DAYS * 30.44  # Average month length
+    YEARS = DAYS * 365.25 # Accounting for leap years (365 + 365 + 365 + 366) / 4
+
+    if seconds >= YEARS:
+        years = seconds / YEARS
+        return f"{years:.1f} {'year' if years < 2 else 'years'}"
+
+    if seconds >= MONTHS:
+        months = seconds / MONTHS
+        return f"{months:.1f} {'month' if months < 2 else 'months'}"
+
+    if seconds >= WEEKS:
+        weeks = seconds / WEEKS
+        return f"{weeks:.1f} {'week' if weeks < 2 else 'weeks'}"
 
     if seconds >= DAYS:
-        return f"{seconds / DAYS:.2f} days"
-    elif seconds >= HOURS:
-        return f"{seconds / HOURS:.2f} h"
-    elif seconds >= MINUTES:
-        return f"{seconds / MINUTES:.2f} min"
-    elif seconds >= 1:
-        return f"{seconds:.2f} s"
-    elif seconds >= MILLISECONDS:
-        return f"{seconds * 1e3:.2f} ms"
-    elif seconds >= MICROSECONDS:
-        return f"{seconds * 1e6:.2f} µs"
-    else:
-        return f"{seconds * 1e9:.2f} ns"
+        days = seconds / DAYS
+        return f"{days:.1f} {'day' if days < 2 else 'days'}"
+
+    if seconds >= HOURS:
+        hours = seconds / HOURS
+        return f"{hours:.1f} h"
+
+    if seconds >= MINUTES:
+        minutes = seconds / MINUTES
+        return f"{minutes:.1f} min"
+
+    if seconds >= 1:
+        return f"{seconds:.1f} s"
+
+    if seconds >= MILLISECONDS:
+        return f"{seconds * 1e3:.1f} ms"
+
+    if seconds >= MICROSECONDS:
+        return f"{seconds * 1e6:.1f} µs"
+    return f"{seconds * 1e9:.1f} ns"
+
 
 def extract_keys(text: str) -> list[str]:
     results = []

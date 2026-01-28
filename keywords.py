@@ -480,14 +480,14 @@ def obj_to_array(text_sbr_obj: str, meta_data=False):
         #Rhythm
         elif isinstance(obj_data, Rhythm):
             obj_data = Structure([Instrument(f"{program_directory}/inst/Kick.wav", 2**32), Velocity([0]),
-                Melody([obj_data, Tones([7*7])]) #it need a default sample to the Rhythm
+                Melody([obj_data, Tones([6*7]) * obj_data.metric]) #it need a default sample to the Rhythm
             ])
 
         #Note and tones
         elif isinstance(obj_data, (Tones, Note)):
             if isinstance(obj_data, Note): obj_data = Tones([obj_data])
             obj_data = Structure([seno, Velocity([0]),
-                Melody([obj_data, Rhythm('10'*len(obj_data))]) #it need a default sample to the Rhythm
+                Melody([obj_data, Rhythm('10000000'*len(obj_data))]) #it need a default sample to the Rhythm
             ])
 
         #Instrument
@@ -909,6 +909,13 @@ def define(args):
     defines[args[0].strip()] = args[1].strip()
 
 
+def the_sbr_line(args):
+    "Compile SBR line from a string"
+    if len(args) == 0:
+        raise SBR_ERROR("Put at least one argument")
+    return sbr_line(args[0][1:-1])
+
+
 record = {
     #Keywords
     "if": sbr_if,
@@ -928,6 +935,7 @@ record = {
     "welcome": sbr_import,
     "licence": sbr_licence,
     "print": sbr_print,
+    "sbr_line": the_sbr_line,
     "share": share,
     "receive": receive,
     "info": info,
