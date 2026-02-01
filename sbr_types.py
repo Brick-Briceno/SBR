@@ -62,6 +62,7 @@ def quantize(data):
     .replace("2", "1")
     return data
 
+
 def only_has(data, allowed_characters):
     for char in data:
         if char not in allowed_characters:
@@ -847,6 +848,7 @@ class Melody():
 
     def ghost(self, data):
         return self-data
+
 
 class Polyrhythm(Group):
     __name__ = "Polyrhythm"

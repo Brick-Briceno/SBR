@@ -240,15 +240,18 @@ class audio_effects:
         if not n: return data
         return audio_effects.resampling(data, int(n*sample_rate), sample_rate)
 
+
     def float_to_dbs(muestra, valor_referencia=1):
         #valor_referencia = 1 #32bits fotante
         valor_pico = np.abs(np.max(muestra))
         db_pico = 20 * np.log10(valor_pico / valor_referencia)
         return db_pico
 
+
     def dbs_to_float(db_pico, valor_referencia=1):
         valor_pico = valor_referencia * 10**(db_pico / 20)
         return valor_pico
+
 
     # @nb.njit
     # def limitador_16bits(data, umbral=-1, ms=10):

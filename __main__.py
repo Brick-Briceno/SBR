@@ -174,29 +174,37 @@ def run_repl():
     awake = True
     while awake:
         try:
-            keyword = input(get_prompt_string())
+            input_text = input(get_prompt_string())
             # Special keywords
-            if keyword in ("cls", "clear", "..", "..."):
+            if input_text in ("cls", "clear", "..", "..."):
                 clean_console()
                 continue
-            elif keyword == "exit":
+
+            elif input_text == "exit":
+                # The keyword 'exit' already exists, but beginners should
+                # know that 'Ctrl+C' makes it easier to exit :)
                 print("Use Ctrl+C to exit or cancel any processes")
                 return
-            elif keyword in ("pause", "\x10", "."):
+            elif input_text in ("pause", "\x10", "."):
                 sbr_line("pause")
                 continue
+
             # Execute keyword
-            code_that_has_been_made.append(keyword)
+            code_that_has_been_made.append(input_text)
             start = time.time()
-            result = sbr_line(keyword)
+            result = sbr_line(input_text)
+
             # Show debug info
-            if DEBUG and type(result) is not None:
+            if DEBUG:
                 elapsed = format_time(time.time() - start)
-                if type(result) in (None, list):
-                    b_print(f"{type(result).__name__} {elapsed}", end=" ")
+                if type(result) not in (type(None), list):
+                    b_print(type(result).__name__, end="")
+                b_print(elapsed, end="")
+
             # Print result
             print_result(result)
 
+        # Errors
         except SBR_ERROR as bad:
             handle_sbr_error(bad)
         except (KeyboardInterrupt, EOFError, SystemExit):
@@ -205,7 +213,7 @@ def run_repl():
             handle_sbr_error(SBR_ERROR("There is not enough RAM to perform this operation"))
         except Exception as e:
             if DEBUG: raise e
-            awake = error_log()  # Returns None, so loop exits
+            awake = error_log() # Returns None so loop exits
 
     b_print("good bye!", color=color5)
 

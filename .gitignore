@@ -17,6 +17,8 @@ words_es.txt
 *.ogg
 *.mid
 *.wav
+*.aiff
+*.flac
 *.inst
 *.spec
 
