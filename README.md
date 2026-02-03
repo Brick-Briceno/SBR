@@ -42,8 +42,14 @@ it in turn you can create a lot of types of foods based on flours, the same here
 
 ## Key Features ✨
 
-- **Intuitive Syntax**: Designed to be easy to learn and use.
+- **Docs**: Detailed required documentation and tutorials
+- **Games**: fun games for auditory training
+- **Efficient florflow**: sbr inspires you to make symmetrical music
 - **Interoperability with Python**: You can use SBR data types with Python
+- **Discover paradigms**: Discover new musical paradigms and techniques
+- **Audio synthesis using an intuitive syntax**: You can create complex soundscapes and polished analog audio effects
+- **Separates musical elements**: By separating rhythmic content from melodic content, among other data types
+
 
 *Check the SBR data types module*
 
