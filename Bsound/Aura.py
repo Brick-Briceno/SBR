@@ -1,5 +1,4 @@
 from scipy.signal import lfilter
-#from pygame import mixer
 import soundfile as sf
 import numpy as np
 import time
@@ -15,6 +14,18 @@ Automations are low-frequency arrays returned as parameters for those automation
 
 
 SAMPLE_RATE = 44_100
+
+# Simplified isophonic curve data (in dB) for a loudness level of 40 phon.
+# This is an approximation for illustrative purposes. Actual values ​​are more detailed.
+# The key is the frequency in Hz, the value is the loudness level in dB.
+ISOPHONIC_CURVE = {
+    20: 60, 25: 55, 31.5: 50, 40: 45, 50: 40,
+    63: 35, 80: 30, 100: 25, 125: 20, 160: 17,
+    200: 15, 250: 13, 315: 12, 400: 10, 500: 9,
+    630: 8, 800: 7, 1000: 6, 1250: 5, 1600: 4,
+    2000: 4, 2500: 5, 3150: 6, 4000: 7, 5000: 8,
+    6300: 9, 8000: 10, 10000: 11, 12500: 12, 16000: 15
+}
 
 class Aura:
     ...

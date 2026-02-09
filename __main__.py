@@ -33,7 +33,7 @@ from keywords import sbr_import
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-__version__ = "2.0.11"
+__version__ = "2.0.12"
 
 # Debug mode flag
 DEBUG = False
@@ -165,10 +165,10 @@ def print_result(result):
 
 def run_repl():
     """Run interactive REPL (Read-Eval-Print Loop)"""
-    if not DEBUG: clean_console()
+    if not DEBUG:
+        clean_console()
 
-    version_short = ".".join(__version__.split("."))
-    b_print(f"Welcome to SBR {version_short} by @Brick_briceno", color=color1)
+    b_print(f"Welcome to SBR {__version__} by @Brick_briceno", color=color1)
     b_print("Type 'help' for more info or 'exit' to... exit", color=color2)
 
     awake = True
@@ -210,7 +210,9 @@ def run_repl():
         except (KeyboardInterrupt, EOFError, SystemExit):
             awake = False
         except MemoryError:
-            handle_sbr_error(SBR_ERROR("There is not enough RAM to perform this operation"))
+            handle_sbr_error(
+                SBR_ERROR("There is not enough RAM to perform this operation")
+                )
         except Exception as e:
             if DEBUG: raise e
             awake = error_log() # Returns None so loop exits
@@ -246,7 +248,9 @@ def run_file(filepath: str):
     except (KeyboardInterrupt, SystemExit):
         b_print("good bye!", color=color5)
     except MemoryError:
-        handle_sbr_error(SBR_ERROR("There is not enough RAM to perform this operation"))
+        handle_sbr_error(
+            SBR_ERROR("There is not enough RAM to perform this operation")
+            )
     except Exception as e:
         handle_exception(e)
 
@@ -271,7 +275,7 @@ def run_code_string(code: str):
 
 def show_version():
     """Display SBR version"""
-    b_print(f"SBR {__version__} by @Brick_briceno")
+    b_print(f"SBR {__version__}")
 
 
 def show_help(topic: str = None):

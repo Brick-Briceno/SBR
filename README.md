@@ -50,11 +50,32 @@ it in turn you can create a lot of types of foods based on flours, the same here
 - **Audio synthesis using an intuitive syntax**: You can create complex soundscapes and polished analog audio effects
 - **Separates musical elements**: By separating rhythmic content from melodic content, among other data types
 
-
 *Check the SBR data types module*
 
 
-### Compile in Windows 💻
+SBR has modules for processing rhythmic and melodic content, where for years its main
+objective was to create pure rhythm, currently, it handles more data types,
+which together we can colloquially call MIDI
+
+These include lyric analysis that can help you write more or better,
+in terms of rhyme, meter, or how to express yourself
+
+It also has data types for creating synthetic sounds so realistic they
+are indistinguishable from real ones, allowing you to create the most
+complex and interesting sounds possible, the presets are distributed in
+plain text as JSON, this is called the SBR Aura engine
+
+
+## How to Compile SBR
+
+The language is almost entirely pure Python with NumPy modules, but the audio engine is made in Rust,
+reading NumPy's memory addresses for greater playback efficiency
+
+### Compile in Windows 🪟 / Linux 🐧
+
+If you're on Windows, you need to compile it in bash,
+the script is made to compile in multiplatform using
+multiple processor cores
 
 ```bash
 # 1. Download
@@ -62,17 +83,17 @@ git clone --depth 1 https://github.com/Brick-Briceno/SBR.git
 cd SBR
 
 # 2. Install dependencies
-Get-Content ./dependencies.sh | Out-String | Invoke-Expression
+bash dependencies.sh
 
-# 3. Compile exe
-.\build.bat
+# 3. Compile .exe or .os
+bash build.sh
 
 ```
 
 ### Compile in Android 📱
 
 ```bash
-# You need to be on Linux to compile the APK
+# You need to be on Linux to compile the APK, use wsl
 
 # Download
 git clone --depth 1 https://github.com/Brick-Briceno/SBR.git

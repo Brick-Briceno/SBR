@@ -27,3 +27,4 @@ words_es.txt
 *.dll
 *.dylib
 *.exe
+*.whl

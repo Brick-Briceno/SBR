@@ -4,7 +4,7 @@ Symmetry Melody Api v2.1
 
 """
 
-from lib.synthesizer import create_tone
+from synthesizer import create_tone
 from variables import variables_user
 from errors import SBR_ERROR
 from sbr_utils import *

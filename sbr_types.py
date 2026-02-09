@@ -145,7 +145,7 @@ class Rhythm:
         return int(self.bin)
 
     def __hash__(self):
-        return hash(self.bin)+69
+        return hash(self.bin) + 69
 
     def __len__(self):
         n = 0
@@ -177,7 +177,7 @@ class Rhythm:
 
     def __iadd__(self, bit):
         return self + bit
-    
+
     def __mul__(self, n):
         return Rhythm(self.__data*n)
 
@@ -352,7 +352,7 @@ class Note:
     @property
     def bin(self) -> tuple:
         return self.__diatonic_tone, self.__alteration
-    
+
     @property
     def oct(self):
         return self.__diatonic_tone // 7
@@ -620,7 +620,7 @@ class Tones(Group):
 
     def __iadd__(self, data):
         return self+data
-    
+
     def __isub__(self, data):
         return self-data
 
@@ -935,7 +935,7 @@ class Instrument:
         else: return path_note
 
     def calculate_interval(self, sm_tones: int) -> float:
-        return 2**(sm_tones/12)
+        return 2 ** (sm_tones/12)
 
     def grade_to_cromatic(self, mode: Rhythm, tone: int, diatonic_tone: Note) -> int:
         mode = mode.scale
@@ -951,5 +951,5 @@ class Instrument:
         else:
             if grado <= 0:
                 raise SBR_ERROR("Grade out of range")
-            croma = mode[grado-8]+(octave*12)+tone-1
-            return croma+alteration
+            croma = mode[grado-8] + (octave*12) + tone - 1
+            return croma + alteration

@@ -1,0 +1,10 @@
+#directories
+*__pycache__
+/audio_engine/target
+
+# formats
+*.lock
+
+# binaries
+*.so
+*.dll

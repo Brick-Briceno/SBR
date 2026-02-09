@@ -13,7 +13,7 @@ from sbr_types import pulse_will_be
 from sbr_utils import *
 from sbr_types import *
 from variables import *
-from sbr_help import *
+#from sbr_help import *
 import lib.MidiFile
 import itertools
 import generators
