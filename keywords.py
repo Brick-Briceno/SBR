@@ -614,6 +614,7 @@ def rec(_):
 
 
 alt = ""
+last_note = Note(0)
 def piano(args):
     "I'm a piano on a console, what can I say?"
     if len(args) not in (0, 1):
@@ -640,10 +641,11 @@ def piano(args):
         "t": 46, "y": 47, "u": 48, "i": 49,
         "o": 50, "p": 51, "´": 52, "+": 53,
         "}": 54,}
+
     b_print("Live piano from SBR... ¡Enjoy!", color=color1)
     active = True
     def live_piano(event):
-        global alt
+        global alt, last_note
         if not active: return
         key_name = event.name
         if "1" == key_name: alt = "b"
@@ -651,7 +653,10 @@ def piano(args):
         print(key_name, end="\r")
         if key_name.lower() in keys:
             n = Note(keys[key_name.lower()])
-            print(f"          Note: {alt}{n}  \r", end="")
+            _interval = int(n) - int(last_note)# - int(n)
+            last_note = n
+
+            print(f"          Note: {alt}{n}  {_interval}  \r", end="")
             play(["Struct{V0;$"+str(inst_id)+";Sm{B1;M"+str(n)+alt+"}}"])
             alt = ""
 

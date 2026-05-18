@@ -161,7 +161,7 @@ def J(args: list[int | Group]):
     grade = args[0]
     for x in args[1:]:
         notes.append(grade)
-        grade += x
+        grade += int(x)
     return Tones(notes)
 
 

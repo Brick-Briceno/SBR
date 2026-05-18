@@ -1,4 +1,2 @@
-from Bsound import *
+from .Bsound import *
 import Bsound.Aura
-
-print(dir())
