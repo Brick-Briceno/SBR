@@ -299,7 +299,14 @@ Imaginemos que queremos invertir, revertir o aplicar cualquier otro efecto a un 
 B1000 1000 \* 2 \= B1000 1000 1000 1000   
 N5L8 \* 8 \+ C4 \= B1000 1100 1000 1100 1000 1100 1000 1100 1000 0100 1000 0100 1000 0100 1000 0100
 
-**S** (dejo pasar solo cierta cantidad de pulsos)  
+**S** (dejo pasar solo ciertos pulsos)
+*En el ejemplo el 2 y el 4*
+
+B1000 1000 1000 1000 S2,4 = B0000 1000 0000 1000
+
+*Sirve para hace contratiempos o para crear contenido rítmico de motivos melódicos a partir de otros ritmos, una técnica muy usada en la música*
+
+**SS** (dejo pasar solo cierta cantidad de pulsos)  
 *Imagínate que tienes una melodía con un ritmo para una letra que tiene siete sílabas contadas, solo quieres dejar pasar las primeras 9 notas*
 
 Tomamos un ritmo con 9 pulsos 
@@ -307,13 +314,13 @@ Tomamos un ritmo con 9 pulsos
 E9 \= B1010 1011 0101 0110
 
 Y dejemos pasar solo los primeros 7   
-E9S \= B1010 1011 0101 0000
+E9SS \= B1010 1011 0101 0000
 
 7 es el valor por defecto… de este efecto
 
 Si quieres vamos a dejar pasar solo los primeros tres cursos pies…
 
-E,S3 \= B1001 0010 0000 0000
+E,SS3 \= B1001 0010 0000 0000
 
 *Si te preguntas qué hace esa coma ahí, pues debes separar los efectos o generadores con algún argumento o una coma para saber que no quieres usar un efecto que no existe, “ES” por ejemplo*
 

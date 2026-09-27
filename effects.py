@@ -55,6 +55,22 @@ def X(data: list[Rhythm], args: list[int]):
 
 
 def S(data: list[Rhythm], args: list[int]):
+    "I only allow certain pulses to pass through, the rest I will silence"
+    if not len(args): args = [2, 4, 6, 8]
+    data = data.bin
+    data = quantize(data)
+    final = ""
+    n_pulso = 1
+    for pulso in data:
+        if pulso == "1" and n_pulso in args:
+            n_pulso += 1
+            final += "1"
+        else: final += "0"
+
+    return Rhythm(final)
+
+
+def SS(data: list[Rhythm], args: list[int]):
     "I only let a certain amount of pulses through"
     if not len(args): args = [7, 0]
     if len(args) == 1: args += [0]
@@ -282,6 +298,7 @@ record = {
     "L": L,
     "X": X,
     "S": S,
+    "SS": SS,
     "D": D,
     "R": R,
     "I": I,

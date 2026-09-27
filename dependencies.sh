@@ -1,13 +1,14 @@
 # Necesario
 pip install --upgrade pip
+pip install soundfile
 pip wheel setuptools
 pip install numpy
-pip install soundfile
+pip install pygame
+pip install scipy
 
 # Para compilar
 pip install pyinstaller
 pip install -U Nuitka #valen los 2 pero este es recomendado
-
 
 # Cosas alternativas
 pip install numba
