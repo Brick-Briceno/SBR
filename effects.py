@@ -62,9 +62,12 @@ def S(data: list[Rhythm], args: list[int]):
     final = ""
     n_pulso = 1
     for pulso in data:
-        if pulso == "1" and n_pulso in args:
+        if pulso == "1":
+            if n_pulso in args:
+                final += "1"
+            else:
+                final += "0"
             n_pulso += 1
-            final += "1"
         else: final += "0"
 
     return Rhythm(final)
