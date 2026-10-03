@@ -1,21 +1,26 @@
 # Aura
 
+Es un sintetizador enfocado a la sintesis compleja de sonido
 
-Posibles nombres:
-Aura
-Aural
-SoundBr
-LALALASound
-Chlorine
-Symmetrical Sound
-Symmetrical Wave
-Beautiful Sound
-Bsound
-SoundScape
-SpectraSynth
-Oscura (juego entre OSC + aura)
-AuralScape
-Ambientum
+## Como crear presets?
+
+### Tokens y ByteCode
+
+Los decimales o parametros se hacen con float32
+
+Meta datos:
+version_compiler
+name
+
+Variables:
+
+note_hz
+duration
+velocity
+slide
+
+
+var + puntero
 
 
 Ok necesito hacer el backend de un sintetizador, y para empezar los presets, o la información que se tiene que sintetizar estará estructurados de la siguiente manera en json
@@ -24,7 +29,7 @@ Existirá mierda que se llamará generador que puede tener un argumento del 0 al
 
 ## Existirán variables globales como
 
-El velocity 
+El velocity
 
 Cuántas negras lleva sonando la nota (duración) 
 
@@ -142,6 +147,152 @@ Main{
 3. referencias (son como punteros que toman un id de qué se quiere automatizar)
 
 ```json
+
+{
+    "meta": {
+    "version": "1.0.0",
+    "name": "Cyberpunk Reese Bass",
+    "author": "AudioDev",
+    "category": "Bass",
+    "tags": ["resampling", "distorted", "sub"],
+    "description": "Heavy wavetable bass with OTT style dynamics and fast LFO"
+  },
+  "global": {
+    "master_gain_db": -0.1,
+    "pitch_bend_range": 2,
+    "polyphony_mode": "mono",
+    "legato": true,
+    "glide": true,
+    "portamento": .045,
+    "tuning_hz": 440.0
+  },
+
+  "oscillators": [
+    {
+      "id": "osc_1",
+      "enabled": true,
+      "wavetable": {
+        "name": "Basic_Shapes",
+        "embedded": true,
+        "frame_count": 256,
+        "sample_rate": 44100,
+        "audio_data_base64": "..." 
+      },
+      "frame_position": 0.35,
+      "unison": {
+        "count": 7,
+        "detune": 0.18,
+        "stereo_spread": 0.85,
+        "blend": 0.5
+      },
+      "tuning": {
+        "octave": -1,
+        "transpose": 0,
+        "fine_tune_cents": 0
+      },
+      "level": 0.85,
+      "pan": 0.0,
+      "phase": 0.0,
+      "phase_randomness": 1.0,
+      "warp": {
+        "type": "bend_plus",
+        "amount": 0.4
+      },
+      "output_routing": "filter_1"
+    }
+  ],
+  "sample_generator": {
+    "enabled": false,
+    "sample_path": "samples/noise/white.wav",
+    "level": 0.5,
+    "key_track": false,
+    "loop": true
+  },
+  "envelopes": [
+    {
+      "id": "env_1",
+      "is_amp_env": true,
+      "attack_s": 0.005,
+      "decay_s": 0.35,
+      "sustain": 0.7,
+      "release_s": 0.15,
+      "curves": {
+        "attack_slope": 0.0,
+        "decay_slope": -0.4,
+        "release_slope": -0.5
+      }
+    }
+  ],
+  "lfos": [
+    {
+      "id": "lfo_1",
+      "sync_mode": "tempo",
+      "frequency_hz": 2.0,
+      "tempo_division": "1/8t",
+      "trigger_mode": "trigger",
+      "smooth_ms": 5.0,
+      "nodes": [
+        {"x": 0.0, "y": 0.0, "control_x": 0.25, "control_y": 0.8},
+        {"x": 0.5, "y": 1.0, "control_x": 0.75, "control_y": 0.2},
+        {"x": 1.0, "y": 0.0, "control_x": 0.0, "control_y": 0.0}
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "filter_1",
+      "enabled": true,
+      "type": "lowpass_24db",
+      "cutoff_hz": 1200.0,
+      "resonance": 0.4,
+      "drive": 3.5,
+      "key_track": 0.5,
+      "routing": "serial"
+    }
+  ],
+  "mod_matrix": [
+    {
+      "source": "lfo_1",
+      "destination": "filter_1.cutoff_hz",
+      "amount": 0.65,
+      "mode": "bipolar",
+      "aux_source": "mod_wheel",
+      "aux_amount": 1.0
+    },
+    {
+      "source": "macro_1",
+      "destination": "osc_1.frame_position",
+      "amount": 1.0,
+      "mode": "unipolar"
+    }
+  ],
+  "fx_chain": [
+    {
+      "type": "distortion",
+      "enabled": true,
+      "mix": 0.75,
+      "params": {
+        "mode": "saturate",
+        "drive_db": 12.0
+      }
+    },
+    {
+      "type": "multiband_compressor",
+      "enabled": true,
+      "mix": 1.0,
+      "params": {
+        "upward_comp": 0.5,
+        "downward_comp": 0.8,
+        "time_scale": 1.0
+      }
+    }
+  ],
+  "macros": [
+    {"id": "macro_1", "name": "Timbre", "value": 0.35},
+    {"id": "macro_2", "name": "Space", "value": 0.0}
+  ]
+}
+
 
 {
     "lfos": {

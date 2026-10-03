@@ -1,5 +1,5 @@
 #directories
-/testing_random_things.py
+*test_random_things.py
 *__pycache__
 desktop.ini
 /.buildozer
