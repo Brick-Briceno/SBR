@@ -18,6 +18,7 @@ Temperament or the specific frequency to which it is tuned—the SBR and Bsound 
 
 """
 
+
 preset_example = {
     "meta": {
         "version": "1.0.0",
@@ -39,7 +40,7 @@ preset_example = {
             "la2a": {
                 "peak_reduction": 50.0,
                 "gain": 50.0,
-                "mode": "compress"
+                "ratio": 5
             },
             "reverb": {
                 "room_size": 0.92,
@@ -74,20 +75,69 @@ preset_example = {
         # los osciladores, envolventes ADSR y LFOs se definen en este diccionario
         #Solo hay 2 tipos de datos, numeros y arrays
         # Y todos son validos en todas las entradas de efectos, osciladores y LFOs
-        1: {
+
+        # Esto de "osc1" es opcional, le puedes poner facilmente "papi rupi" si lo deseas
+        # Esto velo como variables que guardan ondas con valores que puedes meter en cualquier otro lado
+        # Y cuidado, que un nombre de variable para el oscilador o envolvente o lo que sea que guardes en "data"
+        # No puede ser igual a un nombre de efecto o alguna palabara reservada
+        # El estandar es que llames a los osciladores "oscX"
+        # Y a las envolventes "envX" quizas sumado de alguna descripcion
+        "osc1": {
             "waveform": "sawtooth",
             "frequency": "note_hz",
-            "amplitude": 0.8,
-            "stretch": 0.0,
+            "amplitude": "velocity * env1",
+            "stretch": 0,
+            "duration": "duration",
+            "effects": {
+                "drive": {
+                    "gain_db": 20,
+                    "normalize": False
+                },
+            },
         },
     },
-    "out": [1, 2, 3]
+    "env1": {
+        "DAHDSR_envelope": {
+            # Delay before the envelope starts, in seconds (>= 0)
+            "delay": 0,
+            # Attack duration until the envelope reaches its maximum, in seconds
+            # Aqui facilemte puede ir "1.125 - velocity *1.1"
+            # Para que tenga menos ataque si se toca más duro
+            "attack": 0.25,
+            # Time held at maximum level before decay, in seconds
+            "hold": 0.2,
+            # Duration of the fall from maximum to sustain level, in seconds
+            "decay": 1.0,
+            # Sustain amplitude in [0, 1]; 1 is maximum and 0 is silence
+            "sustain_level": 0.5,
+            # Duration of the sustain phase, in seconds
+            "sustain": 0.5,
+            # Duration of the release from sustain level to silence, in seconds
+            "release": 1.0,
+            # Attack curve tension in [-1, 1]: positive rises faster initially
+            "attack_tension": 0.25,
+            # Decay curve tension in [-1, 1]
+            "decay_tension": -0.25,
+            # Release curve tension in [-1, 1]
+            "release_tension": 0.25
+        },
+    },
+
+    # En las salidas al master no tenen que ir todos los osciladores
+    "out": [
+        "osc1",
+        "osc2",
+        "osc3"
+        ]
 }
 
 
-from scipy.signal import lfilter, resample_poly
+
+
+
+from scipy.signal import butter, lfilter_zi, lfilter, resample_poly
 import soundfile as sf
-from numba import njit
+from numba import jit, prange
 import numpy as np
 import base64
 import time
@@ -95,8 +145,24 @@ import gzip
 import json
 
 
+quit()
 
 SAMPLE_RATE = 44_100
+
+
+def _tension_curve(progress: np.ndarray, tension: float) -> np.ndarray:
+    """Map 0..1 progress to a normalized logarithmic curve"""
+    progress = np.clip(progress, 0, 1)
+    if tension > 0:
+        curvature = 10 ** (2 * tension) - 1
+        return np.log1p(curvature * progress) / np.log1p(curvature)
+    if tension < 0:
+        curvature = 10 ** (-2 * tension) - 1
+        return 1 - (
+            np.log1p(curvature * (1 - progress)) / np.log1p(curvature)
+        )
+    return progress
+
 
 # Simplified isophonic curve data (in dB) for a loudness level of 40 phon
 # This is an approximation for illustrative purposes. Actual values ​​are more detailed
@@ -186,6 +252,14 @@ class WaveTables:
         data = rng.normal(0.0, amplitude, size=samples)
         return data
 
+    def vinyl(samples, db=-18):
+        data = WaveTables.sample("vinyl.ogg")
+        if samples == 0:
+            return np.zeros((0, data.shape[1]), dtype=data.dtype)
+        if len(data) < samples:
+            data = np.tile(data, (int(np.ceil(samples / len(data))), 1))
+        return data[:samples] * (10 ** (db / 20))
+
     def sine(samples, frequency=440, amplitude=1.0):
         return np.sin(WaveTables._phase(samples, frequency)) * amplitude
 
@@ -229,6 +303,113 @@ class WaveTables:
             raise ValueError("Audio file must be mono or stereo")
         return data
 
+
+
+class Envelopes:
+    def DAHDSR_envelope(
+        delay,
+        attack,
+        hold,
+        decay,
+        sustain_level,
+        sustain,
+        release,
+        attack_tension: float = 0,
+        decay_tension: float = 0,
+        release_tension: float = 0,
+    ) -> np.ndarray:
+        """
+        Generate a DAHDSR envelope in float32 format
+
+        Args:
+            delay (float | int): Delay before the envelope starts, must
+                be greater than or equal to 0 seconds
+            attack (float | int): Duration of the attack phase, from 0
+                until the envelope reaches its maximum level
+            hold (float | int): Time the envelope stays at its maximum
+                level before the decay begins
+            decay (float | int): Duration of the fall from the maximum
+                level to the sustain level
+            sustain_level (float): Envelope sustain level in the range [0, 1],
+                where 1 is the maximum level and 0 is silence
+            sustain (float | int): Duration of the sustain phase, during
+                which the envelope remains constant
+            release (float | int): Duration of the envelope release, from
+                the sustain level down to 0
+            attack_tension (float, optional): Attack curve shape in the range
+                from -1 to 1, positive values rise faster at the beginning and
+                negative values make the rise smoother
+            decay_tension (float, optional): Decay curve shape in the range from
+                -1 to 1, adjusts the fall toward the sustain level
+            release_tension (float, optional): Release curve shape in the range
+                from -1 to 1, changes the final fade down to 0
+
+        Raises:
+            ValueError: If any time is negative, sustain_level is outside [0, 1],
+                any tension is outside [-1, 1], or SAMPLE_RATE is not a positive
+                integer
+
+        Returns:
+            np.ndarray: One-dimensional array containing the calculated envelope
+                in float32 format
+        """
+        if any(seconds < 0 for seconds in (
+            delay,
+            attack,
+            hold,
+            decay,
+            sustain,
+            release,
+        )):
+            raise ValueError("Envelope times cannot be negative")
+        if not 0 <= sustain_level <= 1:
+            raise ValueError("sustain_level must be between 0 and 1")
+        if any(not -1 <= tension <= 1 for tension in (
+            attack_tension, decay_tension, release_tension
+        )):
+            raise ValueError("Tensions must be between -1 and 1")
+        if not isinstance(SAMPLE_RATE, (int, np.integer)) or SAMPLE_RATE <= 0:
+            raise ValueError("SAMPLE_RATE must be a positive integer")
+
+        segments = [
+            np.zeros(int(round(delay * SAMPLE_RATE)), dtype=np.float64)
+        ]
+
+        attack_count = int(round(attack * SAMPLE_RATE))
+        if attack_count:
+            progress = np.arange(attack_count, dtype=np.float64) / attack_count
+            segments.append(_tension_curve(progress, attack_tension))
+
+        hold_count = int(round(hold * SAMPLE_RATE))
+        if hold_count:
+            segments.append(np.ones(hold_count, dtype=np.float64))
+
+        decay_count = int(round(decay * SAMPLE_RATE))
+        if decay_count:
+            progress = np.arange(decay_count, dtype=np.float64) / decay_count
+            curve = _tension_curve(progress, decay_tension)
+            segments.append(1 + (sustain_level - 1) * curve)
+
+        sustain_count = int(round(sustain * SAMPLE_RATE))
+        if sustain_count:
+            segments.append(
+                np.full(sustain_count, sustain_level, dtype=np.float64)
+            )
+
+        release_count = int(round(release * SAMPLE_RATE))
+        if release_count:
+            progress = np.arange(release_count, dtype=np.float64) / release_count
+            curve = _tension_curve(progress, release_tension)
+            segments.append(sustain_level * (1 - curve))
+
+        if not any(segment.size for segment in segments):
+            raise ValueError("At least one envelope stage must have positive duration")
+        envelope = np.concatenate(segments)
+        envelope[-1] = 0
+        return envelope.astype(np.float32)
+
+
+
 class Audio_Effects:
     class Gain_Distortion_Dynamics:
         def float_to_dbs(sample, reference_value=1):
@@ -246,6 +427,16 @@ class Audio_Effects:
             final_index = np.where(np.abs(audio) > threshold)[0][-1]
             # Trim the audio up to that index
             return audio[:final_index + 1]
+
+        def drive(audio_input: np.ndarray, gain_dbs=1.0, normalize=False) -> np.ndarray:
+            """Usa la tangente hiperbolica para distorsionar la señal de audio"""
+            audio_output = np.tanh(
+                audio_input * 
+                Audio_Effects.Gain_Distortion_Dynamics.dbs_to_float(gain_dbs)
+                )
+            if normalize:
+                audio_output /= np.max(np.abs(audio_output))
+            return audio_output
 
         def bit_crush(
             audio_input: np.ndarray,
@@ -327,41 +518,109 @@ class Audio_Effects:
             return wet_mix * held_audio + (1 - wet_mix) * audio
 
 
-        def valve_distortion(audio_input: np.ndarray, gain=1.2) -> np.ndarray:
-            if gain == 0: return audio_input
-            # Parameters for a 12AX7 tube model
-            # Tube bias voltages
-            Vpk = 275  # Plate voltage
-            Vgk = -2   # Grid voltage (bias)
+        @jit(nopython=True, cache=True, parallel=True)
+        def _triode12ax7_solve_plate_voltage(
+            grid_voltages, supply_voltage, plate_load, mu, exponent, kg1, kp, kvb
+        ):
+            plate_voltages = np.empty_like(grid_voltages)
+            for index in prange(grid_voltages.size):
+                grid_voltage = grid_voltages[index]
+                low = 0.0
+                high = supply_voltage
+                for _ in range(32):
+                    midpoint = (low + high) * 0.5
+                    argument = kp * (
+                        1.0 / mu
+                        + grid_voltage
+                        / np.sqrt(kvb + midpoint * midpoint)
+                    )
+                    if argument > 0.0:
+                        softplus = argument + np.log1p(np.exp(-argument))
+                    else:
+                        softplus = np.log1p(np.exp(argument))
+                    e1 = midpoint * softplus / kp
+                    plate_current = max(e1, 0.0) ** exponent / kg1
+                    residual = (
+                        midpoint + plate_load * plate_current - supply_voltage
+                    )
+                    if residual > 0.0:
+                        high = midpoint
+                    else:
+                        low = midpoint
+                plate_voltages[index] = (low + high) * 0.5
+            return plate_voltages
 
-            k_p = 600  # Exponent parameter
-            k_vb = 300  # Bias voltage
-            mu = 100  # Amplification factor
-            Ex = 1.4  # Coefficient
-            v = 6.3
+        def valve_distortion(audio: np.ndarray, gain_db=20,
+                             normalize=False, high_pass_filter=True) -> np.ndarray:
+            audio = np.asarray(audio)
+            output_dtype = (
+                audio.dtype
+                if audio.dtype in (np.dtype(np.float32), np.dtype(np.float64))
+                else np.dtype(np.float64)
+            )
+            if audio.dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
+                audio = audio.astype(np.float64)
+            if (
+                audio.ndim not in (1, 2)
+                or audio.shape[0] == 0
+                or (audio.ndim == 2 and audio.shape[1] not in (1, 2))
+            ):
+                raise ValueError("Audio debe ser un array mono o estéreo no vacío")
+            if not np.all(np.isfinite(audio)):
+                raise ValueError("Audio debe contener solo valores finitos")
+            if not np.isfinite(gain_db):
+                raise ValueError("gain_db debe ser un valor finito")
 
-            # The grid input is the sum of the bias voltage and the audio signal
-            # You must scale the audio so it fits within the tube voltage range
-            V_audio = audio_input * v  # Adjust this value as needed
-            V_total = Vgk + V_audio
-            # Compute plate current (Ip) using Koren's formula
-            # Avoid division by zero and logs of negative numbers
-            V_term = Vpk + Ex * np.log(1 + np.exp(V_total / Ex))
-            # Handle the case of log of a negative number
-            log_arg = (V_term / mu) - (V_total / gain)
-            # Clamp negative values to 0 to avoid log(negative)
-            log_arg[log_arg < 0] = 0.0
-            Ip = (k_p * np.log(1 + np.exp((k_p * np.log(1 + np.exp(log_arg))) / k_vb)))
-            # The distorted output is the plate current
-            distorted_audio = Ip / np.max(np.abs(Ip))
+            drive_gain = Audio_Effects.Gain_Distortion_Dynamics.dbs_to_float(
+                gain_db
+            )
+            if not np.isfinite(drive_gain):
+                raise ValueError("gain_db produce una ganancia no finita")
 
-            # Normalize so the negative peak is -1 and the positive peak is 1
-            max_pos = np.max(distorted_audio)
-            min_neg = np.min(distorted_audio)
-            # Scale audio to the [-1, 1] range
-            distorted_audio = 2 * (distorted_audio - min_neg) / (max_pos - min_neg) - 1
-            return distorted_audio
+            oversampling = 4
+            audio = resample_poly(audio, oversampling, 1, axis=0)
 
+            # Single common-cathode 12AX7 stage; circuit values are explicit
+            supply_voltage = 250.0
+            plate_load = 100_000.0
+            grid_bias = -1.5
+            mu, exponent, kg1, kp, kvb = 100.0, 1.4, 1060.0, 600.0, 300.0
+
+            quiescent_plate = Audio_Effects.Gain_Distortion_Dynamics._triode12ax7_solve_plate_voltage(
+                np.asarray([grid_bias], dtype=np.float64),
+                supply_voltage, plate_load, mu, exponent, kg1, kp, kvb
+            )[0]
+            grid_voltage = grid_bias + audio * drive_gain
+            # Approximate grid-current onset: a real grid draws current above 0 V
+            grid_voltage = np.minimum(grid_voltage, 0.0)
+            plate_voltage = Audio_Effects.Gain_Distortion_Dynamics._triode12ax7_solve_plate_voltage(
+                np.ascontiguousarray(grid_voltage.reshape(-1)),
+                supply_voltage, plate_load, mu, exponent, kg1, kp, kvb
+            ).reshape(grid_voltage.shape)
+            distorted_audio = (quiescent_plate - plate_voltage) / supply_voltage
+            distorted_audio = resample_poly(
+                distorted_audio, 1, oversampling, axis=0
+            )
+
+            if high_pass_filter:
+                b, a = butter(1, 27.5, btype="highpass", fs=SAMPLE_RATE)
+                zi = lfilter_zi(b, a).reshape(
+                    (-1,) + (1,) * (distorted_audio.ndim - 1)
+                )
+                zi = zi * np.expand_dims(distorted_audio[0], axis=0)
+                distorted_audio, _ = lfilter(
+                    b, a, distorted_audio, axis=0, zi=zi
+                )
+
+            if normalize:
+                peak = np.max(np.abs(distorted_audio))
+                if peak > 0:
+                    distorted_audio /= peak
+
+            return distorted_audio.astype(output_dtype, copy=False)
+
+
+        @jit(nopython=True, cache=True, parallel=True)
         def _t4_cell_and_tube_dsp(audio, peak_reduction_knob, gain_knob, ratio):
             """
             Bucle DSP compilado en C (vía Numba) para procesar el audio muestra por muestra
@@ -404,10 +663,13 @@ class Audio_Effects:
                 # Detección de nivel (Enlazado estéreo si hay más de 1 canal)
                 if n_channels == 2:
                     sc_level = max(np.abs(audio[i, 0]), np.abs(audio[i, 1])) * sc_gain
+                elif audio.ndim == 2:
+                    sc_level = np.abs(audio[i, 0]) * sc_gain
                 else:
-                    sc_level = np.abs(float(audio[i])) * sc_gain
+                    sc_level = np.abs(audio[i]) * sc_gain
 
-                sc_level = max(sc_level, 1e-9)  # Evitar log(0)
+                if sc_level < 1e-9:
+                    sc_level = 1e-9
                 sc_db = 20.0 * np.log10(sc_level)
                 
                 # Cálculo del objetivo de reducción de ganancia
@@ -437,30 +699,28 @@ class Audio_Effects:
                 gain_reduction_linear = 10.0 ** (-current_gr_db / 20.0)
                 
                     # 4. Aplicar ganancia y pasar por la etapa de tubos (12AX7)
-                if n_channels == 2:
+                if audio.ndim == 2:
                     for c in range(n_channels):
                         sample = audio[i, c] * gain_reduction_linear * makeup_linear
                         tube_out = np.tanh(sample + tube_bias) - bias_compensation
                         output[i, c] = tube_out
                 else:
-                    sample = float(audio[i]) * gain_reduction_linear * makeup_linear
+                    sample = audio[i] * gain_reduction_linear * makeup_linear
                     tube_out = np.tanh(sample + tube_bias) - bias_compensation
                     output[i] = tube_out
-                        
+
             return output
 
-        def compressor_la2a(audio, peak_reduction=50.0, gain=50.0, mode='compress'):
+
+        def compressor_la2a(audio, peak_reduction=50.0, gain=50.0, ratio=5):
             """
             LA-2A style compression processor
 
             Parameters:
             - peak_reduction: (0-100) controls how much compression is applied
             - gain: (0-100) output make-up gain
-            - mode: 'compress' (~3:1 ratio) or 'limit' (~10:1 ratio)
+            - ratio: compression ratio
             """
-
-            # Configure mode
-            ratio = 3.0 if mode == 'compress' else 10.0
 
             # Apply the compiled DSP stage
             audio_procesado = Audio_Effects.Gain_Distortion_Dynamics._t4_cell_and_tube_dsp(
@@ -468,25 +728,26 @@ class Audio_Effects:
 
             return audio_procesado
 
-        @njit
+        @jit(nopython=True, cache=True)
         def _1176_analog_core(audio_in, input_gain_lin, output_gain_lin, att_coef, rel_coef, ratio, thresh_db):
             """
             Núcleo del 1176 iterando muestra por muestra
             Incluye bucle Feedback, asimetría FET y distorsión de Transformador (Histéresis)
             """
             out = np.zeros_like(audio_in)
-            
+            n_channels = audio_in.shape[1]
             env = 0.0  # Estado de la reducción de ganancia (dB)
-            feedback_sample = 0.0  # Memoria del detector (Z^-1)
-            transformer_state = 0.0  # Memoria del núcleo magnético del transformador
+            feedback_sample = np.zeros(n_channels, dtype=audio_in.dtype)
+            transformer_state = np.zeros(n_channels, dtype=audio_in.dtype)
             
             for i in range(len(audio_in)):
-                # 1. Drive de Entrada
-                x = audio_in[i] * input_gain_lin
-                
-                # 2. Detección Feedback (Lee la salida del FET del ciclo anterior)
-                # Añadimos offset de 0.001 para emular el bias DC del circuito detector
-                detector_signal = abs(feedback_sample + 0.001) 
+                # Detector de feedback enlazado para mantener la imagen estéreo.
+                detector_signal = 0.0
+                for c in range(n_channels):
+                    channel_level = abs(feedback_sample[c] + 0.001)
+                    if channel_level > detector_signal:
+                        detector_signal = channel_level
+
                 x_db = 20.0 * np.log10(detector_signal + 1e-12) if detector_signal > 1e-12 else -120.0
                 
                 # 3. Target de Reducción de Ganancia (GR)
@@ -506,36 +767,49 @@ class Audio_Effects:
                     
                 # 5. Aplicar GR lineal sobre la señal de entrada
                 gr_linear = 10.0 ** (-env / 20.0)
-                x_comp = x * gr_linear
-                
-                # Guardamos la muestra comprimida para el próximo ciclo del detector
-                feedback_sample = x_comp 
-                
-                # 6. Etapa FET: Ganancia y Saturación Asimétrica (Armónicos pares)
-                x_out = x_comp * output_gain_lin
-                asym_drive = x_out + 0.15 * (x_out ** 2) 
-                fet_out = np.tanh(asym_drive)
-                
-                # 7. Etapa Transformador de Salida (UTC 5002 - Histéresis y Filtro pasabajos natural)
-                diff = fet_out - transformer_state
-                # Curva de saturación magnética
-                non_linear_drive = np.tanh(diff * 1.2) + 0.05 * (diff ** 2)
-                transformer_state = transformer_state + 0.5 * non_linear_drive
-                
-                out[i] = transformer_state
+                for c in range(n_channels):
+                    x = audio_in[i, c] * input_gain_lin
+                    x_comp = x * gr_linear
+
+                    # Guardamos la muestra comprimida para el detector de feedback.
+                    feedback_sample[c] = x_comp
+
+                    # Etapa FET: ganancia y saturación asimétrica.
+                    x_out = x_comp * output_gain_lin
+                    asym_drive = x_out + 0.15 * (x_out ** 2)
+                    fet_out = np.tanh(asym_drive)
+
+                    # Etapa de transformador de salida con memoria por canal.
+                    diff = fet_out - transformer_state[c]
+                    non_linear_drive = np.tanh(diff * 1.2) + 0.05 * (diff ** 2)
+                    transformer_state[c] += 0.5 * non_linear_drive
+                    out[i, c] = transformer_state[c]
                 
             return out
 
-        def urei_1176_analog(audio_in, fs=44100, input_db=12.0, output_db=-6.0, 
-                            attack_ms=0.2, release_ms=300.0, ratio=4.0, 
-                            all_buttons_in=False, oversampling=8):
+        def br11ck67_analog(audio_in, input_db=12.0, output_db=-6.0,
+                            attack_ms=0.2, release_ms=300.0, ratio=4.0,
+                            all_buttons_in=False, oversampling=4):
             """
             Controlador principal del 1176 con Oversampling anti-aliasing
-            
+
             Parámetros:
             - audio_in: Array de numpy (mono o procesar canales por separado)
-            - oversampling: 1 (Off), 2, 4, u 8. (4x recomendado para distorsión analógica sin aliasing).
+            - oversampling: 1 (Off), 2, 4, u 8. (4x recomendado para distorsión analógica sin aliasing)
             """
+            audio_in = np.asarray(audio_in)
+            mono_input = audio_in.ndim == 1
+            if mono_input:
+                audio_in = audio_in[:, np.newaxis]
+            elif audio_in.ndim != 2:
+                raise ValueError("Audio debe ser mono o estéreo")
+            if audio_in.shape[0] == 0 or audio_in.shape[1] not in (1, 2):
+                raise ValueError("Audio debe tener muestras y uno o dos canales")
+            if audio_in.dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
+                audio_in = audio_in.astype(np.float64)
+            if not np.all(np.isfinite(audio_in)):
+                raise ValueError("Audio debe contener solo valores finitos")
+            audio_in = np.ascontiguousarray(audio_in)
             
             # 1. Configuración de parámetros analógicos
             if all_buttons_in:
@@ -551,28 +825,32 @@ class Audio_Effects:
             # 2. OVERSAMPLING (Subir la frecuencia de muestreo)
             if oversampling > 1:
                 # resample_poly aplica un filtro FIR anti-aliasing automático de altísima calidad
-                audio_up = resample_poly(audio_in, oversampling, 1)
-                fs_up = fs * oversampling
+                audio_up = resample_poly(audio_in, oversampling, 1, axis=0)
+                fs_up = SAMPLE_RATE * oversampling
             else:
                 audio_up = audio_in
-                fs_up = fs
+                fs_up = SAMPLE_RATE
                 
             # Calcular coeficientes IIR usando el sample rate interno (fs_up)
             att_coef = 1.0 - np.exp(-1.0 / (fs_up * (attack_ms / 1000.0)))
             rel_coef = 1.0 - np.exp(-1.0 / (fs_up * (release_ms / 1000.0)))
-            
+
             # 3. Procesamiento en C-Speed
-            processed_up = Audio_Effects.Gain_Distortion_Dynamics._1176_analog_core(audio_up, fs_up, input_gain_lin, output_gain_lin, 
+            processed_up = Audio_Effects.Gain_Distortion_Dynamics._1176_analog_core(
+                np.ascontiguousarray(audio_up),
+                input_gain_lin, output_gain_lin,
                                             att_coef, rel_coef, ratio, threshold_db)
                                             
             # 4. DOWNSAMPLING (Bajar de vuelta a fs original limpiando frecuencias ultrasónicas)
             if oversampling > 1:
-                processed = resample_poly(processed_up, 1, oversampling)
+                processed = resample_poly(processed_up, 1, oversampling, axis=0)
             else:
                 processed = processed_up
                 
             # Limitar salida estricta a [-1.0, 1.0] para evitar clipeo digital al exportar
-            return np.clip(processed, -1.0, 1.0)
+            processed = np.clip(processed, -1.0, 1.0)
+            return processed[:, 0] if mono_input else processed
+
 
     class Stereo_Expansion:
         def pan_sound(sound, pan_level: float):
@@ -771,11 +1049,11 @@ class Audio_Effects:
             )
             return stereo_dry * (1 - mix) + expanded * mix
 
-
     class Tuning_Stretching:
-        def vinyl(data, n):
-            if not n: return data
-            return Audio_Effects.Tuning_Stretching.resampling(data, int(n * SAMPLE_RATE), SAMPLE_RATE)
+        def vinyl_stretching(data, factor):
+            if not factor:
+                return data
+            return Audio_Effects.Tuning_Stretching.resampling(data, int(factor * SAMPLE_RATE), SAMPLE_RATE)
 
         def resampling(audio_data, sample_rate_old, new_sample_rate):
             # Compute the number of samples for the new sample rate
@@ -931,9 +1209,12 @@ class Aura:
         elif isinstance(preset, str):
             self.preset = json.loads(preset)
 
+
+
     def osc_aura(hz, duration, gain, waveform_n,
                  stretch, resonance, resonance_q, resonance_gain):
         pass
+
 
 
     def get_note(self, note_hz=261.626, duration_ms=1, velocity=.8):
@@ -948,6 +1229,19 @@ class Aura:
         Returns:
             np.ndarray: Audio array with the generated note, in stereo format (2 channels)
         """
+
+        Envelopes.DAHDSR_envelope(
+            delay=0.1,
+            attack=0.25,
+            hold=0.2,
+            decay=1.0,
+            sustain_level=0.5,
+            sustain=0.5,
+            release=1.0,
+            attack_tension=0.25,
+            decay_tension=-.25,
+            release_tension=.25,
+        )
 
         return
 
@@ -992,14 +1286,31 @@ class Aura:
 
 
 def main():
+    # python -m cProfile -s tottime Bsound/Aura.py
     """Create an audio array"""
 
     audio_data = WaveTables.sample("Bsound/guitar_test.mp3")
-    audio_data = Audio_Effects.Stereo_Expansion.to_mono(audio_data)
-    audio_data = Audio_Effects.Stereo_Expansion.stereo_expander(audio_data)
-    #audio_data = Audio_Effects.Stereo_Expansion.only_side(audio_data)
+
+    # ***************
+    Audio_Effects.Gain_Distortion_Dynamics.br11ck67_analog(
+        audio_data, oversampling=8
+        )
+    # ***************
+
+    start_time = time.perf_counter()
+
+    # ***************
+    audio_data = Audio_Effects.Gain_Distortion_Dynamics.br11ck67_analog(
+        audio_data, oversampling=8
+        )
+    # ***************
+
+
+    elapsed = time.perf_counter() - start_time
+    print(f"valve_distortion took {elapsed:.3f} seconds")
 
     sf.write("output.mp3", audio_data, SAMPLE_RATE)
+
     if 0:
         import matplotlib.pyplot as plt
         time_axis = np.arange(len(audio_data)) / SAMPLE_RATE
@@ -1014,32 +1325,7 @@ def main():
         plt.tight_layout()
         plt.show()
 
-    # convert to stereo and add a subtle room reverb
-    # audio_data = Audio_Effects.Stereo_Expansion.to_stereo(audio_data)
 
-    """
-    # Automate a resonant peaking EQ with an LFO for an acidic, squelchy tone
-    eq_time = np.arange(len(audio_data)) / SAMPLE_RATE
-    resonance_lfo = 0.5 * (1 + np.sin(2 * np.pi * 0.35 * eq_time))
-    eq_freq = 650 + 2200 * resonance_lfo
-    eq_q = np.full(len(audio_data), 12.0)
-    eq_gain = 3 + 9 * resonance_lfo
-    audio_data = np.column_stack([
-        Audio_Effects.Filters_Equalization.time_varying_eq(
-            audio_data[:, channel], eq_freq, eq_q, eq_gain
-        )
-        for channel in range(audio_data.shape[1])
-    ])
-
-    audio_data = Audio_Effects.Stereo_Expansion.reverb(
-        audio_data,
-        room_size=0.92,
-        wet_level=0.35,
-        dry_level=0.65,
-        width=1.2,
-    )
-
-    """
     """Play an audio array"""
     import pygame
 
