@@ -1,363 +1,527 @@
-# Aura
+# Aura class documentation
 
-Es un sintetizador enfocado a la sintesis compleja de sonido
+## Overview
 
-## Como crear presets?
+`Aura` is the high-level synthesis engine used by the Bsound system. Instead of composing notes manually in arrays, the class loads a declarative preset, resolves its formulas, renders audio nodes, applies effects, and returns a stereo note
 
-### Tokens y ByteCode
+This system is designed to be a preset-driven synth layer: the user defines a sound in structured JSON-like Python dictionaries, and `Aura` compiles it into audio
 
-Los decimales o parametros se hacen con float32
 
-Meta datos:
-version_compiler
-name
+## Responsibilities of the class
 
-Variables:
+`Aura` is responsible for:
 
-note_hz
-duration
-velocity
-slide
+- loading presets from Python dicts, compressed bytes, or BaseX strings
+- validating the preset schema
+- resolving internal variable expressions
+- generating oscillator and envelope data
+- merging outputs into stereo audio
+- applying master effects
+- exporting the preset in different binary/text formats
 
+## Relevant file
 
-var + puntero
+- [Aura.py](B:/BrickData/SBR/Bsound/Aura.py)
 
+## Main class
 
-Ok necesito hacer el backend de un sintetizador, y para empezar los presets, o la información que se tiene que sintetizar estará estructurados de la siguiente manera en json
-
-Existirá mierda que se llamará generador que puede tener un argumento del 0 al 1, de 0 a .3333 será un rango entre seno y triángulo, de .3333 a .6666 de triángulo a cuadrada, de .6666 a 1 hasta diente de sierra
-
-## Existirán variables globales como
-
-El velocity
-
-Cuántas negras lleva sonando la nota (duración) 
-
-Altura de la nota
-
-El bpm
-
-## Cada objeto tendrá atributos, que en realidad son strings con referencia
-
-progreso del slide
-
-intensidad del side
-
-Todos esos atributos en realidad son variables globales Solo que con su nombre al principio para tener una referencia clara
-
-se podrán crear tantas envolventes como sean posibles y a todos los parámetros se podrán automatizar con cualquier cosa a su vez, bien rico todo uff
-
-las envolventes también se les puede automatizar con otras envolventes no automatizadas o con variables globales
-
-Y una envolvente también puede ser el retorno de un generador
-
-También hay una pequeña función que genera datos aleatorios
-
-
-### El main
-
-El main puede tener muchas de las propiedades, efectos y características que tiene sus hijos, los osciladores
-
-Si es polimorfismo por ejemplo
-
-Existirán dos tipos de efectos los de tipo 1 y los de tipo 2
-
-
-### Efectos tipo 1
-
-Los de tipo 1 se aplican al wave table, osea a un array de audio que tiene una frecuencia de hipotéticamente 1hz que durará un segundo, esto significa que tendrá su fase positiva como negativa 
-
-Algunos de los efectos tipo uno van a ser
-
-El estiramiento de armónicos
-
-El pulso, que va a dividir la onda a la mitad y poner un silencio y ese silencio va a ir creciendo hasta que vaya desplazando la longitud de las otras dos partes de la onda
-
-La formante de la onda 
-
-El Smear
-
-Vocoder
-
-Amplitudes aleatorias 
-
-Filtros paso bajo y paso alto que se van a controlar con números positivos o negativos, dos efectos en uno solo, además de que se va a filtrar los armónicos a partir de las frecuencias de esa onda, no va a filtrar por hz con un ecualizador normal en un Master 
-
-Dispersión de la fase
-
-Tono de shepard
-
-Flanger
-
-Phaser
-
-Ecualizador
-
-### Cómo funciona?
-A nivel de gestión de memoria el sintetizador
-
-Para ahorrar recursos primero se crea el wave table con todos los efectos de este, y después se pasa por una fórmula que te devuelve la cantidad de repeticiones que el tablet necesita y el porcentaje de aceleración para tener la duración y la frecuencia exacta que se necesita
-
-
-### Efectos tipo 2
-Estos son los que se le pone al array de audio resultante 
-
-ADSL con sus otros parámetros, los parámetros completos quedarían el delay, ataque, hold, sustain y release, es simplemente un efecto sencillo de automatización de volumen en sí
-
-Ecualizador, quizás sea un poco redundante porque ya gay un ecualizador en los efectos de tipo 1 pero en algún caso puede servir
-
-Chorus, que en este caso tiene más sentido ponerlo de tipo 2 porque aquí las ondas pueden ser más variables durante un sonido más largo de un ciclo de onda
-
-Phaser
-
-Distorsión, de válvulas, diodo, cliper, y con una envolvente se podrá crear una distorsión propia 
-
-Delay 
-
-Compresor óptico, analógico, y limpio
-
-Normalizador, sea en picos, rms, o lufs por curva isotónica
-
-Otras cosas
-
-A las envolventes se les podrá poner distorsiones que se pueden expresar con fórmulas matemáticas Como por ejemplo la logarítmica o las lineales o condicionales 
-
-Esto servirá para un montón de cosas exponencialmente inimaginables como hacer que glide sea más lento al principio por ejemplo
-
-Qué llevo hecho?
-
-Ya tengo una rever, los filtros paso alto y paso bajo se hacen con scipy, y el delay simplemente se hace superponiendo trozos de array un poco después, calculando el bpm y todas esas cosas
-
-Podría quedar mejor así
-
+```python
+class Aura:
+    def __init__(self, preset: bytes | dict | str, cache=True):
 ```
 
-Main{
-    "id_manzana"; Osc 1 effect_type_one
-    "id_pera"; Osc 1 effect_type_one
-    "id_mango"; Osc 1 effect_type_one
-} ADSL .1, .9, .8, .2
+## Constructor behavior
 
+```python
+synth = Aura(preset_example)
 ```
 
-## Tipos de datos
+The constructor accepts three valid preset input types:
 
-1. floats (numeros)
-2. arrays (envolventes o wave tables) quizas tanmbien generadores de vectores con curvas
-3. referencias (son como punteros que toman un id de qué se quiere automatizar)
+- `dict`: already loaded preset object
+- `bytes`: compressed JSON preset
+- `str`: BaseX-encoded preset string
 
-```json
+### Input validation
 
-{
+During initialization, the class verifies:
+
+- `meta` exists and is a dict
+- `meta.name`, `meta.version`, `meta.description`, `meta.author`, `meta.category` are strings
+- `meta.tags` is a non-empty list
+- `master` exists and is a dict
+- `master` contains required keys such as `master_gain_db`, `legato`, `glide`, and `portamento`
+- `data` exists and is a non-empty dict
+- `out` exists and is a non-empty list
+
+If something is invalid, it raises `AURA_ERROR`
+
+## Internal state
+
+`Aura` stores the following important attributes:
+
+- `self.preset`: the validated preset dictionary
+- `self.last_note`: last note frequency used
+- `self.cache`: whether note reuse through caching is enabled
+- `self.arrays_bank`: cache of previously computed notes
+
+## Core generation method
+
+### `get_note(note_hz=261.626, duration=4, velocity=.8, gain_db=-.1) -> np.ndarray`
+
+This is the central method. It generates a note from the preset and returns a stereo audio buffer
+
+### Parameters
+
+- `note_hz`: fundamental frequency in Hz
+- `duration`: note length in seconds
+- `velocity`: note intensity scale factor
+- `gain_db`: final gain to apply, in dB
+
+### Return
+
+Returns a NumPy array with shape `(samples, 2)`, meaning stereo audio
+
+### Internals
+
+`get_note()` performs the following pipeline:
+
+1. Reads and validates master settings such as gain, glide, and portamento
+2. Computes pitch glide when `glide` is enabled and a previous note exists
+3. Builds a context with variables like:
+   - `note_hz`
+   - `note_number`
+   - `octave`
+   - `duration`
+   - `duration_progress`
+   - `velocity`
+   - `glide`
+   - `portamento`
+4. Resolves each node stored in `preset['data']`
+5. Evaluates formulas and arrays safely
+6. Converts every output node to stereo
+7. Sums the output nodes into a single mixed output
+8. Applies master effects
+9. Stores the result in cache if enabled
+10. Applies the final gain offset and returns the result
+
+### Example
+
+```python
+synth = Aura(preset_example)
+audio = synth.get_note(note_hz=440.0, duration=1.5, velocity=0.9, gain_db=-1.5)
+```
+
+## Preset format
+
+A valid preset is a dictionary with at least the following structure:
+
+```python
+
+preset_example = {
     "meta": {
-    "version": "1.0.0",
-    "name": "Cyberpunk Reese Bass",
-    "author": "AudioDev",
-    "category": "Bass",
-    "tags": ["resampling", "distorted", "sub"],
-    "description": "Heavy wavetable bass with OTT style dynamics and fast LFO"
-  },
-  "global": {
-    "master_gain_db": -0.1,
-    "pitch_bend_range": 2,
-    "polyphony_mode": "mono",
-    "legato": true,
-    "glide": true,
-    "portamento": .045,
-    "tuning_hz": 440.0
-  },
+        "version": "1.0.0",
+        "name": "Example Preset",
+        "description": "An example preset for demonstration purposes",
+        "author": "Brick Briceño",
+        "category": "Bass",
+        "tags": ["resampling", "distorted", "sub"],
+        "description": "Heavy wavetable bass with OTT style dynamics and fast LFO",
+        },
 
-  "oscillators": [
-    {
-      "id": "osc_1",
-      "enabled": true,
-      "wavetable": {
-        "name": "Basic_Shapes",
-        "embedded": true,
-        "frame_count": 256,
-        "sample_rate": 44100,
-        "audio_data_base64": "..." 
-      },
-      "frame_position": 0.35,
-      "unison": {
-        "count": 7,
-        "detune": 0.18,
-        "stereo_spread": 0.85,
-        "blend": 0.5
-      },
-      "tuning": {
-        "octave": -1,
-        "transpose": 0,
-        "fine_tune_cents": 0
-      },
-      "level": 0.85,
-      "pan": 0.0,
-      "phase": 0.0,
-      "phase_randomness": 1.0,
-      "warp": {
-        "type": "bend_plus",
-        "amount": 0.4
-      },
-      "output_routing": "filter_1"
-    }
-  ],
-  "sample_generator": {
-    "enabled": false,
-    "sample_path": "samples/noise/white.wav",
-    "level": 0.5,
-    "key_track": false,
-    "loop": true
-  },
-  "envelopes": [
-    {
-      "id": "env_1",
-      "is_amp_env": true,
-      "attack_s": 0.005,
-      "decay_s": 0.35,
-      "sustain": 0.7,
-      "release_s": 0.15,
-      "curves": {
-        "attack_slope": 0.0,
-        "decay_slope": -0.4,
-        "release_slope": -0.5
-      }
-    }
-  ],
-  "lfos": [
-    {
-      "id": "lfo_1",
-      "sync_mode": "tempo",
-      "frequency_hz": 2.0,
-      "tempo_division": "1/8t",
-      "trigger_mode": "trigger",
-      "smooth_ms": 5.0,
-      "nodes": [
-        {"x": 0.0, "y": 0.0, "control_x": 0.25, "control_y": 0.8},
-        {"x": 0.5, "y": 1.0, "control_x": 0.75, "control_y": 0.2},
-        {"x": 1.0, "y": 0.0, "control_x": 0.0, "control_y": 0.0}
-      ]
-    }
-  ],
-  "filters": [
-    {
-      "id": "filter_1",
-      "enabled": true,
-      "type": "lowpass_24db",
-      "cutoff_hz": 1200.0,
-      "resonance": 0.4,
-      "drive": 3.5,
-      "key_track": 0.5,
-      "routing": "serial"
-    }
-  ],
-  "mod_matrix": [
-    {
-      "source": "lfo_1",
-      "destination": "filter_1.cutoff_hz",
-      "amount": 0.65,
-      "mode": "bipolar",
-      "aux_source": "mod_wheel",
-      "aux_amount": 1.0
-    },
-    {
-      "source": "macro_1",
-      "destination": "osc_1.frame_position",
-      "amount": 1.0,
-      "mode": "unipolar"
-    }
-  ],
-  "fx_chain": [
-    {
-      "type": "distortion",
-      "enabled": true,
-      "mix": 0.75,
-      "params": {
-        "mode": "saturate",
-        "drive_db": 12.0
-      }
-    },
-    {
-      "type": "multiband_compressor",
-      "enabled": true,
-      "mix": 1.0,
-      "params": {
-        "upward_comp": 0.5,
-        "downward_comp": 0.8,
-        "time_scale": 1.0
-      }
-    }
-  ],
-  "macros": [
-    {"id": "macro_1", "name": "Timbre", "value": 0.35},
-    {"id": "macro_2", "name": "Space", "value": 0.0}
-  ]
-}
-
-
-{
-    "lfos": {
-        "": 0,
-    },
-    "main": {
-        // effectos para el main, se aplican a todos los osciladores
+    "master": {
+        "master_gain_db": -0.1,
+        "legato": True,
+        "glide": True,
+        "portamento": .045, #this is the time in seconds for the glide effect
+        "portamento_tension": 0, # this goes from -1 to 1
         "effects": {
-            "ADLS": {"delay": .1, "attack": .9, "hold": .8, "sustain": .2},
-            "glide": .5, // puede tambien ser otro objeto, puede ser false tambien
-            "isophonic curve": true,
-            "Eq": [
-                {"Hz": 440, "Db": -3, "Q": 1.2},
-            ], //
+            # Add compression
+            "la2a": {
+                "peak_reduction": 50.0,
+                "gain": 50.0,
+                "ratio": 5,
             },
-        // osciladores
-        "osl1": {
-            /* el argumento de "wave" va del 0 al 1, de 0 a .3333 será un rango entre
-            seno y triángulo, de .3333 a .6666 de triángulo a cuadrada,
-            de .6666 a 1 hasta diente de sierra */
-            "wave": 1, // en este caso es un diente de cierra
-            //"wave": "id_sample", // tambien puede ser un sample
-            // si solo, volume y muted en algún oscilador son 0 y o false lado automaticamente no suena nada
-            "volume": 1,
-            "muted": false,
-            "solo": false,
-            // effectos para el oscilador
+            "reverb": {
+                "room_size": 0.98,
+                "wet_level": 0.35,
+                "dry_level": 0.65,
+                "width": 1.2,
+            },
+        },
+    },
+
+    # Variables (They can be used as parameters for automations, LFOs, and envelopes)
+    # inside variables you can use mathematical operators to create complex modulation
+
+    # "note_hz", example: "note_hz * 2" for an octave above
+
+    # "note_number", example: "note_number + 12" for an octave above
+    # it can also be used to control the intensity of a parameter
+    # for example, if you want fewer harmonics in the treble
+    # you can use "note_number / 127" to control the number of harmonics
+
+    # "octave" is note_number / 12
+    # "glide" is the pitch-ratio array for the current note
+
+    # "duration" is a constant indicating how long it lasts, expressed in seconds
+    # "duration_progress" is an array progressing from 0 to duration in seconds
+
+    # "velocity" put this variable after a "1-" and connect it to the ADSR attack
+    # it will sound softer if you play more gently and stronger if you play hard, like a real instrument
+    # "1-velocity" (goes from 1 to 0) and not the other way around
+
+    # "portamento" (goes from 0 to 1) in how long it takes to complete the glide
+
+    "data": {
+        # oscillators, ADSR envelopes, and LFOs are defined in this dictionary
+        # there are only 2 data types: numbers and arrays
+        # and all are valid in all effect, oscillator, and LFO inputs
+
+        # This "osc1" is optional; you can easily name it "papi rupi" if you want
+        # this works like variables that store waveforms with values you can place anywhere else
+        # and be careful: a variable name for the oscillator, envelope, or anything else stored in "data"
+        # cannot match an effect name or any reserved word
+        # the standard is to call oscillators "oscX"
+        # and envelopes "envX", sometimes with an additional description
+        "osc1": {
+            # Available waveform types: sine, square, sawtooth, triangle, noise, silence
+            "waveform": "square",
+            "frequency": "note_hz * vibrato",
+            "amplitude": "velocity * env1",
+            "stretch": "duration_progress ",
+            "duration": "duration",
             "effects": {
-                "harmonic stretch": .5,
-                "pulse": .75,
+                "drive": {
+                    "gain_db": 20,
+                    "normalize": True,
                 },
-        }
-    }
-}
+            },
+        },
+        "vibrato": {
+            "waveform": "square",
+            "frequency": 8,
+            "amplitude": "duration_progress * .5",
+            "stretch": 0,
+            "duration": "duration",
+        },
+        "env1": {
+            # All oscillators/envelopes must have a "waveform" or a "DAHDSR_envelope"
+            # The compiler will look for one or the other to find other parameters
+            "DAHDSR_envelope": {
+                # Delay before the envelope starts, in seconds (>= 0)
+                "delay": 0,
+                # Attack duration until the envelope reaches its maximum, in seconds
+                # This can easily be "1.125 - velocity * 1.1"
+                # so it has less attack if played harder
+                "attack": 0.25,
+                # Time held at maximum level before decay, in seconds
+                "hold": 0.2,
+                # Duration of the fall from maximum to sustain level, in seconds
+                "decay": .5,
+                # Sustain amplitude in [0, 1]; 1 is maximum and 0 is silence
+                "sustain_level": 0.5,
+                # Duration of the sustain phase, in seconds
+                "sustain": 0.5,
+                # Duration of the release from sustain level to silence, in seconds
+                "release": 2,
+
+                # Attack curve tension in [-1, 1]: positive rises faster initially
+                "attack_tension": 0.25,
+                # Decay curve tension in [-1, 1]
+                "decay_tension": -0.25,
+                # Release curve tension in [-1, 1]
+                "release_tension": 0.25,
+            },
+        },
+    },
+
+    # Not all oscillators need to be routed to the master output
+    "out": [
+        "osc1",
+        ]
+},
 
 
 ```
 
-El estiramiento de armónicos
+## `meta` section
 
-El pulso, que va a dividir la onda a la mitad y poner un silencio y ese silencio va a ir creciendo hasta que vaya desplazando la longitud de las otras dos partes de la onda
+The `meta` object contains metadata for the preset itself
 
-La formante de la onda 
+Required entries:
 
-El Smear
+- `version`: preset version
+- `name`: preset display name
+- `description`: human-readable description
+- `author`: author name
+- `category`: category such as `Bass`, `Lead`, `Pad`, etc
+- `tags`: list of tags
 
-Vocoder
+These values are validated as strings or a non-empty list
 
-Amplitudes aleatorias 
+## `master` section
 
-Filtros paso bajo y paso alto que se van a controlar con números positivos o negativos, dos efectos en uno solo, además de que se va a filtrar los armónicos a partir de las frecuencias de esa onda, no va a filtrar por hz con un ecualizador normal en un Master 
+The `master` section defines note-wide behavior and final processing
 
-Dispersión de la fase
+Important keys:
 
-Tono de shepard
+- `master_gain_db`: global gain offset in dB
+- `legato`: feature toggle for legato behavior
+- `glide`: whether portamento/glide is enabled
+- `portamento`: transition time for the glide in seconds
+- `portamento_tension`: tension shape of the glide, in `[-1, 1]`
+- `effects`: object containing post-mix effect definitions
 
-Flanger
+## `data` section
 
-Phaser
+The `data` section is the heart of the synth. It contains the synthesis graph
 
-Ecualizador
+A node can be:
 
+- an oscillator definition
+- an envelope definition
+- a numeric constant
+- an array
+- a formula expression
 
+### Oscillator node
 
-## Backend
+Example:
 
-No se como mierda lo haré pero de que lo hago lo hago
+```python
+"osc1": {
+    "waveform": "square",
+    "frequency": "note_hz * vibrato",
+    "amplitude": "velocity * env1",
+    "stretch": "duration_progress",
+    "duration": "duration",
+    "effects": {
+        "drive": {"gain_db": 20, "normalize": True}
+    }
+}
+```
+
+### Envelope node
+
+Example:
+
+```python
+"env1": {
+    "DAHDSR_envelope": {
+        "delay": 0,
+        "attack": 0.25,
+        "hold": 0.2,
+        "decay": 0.5,
+        "sustain_level": 0.5,
+        "sustain": 0.5,
+        "release": 2,
+        "attack_tension": 0.25,
+        "decay_tension": -0.25,
+        "release_tension": 0.25,
+    }
+}
+```
+
+The envelope generator uses the `Envelopes.DAHDSR_envelope()` helper to produce a one-dimensional amplitude curve
+
+## Supported oscillator waveforms
+
+The waveform resolver supports:
+
+- `sine`
+- `square`
+- `sawtooth`
+- `triangle`
+- `noise`
+- `silence`
+
+These values are checked and if not supported, `AURA_ERROR` is raised
+
+## Expression system
+
+Aura is able to evaluate strings such as:
+
+```python
+"note_hz * vibrato"
+"velocity * env1"
+"note_number / 127"
+"duration_progress * 0.5"
+```
+
+This is done through a restricted AST-based evaluation pipeline
+
+### Important details
+
+The system:
+
+- replaces complete variable names without accidental partial matches
+- prevents collisions between names such as `env1` and `env10`
+- validates allowed arithmetic nodes
+- rejects unknown variables
+- limits expression complexity and exponent magnitude
+- aligns array lengths for simultaneous modulation
+
+Internally the following helpers are used:
+
+- `_replace_preset_names()`
+- `_validate_preset_expression()`
+- `_align_preset_arrays()`
+- `_maths()`
+
+This provides a safer evaluation model than raw `eval()` on arbitrary strings
+
+## Effects available in `master.effects`
+
+The `effect_handlers` registry includes these built-in effects:
+
+- `drive`
+- `bit_crush`
+- `valve_distortion`
+- `la2a`
+- `compressor_la2a`
+- `br11ck67_analog`
+- `reverb`
+- `stereo_expander`
+- `normalize`
+- `invert_phase`
+- `reverse`
+- `fade_in`
+- `fade_out`
+
+These handlers are mapped to the DSP functions defined inside `Audio_Effects` and are called with preset-derived parameters
+
+## Final output routing
+
+Each entry in `preset['out']` is resolved into an array and then converted to stereo using:
+
+```python
+Audio_Effects.Stereo_Expansion.to_stereo(np.asarray(output))
+```
+
+Then all outputs are summed to obtain the final output buffer:
+
+```python
+audio_note = np.zeros((output_samples, 2), dtype=...)
+for output in output_arrays:
+    audio_note[:len(output)] += output
+```
+
+After that, master effects are applied and the note is multiplied by `gain_db + master_gain_db`
+
+## Serialization utilities
+
+Aura offers methods for storing the preset in multiple formats
+
+### `get_bin_preset`
+
+Returns a compressed binary representation of the preset JSON
+
+```python
+binary = synth.get_bin_preset
+```
+
+### `get_baseX_preset`
+
+Returns a BaseX-encoded string designed for compact textual transport
+
+```python
+encoded = synth.get_baseX_preset
+```
+
+### `get_json_preset`
+
+Returns compact JSON text of the preset without extra formatting
+
+```python
+json_text = synth.get_json_preset
+```
+
+### `get_SBR_string_preset`
+
+Creates a text-friendly string version that can be embedded in SBR-style code
+
+```python
+code = synth.get_SBR_string_preset
+```
+
+## Utility conversion functions
+
+### `get_hz_note(note_number, tune_reference=440) -> float`
+
+Converts a note number to frequency in Hz
+
+Example:
+
+```python
+freq = synth.get_hz_note(57)  # 440.0Hz
+```
+
+### `get_note_number(f) -> float`
+
+Converts a frequency in Hz to a note number
+
+Example:
+
+```python
+n = synth.get_note_number(440.0)
+```
+
+## Caching system
+
+When `cache=True`, `Aura` memoizes generated note arrays inside `self.arrays_bank`
+
+The cache key includes:
+
+- `note_hz`
+- `duration`
+- `velocity`
+- `glide_source`
+
+This can speed repeated operations for similar note events
+
+## Error model
+
+`Aura` uses `AURA_ERROR` for preset validation and synthesis errors. Typical causes include:
+
+- invalid preset object
+- missing `meta` or `master` keys
+- unsupported waveform
+- invalid expression
+- unknown variable in formula
+- circular dependency
+- output node shape error
+- invalid numeric ranges for portamento or tension
+
+## Minimal practical use
+
+```python
+import soundfile as sf
+from Bsound.Aura import Aura, SAMPLE_RATE, preset_example
+
+synth = Aura(preset_example)
+
+note = synth.get_note(
+    note_hz=220.0,
+    duration=2.0,
+    velocity=0.9,
+    gain_db=-1.0,
+)
+
+sf.write("example_note.wav", note, SAMPLE_RATE)
+```
+
+## Best practices for preset authors
+
+- Use `oscX` / `envX` naming conventions
+- Avoid variable names that match effect names or reserved terms
+- Use `note_hz`, `velocity`, and `duration_progress` as the main modulation inputs
+- Keep formulas readable and small
+- Use portamento only when the glide effect is intentional
+- Check `out` list entries to ensure each node is valid and resolves correctly
+
+## In summary
+
+`Aura` is a declarative synthesis interface that converts a preset into real-time audio. Its main value is that it abstracts the complexity of waveform generation, modulation, envelopes, and effects into a readable, preset-based design language. It is the high-level point where the sound designer defines the timbre and the engine turns that definition into stereo audio
+
 

@@ -9,7 +9,7 @@ unless specified otherwise in specific module functions
 Automations are low-frequency arrays returned as parameters for those automations
 
 Presets can be stored in JSON format for easy modification
-Gzip converts them to binary, while Base64 (and Gzip) converts them into a string,
+Zlib converts them to binary, while BaseX and Zlib convert them into a string,
 allowing them to be sent via message or posted on forums and social media
 
 This is an SBR module, so Aura knows nothing about BPM, scales, or note durations,
@@ -30,122 +30,129 @@ preset_example = {
         "description": "Heavy wavetable bass with OTT style dynamics and fast LFO",
         },
 
-    "global": {
+    "master": {
         "master_gain_db": -0.1,
         "legato": True,
         "glide": True,
         "portamento": .045, #this is the time in seconds for the glide effect
+        "portamento_tension": 0, # this goes from -1 to 1
         "effects": {
-            # Añadimos compresion
+            # Add compression
             "la2a": {
                 "peak_reduction": 50.0,
                 "gain": 50.0,
-                "ratio": 5
+                "ratio": 5,
             },
             "reverb": {
-                "room_size": 0.92,
+                "room_size": 0.98,
                 "wet_level": 0.35,
                 "dry_level": 0.65,
-                "width": 1.2
-            }
-        }
+                "width": 1.2,
+            },
+        },
     },
 
     # Variables (They can be used as parameters for automations, LFOs, and envelopes)
-    # dentro de las variables puedes usar operadores matemáticos crear modulación compleja
+    # inside variables you can use mathematical operators to create complex modulation
 
-    # "note_hz", ejemplo: "note_hz * 2" para una octava arriba
+    # "note_hz", example: "note_hz * 2" for an octave above
 
-    # "note_number", ejemplo: "note_number + 12" para una octava arriba
-    # Tambien puede ser usado para controlar la intensidad de un parametro
-    # Por ejemplo si quieres que haya menos harmonicos en los agudos
-    # Puedes usar "note_number / 127" para controlar la cantidad de harmonicos
+    # "note_number", example: "note_number + 12" for an octave above
+    # it can also be used to control the intensity of a parameter
+    # for example, if you want fewer harmonics in the treble
+    # you can use "note_number / 127" to control the number of harmonics
 
-    # "duration" es una cosntante cuanto dura expresado en segundos
-    # "duration_progress" te sirve por ejemplo para conectarlo al vobrato
-    # mientas avanza la nota, el vobrato se va haciendo mas intenso, va de (0 a 100)
+    # "octave" is note_number / 12
+    # "glide" is the pitch-ratio array for the current note
 
-    # "velocity" pones esta variable despues de un "1-" y lo conectas al attak del ADSR
-    # sonará más suave si tocas más despacio y más fuerte si tocas duro, como un instrumento real
-    # "1-velocity" (va de 1 a 0) y no a la inversa
+    # "duration" is a constant indicating how long it lasts, expressed in seconds
+    # "duration_progress" is an array progressing from 0 to duration in seconds
 
-    # "portamento" (va de 0 a 1) en lo que tarda en completar el glide
+    # "velocity" put this variable after a "1-" and connect it to the ADSR attack
+    # it will sound softer if you play more gently and stronger if you play hard, like a real instrument
+    # "1-velocity" (goes from 1 to 0) and not the other way around
+
+    # "portamento" (goes from 0 to 1) in how long it takes to complete the glide
 
     "data": {
-        # los osciladores, envolventes ADSR y LFOs se definen en este diccionario
-        #Solo hay 2 tipos de datos, numeros y arrays
-        # Y todos son validos en todas las entradas de efectos, osciladores y LFOs
+        # oscillators, ADSR envelopes, and LFOs are defined in this dictionary
+        # there are only 2 data types: numbers and arrays
+        # and all are valid in all effect, oscillator, and LFO inputs
 
-        # Esto de "osc1" es opcional, le puedes poner facilmente "papi rupi" si lo deseas
-        # Esto velo como variables que guardan ondas con valores que puedes meter en cualquier otro lado
-        # Y cuidado, que un nombre de variable para el oscilador o envolvente o lo que sea que guardes en "data"
-        # No puede ser igual a un nombre de efecto o alguna palabara reservada
-        # El estandar es que llames a los osciladores "oscX"
-        # Y a las envolventes "envX" quizas sumado de alguna descripcion
+        # This "osc1" is optional; you can easily name it "papi rupi" if you want
+        # this works like variables that store waveforms with values you can place anywhere else
+        # and be careful: a variable name for the oscillator, envelope, or anything else stored in "data"
+        # cannot match an effect name or any reserved word
+        # the standard is to call oscillators "oscX"
+        # and envelopes "envX", sometimes with an additional description
         "osc1": {
-            "waveform": "sawtooth",
-            "frequency": "note_hz",
+            # Available waveform types: sine, square, sawtooth, triangle, noise, silence
+            "waveform": "square",
+            "frequency": "note_hz * vibrato",
             "amplitude": "velocity * env1",
-            "stretch": 0,
+            "stretch": "duration_progress ",
             "duration": "duration",
             "effects": {
                 "drive": {
                     "gain_db": 20,
-                    "normalize": False
+                    "normalize": True,
                 },
             },
         },
-    },
-    "env1": {
-        "DAHDSR_envelope": {
-            # Delay before the envelope starts, in seconds (>= 0)
-            "delay": 0,
-            # Attack duration until the envelope reaches its maximum, in seconds
-            # Aqui facilemte puede ir "1.125 - velocity *1.1"
-            # Para que tenga menos ataque si se toca más duro
-            "attack": 0.25,
-            # Time held at maximum level before decay, in seconds
-            "hold": 0.2,
-            # Duration of the fall from maximum to sustain level, in seconds
-            "decay": 1.0,
-            # Sustain amplitude in [0, 1]; 1 is maximum and 0 is silence
-            "sustain_level": 0.5,
-            # Duration of the sustain phase, in seconds
-            "sustain": 0.5,
-            # Duration of the release from sustain level to silence, in seconds
-            "release": 1.0,
-            # Attack curve tension in [-1, 1]: positive rises faster initially
-            "attack_tension": 0.25,
-            # Decay curve tension in [-1, 1]
-            "decay_tension": -0.25,
-            # Release curve tension in [-1, 1]
-            "release_tension": 0.25
+        "vibrato": {
+            "waveform": "square",
+            "frequency": 8,
+            "amplitude": "duration_progress * .5",
+            "stretch": 0,
+            "duration": "duration",
+        },
+        "env1": {
+            # All oscillators/envelopes must have a "waveform" or a "DAHDSR_envelope"
+            # The compiler will look for one or the other to find other parameters
+            "DAHDSR_envelope": {
+                # Delay before the envelope starts, in seconds (>= 0)
+                "delay": 0,
+                # Attack duration until the envelope reaches its maximum, in seconds
+                # This can easily be "1.125 - velocity * 1.1"
+                # so it has less attack if played harder
+                "attack": 0.25,
+                # Time held at maximum level before decay, in seconds
+                "hold": 0.2,
+                # Duration of the fall from maximum to sustain level, in seconds
+                "decay": .5,
+                # Sustain amplitude in [0, 1]; 1 is maximum and 0 is silence
+                "sustain_level": 0.5,
+                # Duration of the sustain phase, in seconds
+                "sustain": 0.5,
+                # Duration of the release from sustain level to silence, in seconds
+                "release": 2,
+
+                # Attack curve tension in [-1, 1]: positive rises faster initially
+                "attack_tension": 0.25,
+                # Decay curve tension in [-1, 1]
+                "decay_tension": -0.25,
+                # Release curve tension in [-1, 1]
+                "release_tension": 0.25,
+            },
         },
     },
 
-    # En las salidas al master no tenen que ir todos los osciladores
+    # Not all oscillators need to be routed to the master output
     "out": [
         "osc1",
-        "osc2",
-        "osc3"
         ]
-}
-
-
-
+},
 
 
 from scipy.signal import butter, lfilter_zi, lfilter, resample_poly
 import soundfile as sf
 from numba import jit, prange
 import numpy as np
-import base64
+import ast
 import time
-import gzip
 import json
+import zlib
 
-
-quit()
 
 SAMPLE_RATE = 44_100
 
@@ -175,6 +182,7 @@ ISOPHONIC_CURVE = {
     2000: 4, 2500: 5, 3150: 6, 4000: 7, 5000: 8,
     6300: 9, 8000: 10, 10000: 11, 12500: 12, 16000: 15
 }
+
 
 class WaveTables:
     def _phase(samples, frequency):
@@ -304,7 +312,6 @@ class WaveTables:
         return data
 
 
-
 class Envelopes:
     def DAHDSR_envelope(
         delay,
@@ -412,16 +419,6 @@ class Envelopes:
 
 class Audio_Effects:
     class Gain_Distortion_Dynamics:
-        def float_to_dbs(sample, reference_value=1):
-            # reference_value = 1 #32-bit floating
-            peak_value = np.abs(np.max(sample))
-            peak_db = 20 * np.log10(peak_value / reference_value)
-            return peak_db
-
-        def dbs_to_float(peak_db, reference_value=1):
-            peak_value = reference_value * 10**(peak_db / 20)
-            return peak_value
-
         def remove_ending_in_silence(audio, threshold=10e-4):
             # Find the last index where the audio exceeds the threshold
             final_index = np.where(np.abs(audio) > threshold)[0][-1]
@@ -429,10 +426,10 @@ class Audio_Effects:
             return audio[:final_index + 1]
 
         def drive(audio_input: np.ndarray, gain_dbs=1.0, normalize=False) -> np.ndarray:
-            """Usa la tangente hiperbolica para distorsionar la señal de audio"""
+            """Use the hyperbolic tangent to distort the audio signal"""
             audio_output = np.tanh(
                 audio_input * 
-                Audio_Effects.Gain_Distortion_Dynamics.dbs_to_float(gain_dbs)
+                Audio_Effects.Audio_Analysis.dbs_to_float(gain_dbs)
                 )
             if normalize:
                 audio_output /= np.max(np.abs(audio_output))
@@ -565,17 +562,15 @@ class Audio_Effects:
                 or audio.shape[0] == 0
                 or (audio.ndim == 2 and audio.shape[1] not in (1, 2))
             ):
-                raise ValueError("Audio debe ser un array mono o estéreo no vacío")
+                raise ValueError("Audio must be a non-empty mono or stereo array")
             if not np.all(np.isfinite(audio)):
-                raise ValueError("Audio debe contener solo valores finitos")
+                raise ValueError("Audio must contain only finite values")
             if not np.isfinite(gain_db):
-                raise ValueError("gain_db debe ser un valor finito")
+                raise ValueError("gain_db must be a finite value")
 
-            drive_gain = Audio_Effects.Gain_Distortion_Dynamics.dbs_to_float(
-                gain_db
-            )
+            drive_gain = Audio_Effects.Audio_Analysis.dbs_to_float(gain_db)
             if not np.isfinite(drive_gain):
-                raise ValueError("gain_db produce una ganancia no finita")
+                raise ValueError("gain_db produces a non-finite gain")
 
             oversampling = 4
             audio = resample_poly(audio, oversampling, 1, axis=0)
@@ -620,47 +615,47 @@ class Audio_Effects:
             return distorted_audio.astype(output_dtype, copy=False)
 
 
-        @jit(nopython=True, cache=True, parallel=True)
+        @jit(nopython=True, cache=True)
         def _t4_cell_and_tube_dsp(audio, peak_reduction_knob, gain_knob, ratio):
             """
-            Bucle DSP compilado en C (vía Numba) para procesar el audio muestra por muestra
-            Emula la celda óptica T4 y la etapa de amplificación 12AX7
+            C-compiled DSP core (via Numba) to process audio sample by sample
+            Emulates the T4 optical cell and the 12AX7 amplification stage
             """
             n_samples = audio.shape[0]
             n_channels = audio.shape[1] if audio.ndim > 1 else 1
             if n_channels not in (1, 2):
-                raise ValueError("Audio debe ser mono o estéreo")
+                raise ValueError("Audio must be mono or stereo")
 
             output = np.zeros_like(audio)
             
-            # 1. Ajuste de controles (0 - 100)
-            # Peak Reduction incrementa la ganancia del sidechain contra un umbral fijo interno
+            # 1. Adjust controls (0 - 100)
+            # Peak Reduction increases the sidechain gain against a fixed internal threshold
             sc_gain = 10.0 ** ((peak_reduction_knob - 50.0) / 20.0)
-            # Gain controla el makeup de salida (0 a ~40 dB)
+            # Gain controls output makeup (0 to ~40 dB)
             makeup_linear = 10.0 ** ((gain_knob * 0.4) / 20.0)
             
-            # Parámetros internos del LA-2A
+            # Internal LA-2A parameters
             THRESHOLD_DB = -24.0
             
-            # 2. Constantes de tiempo de la Celda T4 (Filtros RC)
-            # Ataque promediado en 10ms
+            # 2. T4 cell time constants (RC filters)
+            # Attack averaged in 10ms
             alpha_A = np.exp(-1.0 / (SAMPLE_RATE * 0.010)) 
-            # La fotocelda CdS tiene un release de dos etapas:
-            # 50% de recuperación en ~60ms (rápido)
+            # The CdS photocell has a two-stage release:
+            # 50% recovery in ~60ms (fast)
             alpha_R_fast = np.exp(-1.0 / (SAMPLE_RATE * 0.060))
-            # El resto de la recuperación toma de 1 a 15 segundos (dependiente del programa)
-            # Usaremos 2.5 segundos como promedio representativo del efecto de memoria
+            # The remainder takes 1 to 15 seconds (program-dependent)
+            # We will use 2.5 seconds as the representative memory effect average
             alpha_R_slow = np.exp(-1.0 / (SAMPLE_RATE * 2.500))
             
             env_fast = 0.0
             env_slow = 0.0
             
-            # Offset para saturación asimétrica (Emulación básica de armónicos pares del triodo 12AX7)
+            # Offset for asymmetric saturation (basic even-harmonic emulation of the 12AX7 triode)
             tube_bias = 0.15 
             bias_compensation = np.tanh(tube_bias)
             
             for i in range(n_samples):
-                # Detección de nivel (Enlazado estéreo si hay más de 1 canal)
+                # Level detection (stereo-linked if there is more than 1 channel)
                 if n_channels == 2:
                     sc_level = max(np.abs(audio[i, 0]), np.abs(audio[i, 1])) * sc_gain
                 elif audio.ndim == 2:
@@ -672,33 +667,33 @@ class Audio_Effects:
                     sc_level = 1e-9
                 sc_db = 20.0 * np.log10(sc_level)
                 
-                # Cálculo del objetivo de reducción de ganancia
+                # Calculate the gain-reduction target
                 if sc_db > THRESHOLD_DB:
                     target_gr = (sc_db - THRESHOLD_DB) * (1.0 - 1.0/ratio)
                 else:
                     target_gr = 0.0
                     
-                # 3. Seguidor de envolvente (Envelope Follower) de la celda T4
-                # Ataque
+                # 3. T4 cell envelope follower
+                # Attack
                 if target_gr > env_fast:
                     env_fast = alpha_A * env_fast + (1.0 - alpha_A) * target_gr
                 else:
-                    # Release rápido (primer 50%)
+                    # Fast release (first 50%)
                     env_fast = alpha_R_fast * env_fast + (1.0 - alpha_R_fast) * target_gr
                     
                 if target_gr > env_slow:
                     env_slow = alpha_A * env_slow + (1.0 - alpha_A) * target_gr
                 else:
-                    # Release lento (memoria lumínica para el 50% restante)
+                    # Slow release (light memory for the remaining 50%)
                     env_slow = alpha_R_slow * env_slow + (1.0 - alpha_R_slow) * target_gr
                     
-                # La suma de ambas envolventes promediadas genera la curva de caída dual óptica
+                # The sum of both averaged envelopes generates the dual-optical fall curve
                 current_gr_db = 0.5 * env_fast + 0.5 * env_slow
                 
-                # Convertir reducción en dB a ganancia lineal
+                # Convert dB reduction to linear gain
                 gain_reduction_linear = 10.0 ** (-current_gr_db / 20.0)
                 
-                    # 4. Aplicar ganancia y pasar por la etapa de tubos (12AX7)
+                    # 4. Apply gain and pass through the tube stage (12AX7)
                 if audio.ndim == 2:
                     for c in range(n_channels):
                         sample = audio[i, c] * gain_reduction_linear * makeup_linear
@@ -728,20 +723,21 @@ class Audio_Effects:
 
             return audio_procesado
 
+
         @jit(nopython=True, cache=True)
         def _1176_analog_core(audio_in, input_gain_lin, output_gain_lin, att_coef, rel_coef, ratio, thresh_db):
             """
-            Núcleo del 1176 iterando muestra por muestra
-            Incluye bucle Feedback, asimetría FET y distorsión de Transformador (Histéresis)
+            1176 core processing sample by sample
+            Includes feedback loop, FET asymmetry, and transformer distortion (hysteresis)
             """
             out = np.zeros_like(audio_in)
             n_channels = audio_in.shape[1]
-            env = 0.0  # Estado de la reducción de ganancia (dB)
+            env = 0.0  # Gain reduction state (dB)
             feedback_sample = np.zeros(n_channels, dtype=audio_in.dtype)
             transformer_state = np.zeros(n_channels, dtype=audio_in.dtype)
             
             for i in range(len(audio_in)):
-                # Detector de feedback enlazado para mantener la imagen estéreo.
+                # Linked feedback detector to keep the stereo image stable
                 detector_signal = 0.0
                 for c in range(n_channels):
                     channel_level = abs(feedback_sample[c] + 0.001)
@@ -750,7 +746,7 @@ class Audio_Effects:
 
                 x_db = 20.0 * np.log10(detector_signal + 1e-12) if detector_signal > 1e-12 else -120.0
                 
-                # 3. Target de Reducción de Ganancia (GR)
+                # 3. Gain Reduction target (GR)
                 if x_db > thresh_db:
                     gr_target_db = (x_db - thresh_db) * (1.0 - (1.0 / ratio))
                 else:
@@ -761,25 +757,25 @@ class Audio_Effects:
                 if delta > 0:
                     env += att_coef * delta  # Ataque
                 else:
-                    # Release dinámico: Suelta más lento si hay mucha compresión acumulada
+                    # Dynamic release: it falls more slowly if there is a lot of accumulated compression
                     dynamic_rel = rel_coef * (1.0 - (min(env, 40.0) / 40.0) * 0.1) 
                     env += dynamic_rel * delta
                     
-                # 5. Aplicar GR lineal sobre la señal de entrada
+                # 5. Apply linear GR to the input signal
                 gr_linear = 10.0 ** (-env / 20.0)
                 for c in range(n_channels):
                     x = audio_in[i, c] * input_gain_lin
                     x_comp = x * gr_linear
 
-                    # Guardamos la muestra comprimida para el detector de feedback.
+                    # Save the compressed sample for the feedback detector
                     feedback_sample[c] = x_comp
 
-                    # Etapa FET: ganancia y saturación asimétrica.
+                    # FET stage: gain and asymmetric saturation
                     x_out = x_comp * output_gain_lin
                     asym_drive = x_out + 0.15 * (x_out ** 2)
                     fet_out = np.tanh(asym_drive)
 
-                    # Etapa de transformador de salida con memoria por canal.
+                    # Output transformer stage with per-channel memory
                     diff = fet_out - transformer_state[c]
                     non_linear_drive = np.tanh(diff * 1.2) + 0.05 * (diff ** 2)
                     transformer_state[c] += 0.5 * non_linear_drive
@@ -791,66 +787,65 @@ class Audio_Effects:
                             attack_ms=0.2, release_ms=300.0, ratio=4.0,
                             all_buttons_in=False, oversampling=4):
             """
-            Controlador principal del 1176 con Oversampling anti-aliasing
+            Main 1176 controller with anti-aliasing oversampling
 
-            Parámetros:
-            - audio_in: Array de numpy (mono o procesar canales por separado)
-            - oversampling: 1 (Off), 2, 4, u 8. (4x recomendado para distorsión analógica sin aliasing)
+            Parameters:
+            - audio_in: NumPy array (mono or processed channel by channel)
+            - oversampling: 1 (Off), 2, 4, or 8. (4x recommended for analog distortion without aliasing)
             """
             audio_in = np.asarray(audio_in)
             mono_input = audio_in.ndim == 1
             if mono_input:
                 audio_in = audio_in[:, np.newaxis]
             elif audio_in.ndim != 2:
-                raise ValueError("Audio debe ser mono o estéreo")
+                raise ValueError("Audio must be mono or stereo")
             if audio_in.shape[0] == 0 or audio_in.shape[1] not in (1, 2):
-                raise ValueError("Audio debe tener muestras y uno o dos canales")
+                raise ValueError("Audio must have samples and one or two channels")
             if audio_in.dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
                 audio_in = audio_in.astype(np.float64)
             if not np.all(np.isfinite(audio_in)):
-                raise ValueError("Audio debe contener solo valores finitos")
+                raise ValueError("Audio must contain only finite values")
             audio_in = np.ascontiguousarray(audio_in)
             
-            # 1. Configuración de parámetros analógicos
+            # 1. Configure analog parameters
             if all_buttons_in:
                 ratio = 100.0 
                 attack_ms = 0.02 
-                input_db += 6.0 # Empuje masivo interno
+                input_db += 6.0 # internal massive push
                 
-            threshold_db = -24.0 # Umbral fijo interno
+            threshold_db = -24.0 # fixed internal threshold
             
             input_gain_lin = 10.0 ** (input_db / 20.0)
             output_gain_lin = 10.0 ** (output_db / 20.0)
             
-            # 2. OVERSAMPLING (Subir la frecuencia de muestreo)
+            # 2. OVERSAMPLING (increase the sample rate)
             if oversampling > 1:
-                # resample_poly aplica un filtro FIR anti-aliasing automático de altísima calidad
+                # resample_poly applies a high-quality automatic anti-aliasing FIR filter
                 audio_up = resample_poly(audio_in, oversampling, 1, axis=0)
                 fs_up = SAMPLE_RATE * oversampling
             else:
                 audio_up = audio_in
                 fs_up = SAMPLE_RATE
                 
-            # Calcular coeficientes IIR usando el sample rate interno (fs_up)
+            # Calculate IIR coefficients using the internal sample rate (fs_up)
             att_coef = 1.0 - np.exp(-1.0 / (fs_up * (attack_ms / 1000.0)))
             rel_coef = 1.0 - np.exp(-1.0 / (fs_up * (release_ms / 1000.0)))
 
-            # 3. Procesamiento en C-Speed
+            # 3. C-speed processing
             processed_up = Audio_Effects.Gain_Distortion_Dynamics._1176_analog_core(
                 np.ascontiguousarray(audio_up),
                 input_gain_lin, output_gain_lin,
                                             att_coef, rel_coef, ratio, threshold_db)
                                             
-            # 4. DOWNSAMPLING (Bajar de vuelta a fs original limpiando frecuencias ultrasónicas)
+            # 4. DOWNSAMPLING (return to the original fs while removing ultrasonic frequencies)
             if oversampling > 1:
                 processed = resample_poly(processed_up, 1, oversampling, axis=0)
             else:
                 processed = processed_up
                 
-            # Limitar salida estricta a [-1.0, 1.0] para evitar clipeo digital al exportar
+            # Strictly limit the output to [-1.0, 1.0] to avoid digital clipping during export
             processed = np.clip(processed, -1.0, 1.0)
             return processed[:, 0] if mono_input else processed
-
 
     class Stereo_Expansion:
         def pan_sound(sound, pan_level: float):
@@ -912,6 +907,7 @@ class Audio_Effects:
                 return input_audio  # Return mono as is
             return input_audio[:, 1]  # Return right channel
 
+
         def reverb(input_audio, room_size=.92, wet_level=.45, dry_level=.55, width=1.5):
             """
             Process stereo audio with reverb (Schroeder/Moorer algorithm)
@@ -922,13 +918,15 @@ class Audio_Effects:
             # Base delay definitions (in samples)
             comb_delays = [1557, 1617, 1491, 1422]
             
-            # Calculate the longest possible delay.
+            # Calculate the longest possible delay
             # The right channel has an extra 'spread', so the maximum effective delay is:
             # Max Base Delay + (20 * width)
             max_delay_base = max(comb_delays)
             max_effective_delay = max_delay_base + (20 * width)
 
             # Safety: room_size cannot be >= 1.0 (infinite feedback)
+            if room_size >= 1:
+                raise AURA_ERROR("Room_size cannot be >= 1.0 (infinite feedback)")
             safe_room_size = min(room_size, 0.999)
 
             # RT80 FORMULA: N = (-4 * delay) / log10(gain)
@@ -1001,9 +999,9 @@ class Audio_Effects:
 
         def stereo_expander(input_audio, mix=.5, start_in_hz=180):
             """
-            Expande una señal mono paneando 32 bandas alternadas
+            Expands a mono signal by panning across 32 alternating bands
 
-            ``mix`` mezcla la señal expandida con la señal mono original
+            ``mix`` blends the expanded signal with the original mono signal
             """
             if input_audio.ndim != 1:
                 raise ValueError("input_audio must be a mono one-dimensional array")
@@ -1153,6 +1151,7 @@ class Audio_Effects:
 
             return output_signal
 
+
     class Special:
         def normalize(audio_signal):
             max_val = np.max(np.abs(audio_signal))
@@ -1196,54 +1195,565 @@ class Audio_Effects:
             return result
 
     class Audio_Analysis:
+        def float_to_dbs(sample, reference_value=1):
+            # reference_value = 1 #32-bit floating
+            peak_value = np.abs(np.max(sample))
+            peak_db = 20 * np.log10(peak_value / reference_value)
+            return peak_db
+
+        def dbs_to_float(peak_db, reference_value=1):
+            peak_value = reference_value * 10**(peak_db / 20)
+            return peak_value
+
         def rms(audio_signal):
             return np.sqrt(np.mean(audio_signal**2))
 
 
+class AURA_ERROR(Exception):
+    def __init__(self, message="", advice=None):
+        self.message, self.advice = message, advice
+        super().__init__()
+
+    def __str__(self):
+        return (self.message if self.advice is None
+         else f"{self.message} ({self.advice})")
+
+
+
+#ALPHABET = tuple("".join(chr(i) for i in range(0x3400, 0x3400 + 2048)))
+
+ALPHABET = tuple(dict.fromkeys("""
+
+0123456789aàáâãäåăæbcçdðeèéêëfghiìíîïĳjklmnñoòóôõöøœpqrsšșt
+țuùúûüvwxyýÿzþßAÀÁÂÃÄÅÆBCÇDÐEÈÉÊËFGHIÌÍÎÏĲJKLMNÑOÒÓÔÕÖØŒPQR
+SŠȘTȚUÙÚÛÜVWXYÝZÞẞ!"#$%&'()*+,-./:;<=>?@[]^_`{|}~¡¢£¤¥§©«®°
+±²³µ¶·»¿×÷
+
+""".replace("\n", "")))
+
+BASE = len(ALPHABET)
+
+def encode_baseX(data_bytes: bytes) -> str:
+    if not data_bytes:
+        return ""
+
+    # 1. Convert the bytes into a large integer
+    num = int.from_bytes(data_bytes, byteorder='big')
+    if num == 0:
+        return ALPHABET[0] * len(data_bytes)
+
+    # 2. Convert the number to our Base96
+    encoded = ""
+    while num > 0:
+        num, rem = divmod(num, BASE)
+        encoded = ALPHABET[rem] + encoded
+
+    # 3. Preservar los ceros (bytes nulos) iniciales
+    pad_count = 0
+    for byte in data_bytes:
+        if byte == 0:
+            pad_count += 1
+        else:
+            break
+            
+    return (ALPHABET[0] * pad_count) + encoded
+
+def decode_baseX(encoded_str: str) -> bytes:
+    if not encoded_str:
+        return b""
+
+    # 1. Convert the Base96 string back into a large integer
+    num = 0
+    for char in encoded_str:
+        num = num * BASE + ALPHABET.index(char)
+
+    # 2. Restaurar los ceros iniciales
+    pad_count = 0
+    for char in encoded_str:
+        if char == ALPHABET[0]:
+            pad_count += 1
+        else:
+            break
+
+    if num == 0:
+        return b'\x00' * pad_count
+
+    # 3. Convert the number back into bytes
+    byte_length = (num.bit_length() + 7) // 8
+    
+    data_bytes = num.to_bytes(byte_length, byteorder='big')
+
+    return (b'\x00' * pad_count) + data_bytes
+
+
+def _replace_preset_names(expression, names):
+    """Replace whole variable names without regex or partial-name collisions."""
+    result = []
+    referenced = []
+    index = 0
+    while index < len(expression):
+        char = expression[index]
+        if char == "_" or char.isalpha():
+            end = index + 1
+            while end < len(expression) and (
+                expression[end] == "_" or expression[end].isalnum()
+            ):
+                end += 1
+            name = expression[index:end]
+            result.append(names.get(name, name))
+            referenced.append(name)
+            index = end
+        else:
+            result.append(char)
+            index += 1
+    return "".join(result), referenced
+
+
+def _validate_preset_expression(parsed, expression, variables):
+    allowed_nodes = (
+        ast.Expression, ast.Constant, ast.Name, ast.Load,
+        ast.UnaryOp, ast.UAdd, ast.USub, ast.BinOp, ast.Add,
+        ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod, ast.Pow,
+    )
+    nodes = list(ast.walk(parsed))
+    if len(nodes) > 256:
+        raise AURA_ERROR("Preset expression is too complex")
+    for node in nodes:
+        if not isinstance(node, allowed_nodes):
+            raise AURA_ERROR(f"Unsupported operation in formula '{expression}'")
+        if isinstance(node, ast.Name) and node.id not in variables:
+            raise AURA_ERROR("Preset error", advice="Variable not found")
+        if isinstance(node, ast.Constant) and not isinstance(
+            node.value, (int, float)
+        ):
+            raise AURA_ERROR("Preset expressions only allow numeric constants")
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Pow):
+            exponent = node.right
+            if isinstance(exponent, ast.UnaryOp) and isinstance(
+                exponent.op, (ast.UAdd, ast.USub)
+            ):
+                exponent = exponent.operand
+            if isinstance(exponent, ast.Constant) and abs(exponent.value) > 16:
+                raise AURA_ERROR("Preset exponent magnitude cannot exceed 16")
+
+
+def _align_preset_arrays(parsed, variables):
+    names = {node.id for node in ast.walk(parsed) if isinstance(node, ast.Name)}
+    lengths = [
+        len(variables[name])
+        for name in names
+        if isinstance(variables[name], np.ndarray)
+        and variables[name].ndim == 1
+    ]
+    if not lengths:
+        return variables
+
+    shared_samples = min(lengths)
+    return {
+        name: value[:shared_samples]
+        if name in names
+        and isinstance(value, np.ndarray)
+        and value.ndim == 1
+        else value
+        for name, value in variables.items()
+    }
+
+
+
 class Aura:
-    def __init__(self, preset: bytes | dict | str):
+    def __init__(self, preset: bytes | dict | str, cache=True):
         self.last_note = None
-        self.preset = preset
+        self.cache = cache
+        self.arrays_bank = {}
         if isinstance(preset, bytes):
-            self.preset = self.get_bin_preset()
+            try:
+                preset_json = zlib.decompress(preset)
+                preset = json.loads(preset_json.decode())
+            except (zlib.error, UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise AURA_ERROR("This preset is corrupt: invalid compressed JSON") from exc
+
         elif isinstance(preset, str):
-            self.preset = json.loads(preset)
+            try:
+                preset_bytes = decode_baseX(preset)
+                preset_json = zlib.decompress(preset_bytes)
+                preset = json.loads(preset_json.decode())
+            except (ValueError, zlib.error, UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise AURA_ERROR("This preset is corrupt", advice=str(exc)) from exc
+
+        if isinstance(preset, (list, tuple)) and len(preset) == 1:
+            preset = preset[0]
+        if not isinstance(preset, dict):
+            raise AURA_ERROR("This preset is corrupt: expected a preset object")
+
+        meta = preset.get("meta")
+        if not isinstance(meta, dict):
+            raise AURA_ERROR("This preset is corrupt: 'meta' must be an object")
+
+        for field in ("name", "version", "description", "author", "category"):
+            if not isinstance(meta.get(field), str):
+                raise AURA_ERROR(
+                    f"This preset is corrupt: 'meta.{field}' must be a string"
+                )
+
+        if not isinstance(meta.get("tags"), list) or not meta["tags"]:
+            raise AURA_ERROR(
+                "This preset is corrupt: 'meta.tags' must be a non-empty list"
+            )
+
+        master = preset.get("master")
+        if not isinstance(master, dict):
+            raise AURA_ERROR("This preset is corrupt: 'master' must be an object")
+        for field in ("master_gain_db", "legato", "glide", "portamento"):
+            if field not in master:
+                raise AURA_ERROR(
+                    f"This preset is corrupt: missing 'master.{field}'"
+                )
+
+        if not isinstance(preset.get("data"), dict) or not preset["data"]:
+            raise AURA_ERROR("This preset is corrupt: 'data' must be a non-empty object")
+        if not isinstance(preset.get("out"), list) or not preset["out"]:
+            raise AURA_ERROR("This preset is corrupt: 'out' must be a non-empty list")
+
+        self.preset = preset
 
 
-
-    def osc_aura(hz, duration, gain, waveform_n,
-                 stretch, resonance, resonance_q, resonance_gain):
-        pass
-
-
-
-    def get_note(self, note_hz=261.626, duration_ms=1, velocity=.8):
+    def get_note(self, note_hz=261.626, duration=4, velocity=.8, gain_db=-.1) -> np.ndarray:
         """
         Generate a note from the preset with the specified frequency and duration
 
         Args:
             note_hz: Fundamental frequency of the note, in Hz
-            duration_ms: Duration of the note, in milliseconds
+            duration: Duration of the note, in seconds
             velocity: Relative intensity of the note (default, 0.8)
+            gain_db: The final gain
 
         Returns:
             np.ndarray: Audio array with the generated note, in stereo format (2 channels)
+
         """
 
-        Envelopes.DAHDSR_envelope(
-            delay=0.1,
-            attack=0.25,
-            hold=0.2,
-            decay=1.0,
-            sustain_level=0.5,
-            sustain=0.5,
-            release=1.0,
-            attack_tension=0.25,
-            decay_tension=-.25,
-            release_tension=.25,
+
+        master = self.preset["master"]
+        try:
+            master_gain_db = float(master["master_gain_db"])
+        except (TypeError, ValueError) as exc:
+            raise AURA_ERROR("master.master_gain_db must be numeric") from exc
+
+        try:
+            portamento = float(master["portamento"])
+            portamento_tension = float(master.get("portamento_tension", 0))
+        except (TypeError, ValueError) as exc:
+            raise AURA_ERROR(
+                "master.portamento and master.portamento_tension must be numeric"
+            ) from exc
+        if portamento < 0:
+            raise AURA_ERROR("master.portamento must be non-negative")
+        if not -1 <= portamento_tension <= 1:
+            raise AURA_ERROR("master.portamento_tension must be in [-1, 1]")
+
+        previous_note = self.last_note
+        glide_source = (
+            previous_note
+            if (
+                master["glide"]
+                and portamento > 0
+                and previous_note is not None
+                and previous_note != note_hz
+            )
+            else None
+        )
+        cache_key = (note_hz, duration, velocity, glide_source)
+        if self.cache and cache_key in self.arrays_bank:
+            audio_note = self.arrays_bank[cache_key]
+            self.last_note = note_hz
+            return audio_note * Audio_Effects.Audio_Analysis.dbs_to_float(
+                gain_db + master_gain_db
+            )
+
+        note_samples = int(round(duration * SAMPLE_RATE))
+        if note_samples <= 0:
+            raise AURA_ERROR("duration is too short to produce audio samples")
+
+        pitch_env = np.ones(note_samples, dtype=np.float64)
+        portamento_progress = np.ones(note_samples, dtype=np.float64)
+
+        if master["glide"] and previous_note is not None and portamento > 0:
+            transition_samples = min(
+                note_samples, max(1, int(round(portamento * SAMPLE_RATE)))
+            )
+            progress = np.linspace(0, 1, transition_samples)
+            curve = _tension_curve(progress, portamento_tension)
+            initial_ratio = previous_note / note_hz
+            pitch_env[:transition_samples] = (
+                initial_ratio + (1 - initial_ratio) * curve
+            )
+            portamento_progress[:transition_samples] = progress
+
+        note_number = self.get_note_number(note_hz)
+        context = {
+            "note_hz": note_hz,
+            "note_number": note_number,
+            "octave": note_number / 12,
+            "duration": duration,
+            "duration_progress": np.linspace(0, duration, note_samples),
+            "velocity": velocity,
+            "glide": pitch_env,
+            "portamento": portamento_progress,
+        }
+
+        data = self.preset["data"]
+        node_aliases = {
+            name: f"_{index}_"
+            for index, name in enumerate(data)
+            if isinstance(name, str)
+        }
+        if any(name in context for name in node_aliases):
+            name = next(name for name in node_aliases if name in context)
+            raise AURA_ERROR(
+                f"Preset data name '{name}' conflicts with a built-in variable"
+            )
+        data_bank = dict(context)
+        resolving = set()
+        effect_handlers = {
+            "drive": Audio_Effects.Gain_Distortion_Dynamics.drive,
+            "bit_crush": Audio_Effects.Gain_Distortion_Dynamics.bit_crush,
+            "valve_distortion": Audio_Effects.Gain_Distortion_Dynamics.valve_distortion,
+            "la2a": Audio_Effects.Gain_Distortion_Dynamics.compressor_la2a,
+            "compressor_la2a": Audio_Effects.Gain_Distortion_Dynamics.compressor_la2a,
+            "br11ck67_analog": Audio_Effects.Gain_Distortion_Dynamics.br11ck67_analog,
+            "reverb": Audio_Effects.Stereo_Expansion.reverb,
+            "stereo_expander": Audio_Effects.Stereo_Expansion.stereo_expander,
+            "normalize": Audio_Effects.Special.normalize,
+            "invert_phase": Audio_Effects.Special.invert_phase,
+            "reverse": Audio_Effects.Special.reverse,
+            "fade_in": Audio_Effects.Special.fade_in,
+            "fade_out": Audio_Effects.Special.fade_out,
+        }
+
+        def apply_effects(audio, effects, scope):
+            if not isinstance(effects, dict):
+                raise AURA_ERROR(f"{scope} effects must be an object")
+            for effect_name, effect_values in effects.items():
+                handler = effect_handlers.get(effect_name)
+                if handler is None:
+                    raise AURA_ERROR(
+                        f"Unsupported effect '{effect_name}' in {scope}"
+                    )
+                if effect_values is True:
+                    effect_values = {}
+                if not isinstance(effect_values, dict):
+                    raise AURA_ERROR(
+                        f"Effect '{effect_name}' parameters must be an object"
+                    )
+                parameters = {
+                    key: self._preset_value(
+                        value, data_bank, node_aliases, resolve_node
+                    )
+                    for key, value in effect_values.items()
+                }
+                if effect_name == "drive" and "gain_db" in parameters:
+                    parameters["gain_dbs"] = parameters.pop("gain_db")
+                audio = handler(audio, **parameters)
+            return audio
+
+        def resolve_node(name):
+            if name in data_bank:
+                return data_bank[name]
+            if name not in data:
+                raise AURA_ERROR(f"Unknown preset data node: {name}")
+            if name in resolving:
+                raise AURA_ERROR(f"Circular preset data dependency: {name}")
+
+            resolving.add(name)
+            try:
+                definition = data[name]
+                alias = node_aliases.get(name)
+                if isinstance(definition, dict) and "DAHDSR_envelope" in definition:
+                    stages = definition["DAHDSR_envelope"]
+                    if not isinstance(stages, dict):
+                        raise AURA_ERROR(
+                            f"Envelope '{name}' must contain an object"
+                        )
+                    parameters = {
+                        key: self._preset_value(
+                            value, data_bank, node_aliases, resolve_node
+                        )
+                        for key, value in stages.items()
+                    }
+                    required = (
+                        "delay", "attack", "hold", "decay",
+                        "sustain_level", "sustain", "release",
+                    )
+                    missing = [key for key in required if key not in parameters]
+                    if missing:
+                        raise AURA_ERROR(
+                            f"Envelope '{name}' is missing: {', '.join(missing)}"
+                        )
+                    if any(
+                        np.asarray(value).ndim != 0
+                        for value in parameters.values()
+                    ):
+                        raise AURA_ERROR(
+                            f"Envelope '{name}' timing and levels must be scalar"
+                        )
+                    result = Envelopes.DAHDSR_envelope(**parameters)
+                elif isinstance(definition, dict) and "waveform" in definition:
+                    waveform = definition["waveform"]
+                    if not isinstance(waveform, str):
+                        raise AURA_ERROR(
+                            f"Oscillator '{name}' waveform must be a string"
+                        )
+                    oscillator_duration = self._preset_value(
+                        definition.get("duration", duration),
+                        data_bank,
+                        node_aliases,
+                        resolve_node,
+                    )
+                    if np.asarray(oscillator_duration).ndim != 0:
+                        raise AURA_ERROR(
+                            f"Oscillator '{name}' duration must be scalar"
+                        )
+                    oscillator_duration = float(oscillator_duration)
+                    if oscillator_duration < 0:
+                        raise AURA_ERROR(
+                            f"Oscillator '{name}' duration must be non-negative"
+                        )
+                    oscillator_samples = int(
+                        round(oscillator_duration * SAMPLE_RATE)
+                    )
+                    if oscillator_samples <= 0:
+                        result = np.zeros(0, dtype=np.float32)
+                    else:
+                        if waveform not in {
+                            "sine", "square", "sawtooth", "triangle",
+                            "noise", "silence",
+                        }:
+                            raise AURA_ERROR(
+                                f"Unsupported waveform '{waveform}' in '{name}'"
+                            )
+
+                        stretch = self._preset_value(
+                            definition.get("stretch", 0.0),
+                            data_bank,
+                            node_aliases,
+                            resolve_node,
+                        )
+                        amplitude = self._preset_value(
+                            definition.get("amplitude", 1.0),
+                            data_bank,
+                            node_aliases,
+                            resolve_node,
+                        )
+                        frequency = self._preset_value(
+                            definition.get("frequency", note_hz),
+                            data_bank,
+                            node_aliases,
+                            resolve_node,
+                        )
+                        parameter_lengths = [
+                            len(value)
+                            for value in (amplitude, stretch, frequency)
+                            if isinstance(value, np.ndarray) and value.ndim == 1
+                        ]
+                        rendered_samples = min(
+                            [oscillator_samples, note_samples, *parameter_lengths]
+                        )
+                        if rendered_samples == 0:
+                            result = np.zeros(0, dtype=np.float32)
+                        else:
+                            def clip_parameter(value):
+                                if isinstance(value, np.ndarray) and value.ndim == 1:
+                                    return value[:rendered_samples]
+                                return value
+
+                            amplitude = clip_parameter(amplitude)
+                            stretch = clip_parameter(stretch)
+                            frequency = clip_parameter(frequency)
+                            if waveform != "noise" and waveform != "silence":
+                                frequency = np.asarray(frequency) * pitch_env[
+                                    :rendered_samples
+                                ]
+                            if waveform == "noise":
+                                result = WaveTables.noise(
+                                    rendered_samples, amplitude
+                                )
+                            elif waveform == "silence":
+                                result = np.zeros(rendered_samples)
+                            else:
+                                generator = {
+                                    "sine": WaveTables.sine,
+                                    "square": WaveTables.square,
+                                    "sawtooth": WaveTables.sawtooth,
+                                    "triangle": WaveTables.triangle,
+                                }[waveform]
+                                parameters = {
+                                    "frequency": frequency,
+                                    "amplitude": amplitude,
+                                }
+                                if waveform != "sine":
+                                    parameters["stretch"] = stretch
+                                result = generator(rendered_samples, **parameters)
+
+                        effects = definition.get("effects", {})
+                        result = apply_effects(
+                            result, effects, f"oscillator '{name}'"
+                        )
+                else:
+                    result = self._preset_value(
+                        definition, data_bank, node_aliases, resolve_node
+                    )
+
+                result_values = np.asarray(result)
+                if result_values.dtype.kind not in "iuf":
+                    raise AURA_ERROR(
+                        f"Preset data node '{name}' must contain real numbers"
+                    )
+                if result_values.ndim > 2 or (
+                    result_values.ndim == 2 and result_values.shape[1] not in (1, 2)
+                ):
+                    raise AURA_ERROR(
+                        f"Preset data node '{name}' returned an invalid array shape"
+                    )
+                if alias is not None:
+                    data_bank[alias] = result
+                return result
+            finally:
+                resolving.remove(name)
+
+        output_arrays = []
+        for output_name in self.preset["out"]:
+            if not isinstance(output_name, str):
+                raise AURA_ERROR("Preset output names must be strings")
+            output = resolve_node(output_name)
+            output = Audio_Effects.Stereo_Expansion.to_stereo(
+                np.asarray(output)
+            )
+            if output.ndim != 2 or output.shape[1] != 2:
+                raise AURA_ERROR(
+                    f"Preset output '{output_name}' must be mono or stereo audio"
+                )
+            output_arrays.append(output)
+
+        output_samples = max(len(output) for output in output_arrays)
+        audio_note = np.zeros(
+            (output_samples, 2),
+            dtype=np.result_type(*(output.dtype for output in output_arrays), np.float32),
+        )
+        for output in output_arrays:
+            audio_note[:len(output)] += output
+
+        audio_note = apply_effects(
+            audio_note, master.get("effects", {}), "master"
         )
 
-        return
+        if self.cache:
+            self.arrays_bank[cache_key] = audio_note
+        self.last_note = note_hz
+        return audio_note * Audio_Effects.Audio_Analysis.dbs_to_float(
+            gain_db + master_gain_db
+        )
+
+
 
     def get_hz_note(self, note_number, tune_reference=440) -> float:
         """
@@ -1253,6 +1763,7 @@ class Aura:
         """
         return tune_reference * 2**((note_number-57) / 12)
 
+
     def get_note_number(self, f) -> float:
         """
         Convert frequency in Hz to note number
@@ -1261,27 +1772,108 @@ class Aura:
         """
         return float(12 * np.log2(f / 440)) + 57
 
+
+    @staticmethod
+    def _insert_multiplication_operators(expression):
+        result = ""
+        for i, char in enumerate(expression):
+            if char == "(" and i > 0 and expression[i-1].isdigit():
+                result += f"*{char}"
+            elif char == ")" and i < len(expression) - 1 and expression[i+1].isdigit():
+                result += f"{char}*"
+            else:
+                result += char
+        return result
+
+
+    def _preset_value(self, value, data_bank, node_aliases, resolve_node):
+        if isinstance(value, (bool, int, float, np.number)):
+            return value
+        if isinstance(value, (list, tuple, np.ndarray)):
+            return np.asarray(value)
+        if not isinstance(value, str):
+            raise AURA_ERROR(f"Unsupported preset value type: {type(value).__name__}")
+
+        # Replace complete identifiers only, so names like env1 and env10 stay distinct
+        expression, referenced_names = _replace_preset_names(
+            value, node_aliases
+        )
+        for name in referenced_names:
+            if name in node_aliases:
+                resolve_node(name)
+        return self._maths(expression, data_bank)
+
+    def _maths(self, expression, _vars=None):
+        variables = {} if _vars is None else dict(_vars)
+        expression = self._insert_multiplication_operators(
+            expression.replace("...", "").replace("()", "")
+        )
+        try:
+            parsed = ast.parse(expression, mode="eval")
+        except SyntaxError as exc:
+            raise AURA_ERROR(f"Invalid formula or syntax '{expression}'") from exc
+
+        _validate_preset_expression(parsed, expression, variables)
+        variables = _align_preset_arrays(parsed, variables)
+
+        try:
+            return eval(
+                compile(parsed, "<preset expression>", "eval"),
+                {"__builtins__": {}},
+                variables,
+            )
+        except (ArithmeticError, NameError, TypeError, ValueError) as exc:
+            raise AURA_ERROR(f"Invalid formula or syntax '{expression}'") from exc
+
+
+
     rb"""Save the preset in different formats for storage or transmission"""
 
+
+    @property
     def get_bin_preset(self):
         """
         Convert the preset dictionary to a binary format for storage or transmission
         """
         preset_json = json.dumps(self.preset, separators=(",", ":"))
-        return gzip.compress(preset_json.encode("utf-8"))
 
-    def get_base46_preset(self):
-        """
-        Convert the preset dictionary to a base46 format for storage or transmission
-        """
-        preset_json = json.dumps(self.preset, separators=(",", ":"))
-        return base64.b64encode(gzip.compress(preset_json.encode("utf-8"))).decode("utf-8")
+        return zlib.compress(
+            preset_json.encode("utf-8"), level=9
+            )
 
-    def get_string_preset(self):
+
+    @property
+    def get_SBR_string_preset(self):
         """
         Convert the preset dictionary to a string format for storage or transmission
         """
-        return json.dumps(self.preset, separators=(",", ":"))
+
+        max_leng = 70
+        var_name = self.preset["meta"]["name"].replace(" ", "_").lower()
+        data = f"$\"{self.get_baseX_preset}\""
+        code = f"{var_name} = {data}"
+        code = "\n".join(
+            code[index:index + max_leng]
+            for index in range(0, len(code), max_leng)
+        )
+
+        return code
+
+
+    @property
+    def get_baseX_preset(self):
+        """
+        Convert the compressed preset to BaseX for text storage or transmission
+        """
+        return encode_baseX(self.get_bin_preset)
+
+
+    @property
+    def get_json_preset(self):
+        """
+        Convert the preset dictionary to a string format for storage or transmission
+        """
+        return json.dumps(self.preset, separators=(",", ":"))[1:-1]
 
 
 
@@ -1289,25 +1881,26 @@ def main():
     # python -m cProfile -s tottime Bsound/Aura.py
     """Create an audio array"""
 
-    audio_data = WaveTables.sample("Bsound/guitar_test.mp3")
+    #audio_data = WaveTables.sample("Bsound/guitar_test.mp3")
 
     # ***************
-    Audio_Effects.Gain_Distortion_Dynamics.br11ck67_analog(
-        audio_data, oversampling=8
-        )
+
+    sint1 = Aura(preset_example)
+
+    audio_data = sint1.get_note()
     # ***************
 
     start_time = time.perf_counter()
 
     # ***************
-    audio_data = Audio_Effects.Gain_Distortion_Dynamics.br11ck67_analog(
-        audio_data, oversampling=8
-        )
+
+    audio_data = sint1.get_note()
+
     # ***************
 
 
     elapsed = time.perf_counter() - start_time
-    print(f"valve_distortion took {elapsed:.3f} seconds")
+    print(f"Took {elapsed:.3f} seconds")
 
     sf.write("output.mp3", audio_data, SAMPLE_RATE)
 
@@ -1335,7 +1928,7 @@ def main():
     #sf.write("output.wav", audio_data, SAMPLE_RATE)
 
     audio_data_int16 = np.clip(
-        audio_data * (2**15 * 0.9), -2**15, 2**15 - 1
+        audio_data * (2**15 * .9), -2**15, 2**15 - 1
     ).astype(np.int16)
     audio_data_int16 = np.ascontiguousarray(audio_data_int16)
     sound = pygame.mixer.Sound(array=audio_data_int16)
@@ -1345,3 +1938,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
