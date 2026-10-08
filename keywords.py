@@ -16,6 +16,7 @@ from variables import *
 #from sbr_help import *
 import lib.MidiFile
 import itertools
+import datetime
 import generators
 import effects
 import base64
@@ -28,12 +29,243 @@ import lib
 import sys
 import os
 
+from Bsound.Aura import Aura
+
 try: import keyboard
 except ImportError:
     print("Missing keyboard library")
     print("Some features, such as games or playing"
             "the piano, may cause errors on this system")
     input("To continue, press any key")
+
+
+_sine_preset = {
+    "meta": {
+        "name": "Sine",
+        "version": "1.0.0",
+        "description": "Built-in sine instrument",
+        "author": "SBR",
+        "category": "Utility",
+        "tags": ["sine", "built-in"],
+    },
+    "master": {
+        "master_gain_db": -6,
+        "legato": False,
+        "glide": True,
+        "portamento": .1,
+    },
+    "data": {
+        "osc1": {
+            "waveform": "sine",
+            "frequency": "note_hz",
+            "amplitude": "velocity * env1",
+            "duration": "duration",
+        },
+        "env1": {
+            # All oscillators/envelopes must have a "waveform" or a "DAHDSR_envelope"
+            # The compiler will look for one or the other to find other parameters
+            "DAHDSR_envelope": {
+                # Delay before the envelope starts, in seconds (>= 0)
+                "delay": 0,
+                # Attack duration until the envelope reaches its maximum, in seconds
+                # This can easily be "1.125 - velocity * 1.1"
+                # so it has less attack if played harder
+                "attack": 0.25,
+                # Time held at maximum level before decay, in seconds
+                "hold": 0.2,
+                # Duration of the fall from maximum to sustain level, in seconds
+                "decay": .5,
+                # Sustain amplitude in [0, 1]; 1 is maximum and 0 is silence
+                "sustain_level": 0.5,
+                # Duration of the sustain phase, in seconds
+                "sustain": 0.5,
+                # Duration of the release from sustain level to silence, in seconds
+                "release": 2,
+                # Attack curve tension in [-1, 1]: positive rises faster initially
+                "attack_tension": 0.25,
+                # Decay curve tension in [-1, 1]
+                "decay_tension": -0.25,
+                # Release curve tension in [-1, 1]
+                "release_tension": 0.25,
+            },
+        },
+    },
+    "out": ["osc1"],
+},
+
+_kick_preset = {
+    "meta": {
+        "name": "Kick",
+        "version": "1.0.0",
+        "description": "Built-in synthesized kick drum",
+        "author": "Brick Briceño",
+        "category": "Percussion",
+        "tags": ["kick", "percussion", "built-in"],
+    },
+    "master": {
+        "master_gain_db": -3,
+        "legato": False,
+        "glide": False,
+        "portamento": 0,
+        "effects": {
+            "drive": {
+                "gain_dbs": 12,
+                "normalize": True
+            }
+        }
+    },
+    "data": {
+        "osc1": {
+            "waveform": "sine",
+            "frequency": "42 + 155 * env_pitch",
+            "amplitude": "velocity * env_amp",
+            "duration": 0.25,
+        },
+        "osc2": {
+            "waveform": "sine",
+            "frequency": 1800,
+            "amplitude": "velocity * 0.06 * env_click",
+            "duration": 0.008,
+        },
+        "env_pitch": {
+            "DAHDSR_envelope": {
+                "delay": 0,
+                "attack": 0,
+                "hold": 0,
+                "decay": 0.12,
+                "sustain_level": 0,
+                "sustain": 0,
+                "release": 0.13,
+                "decay_tension": 0.5,
+            },
+        },
+        "env_amp": {
+            "DAHDSR_envelope": {
+                "delay": 0,
+                "attack": 0,
+                "hold": 0.004,
+                "decay": 0.21,
+                "sustain_level": 0,
+                "sustain": 0,
+                "release": 0.036,
+                "decay_tension": 0.35,
+            },
+        },
+        "env_click": {
+            "DAHDSR_envelope": {
+                "delay": 0,
+                "attack": 0,
+                "hold": 0,
+                "decay": 0.008,
+                "sustain_level": 0,
+                "sustain": 0,
+                "release": 0,
+            },
+        },
+    },
+    "out": ["osc1", "osc2"],
+},
+
+_pluck_preset = {
+    "meta": {
+        "name": "Pluck",
+        "version": "1.0.0",
+        "description": "Built-in piano-like plucked string",
+        "author": "SBR",
+        "category": "Plucked",
+        "tags": ["pluck", "piano", "built-in"],
+    },
+    "master": {
+        "master_gain_db": -3,
+        "legato": False,
+        "glide": True,
+        "portamento": 0.02,
+    },
+    "data": {
+        "osc1": {
+            "waveform": "sine",
+            "frequency": "note_hz",
+            "amplitude": "velocity * env1",
+            "duration": "duration",
+        },
+        "osc2": {
+            "waveform": "sine",
+            "frequency": "note_hz * 2.01",
+            "amplitude": "velocity * 0.42 * env2",
+            "duration": "duration",
+        },
+        "osc3": {
+            "waveform": "sine",
+            "frequency": "note_hz * 4.02",
+            "amplitude": "velocity * 0.18 * env3",
+            "duration": "duration",
+        },
+        "osc4": {
+            "waveform": "sine",
+            "frequency": "note_hz * 6.08",
+            "amplitude": "velocity * 0.07 * env4",
+            "duration": "duration",
+        },
+        "env1": {
+            "DAHDSR_envelope": {
+                "delay": 0,
+                "attack": 0,
+                "hold": 0.002,
+                "decay": 0.82,
+                "sustain_level": 0,
+                "sustain": 0,
+                "release": 0.03,
+                "decay_tension": 0.3,
+            },
+        },
+        "env2": {
+            "DAHDSR_envelope": {
+                "delay": 0,
+                "attack": 0,
+                "hold": 0.001,
+                "decay": 0.48,
+                "sustain_level": 0,
+                "sustain": 0,
+                "release": 0.02,
+                "decay_tension": 0.2,
+            },
+        },
+        "env3": {
+            "DAHDSR_envelope": {
+                "delay": 0,
+                "attack": 0,
+                "hold": 0,
+                "decay": 0.29,
+                "sustain_level": 0,
+                "sustain": 0,
+                "release": 0.015,
+                "decay_tension": 0.1,
+            },
+        },
+        "env4": {
+            "DAHDSR_envelope": {
+                "delay": 0,
+                "attack": 0,
+                "hold": 0,
+                "decay": 0.16,
+                "sustain_level": 0,
+                "sustain": 0,
+                "release": 0.01,
+                "decay_tension": 0,
+            },
+        },
+    },
+    "out": ["osc1", "osc2", "osc3", "osc4"],
+},
+
+
+seno = Instrument(Aura(_sine_preset), 2**32)
+vars_instruments["$seno"] = seno
+kick = Instrument(Aura(_kick_preset), 2**32 + 1)
+vars_instruments["$kick"] = kick
+pluck = Instrument(Aura(_pluck_preset), 2**32 + 2)
+vars_instruments["$pluck"] = pluck
+
 
 
 welcome = """
@@ -236,7 +468,7 @@ def sbr_import(args):
         return
     data = args[0]
     try:
-        with open(data, "r") as _file:
+        with open(data, "r", encoding="utf-8") as _file:
             _file = _file.read()
         wait = "  Importing..."
         print(wait, end="\r")
@@ -259,18 +491,22 @@ sbr_line = None
 
 def instrument(arg):
     "I record an instrument"
-    if len(arg) == 0:
-        raise SBR_ERROR("Enter the path of an instrument or sample")
+    if len(arg) != 1:
+        raise SBR_ERROR("Enter the path of an instrument, sample or Aura preset")
     else:
         _id = len(vars_instruments.keys())
         inst = Instrument(arg[0], _id)
+        if inst.aura is not None:
+            inst.inst_id = (
+                f"\"{inst.aura.category} {inst.name}\""
+                .replace(" ", "_")
+                .lower()
+            )
         if f"${inst.name}" in vars_instruments.keys():
             print(f"This instrument already exists: {inst.name}")
         vars_instruments[f"${inst.name}"] = inst
 
 
-seno = Instrument("seno", 2**32)
-vars_instruments[f"${seno.name}"] = seno
 
 def phrase(arg):
     print("Hi! how are you :)")
@@ -470,26 +706,24 @@ def brute_force(args):
 
 
 def obj_to_array(text_sbr_obj: str, meta_data=False):
-        program_path = os.path.abspath(__file__)
-        program_directory = os.path.dirname(program_path)
         obj_data = sbr_line(text_sbr_obj)
         #%AppData%
         #Melody
         if isinstance(obj_data, Melody):
-            obj_data = Structure([Velocity([0]), seno, obj_data
+            obj_data = Structure([Velocity([0]), pluck, obj_data
                                   #it need a default instrument
             ])
 
         #Rhythm
         elif isinstance(obj_data, Rhythm):
-            obj_data = Structure([Instrument(f"{program_directory}/inst/Kick.wav", 2**32), Velocity([0]),
-                Melody([obj_data, Tones([6*7]) * obj_data.metric]) #it need a default sample to the Rhythm
+            obj_data = Structure([kick, Velocity([0]),
+                Melody([obj_data, Tones([6*7]) * obj_data.metric]) #it needs a default instrument for the Rhythm
             ])
 
         #Note and tones
         elif isinstance(obj_data, (Tones, Note)):
             if isinstance(obj_data, Note): obj_data = Tones([obj_data])
-            obj_data = Structure([seno, Velocity([0]),
+            obj_data = Structure([pluck, Velocity([0]),
                 Melody([obj_data, Rhythm('1000'*len(obj_data))]) #it need a default sample to the Rhythm
             ])
 
@@ -508,6 +742,7 @@ def obj_to_array(text_sbr_obj: str, meta_data=False):
         array = Bsound.audio_render_engine(__meta_data)
         print(" "*len(wait), end="\r")
         return array
+
 
 def play(args):
     "I bring the sense of sound to life in your brain"
@@ -624,7 +859,7 @@ def piano(args):
         if isinstance(instr, Instrument):
             inst_id = instr.inst_id
         else: raise SBR_ERROR("This ain't an Instrument!")
-    else: inst_id = seno.inst_id
+    else: inst_id = pluck.inst_id
     keys = {
         #5th octve
         "a": 35, "s": 36, "d": 37, "f": 38,
@@ -930,6 +1165,11 @@ def define(args):
     defines[args[0].strip()] = args[1].strip()
 
 
+def ttime(args):
+    print(datetime.datetime.now(
+    ).strftime("%H:%M:%S.%f")[:-3])
+
+
 record = {
     #Keywords
     "if": sbr_if,
@@ -949,6 +1189,7 @@ record = {
     "welcome": sbr_import,
     "licence": sbr_licence,
     "print": sbr_print,
+    "ttime": ttime,
     "share": share,
     "receive": receive,
     "info": info,

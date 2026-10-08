@@ -4,11 +4,10 @@ Symmetry Melody Api v2.1
 
 """
 
-from .synthesizer import create_tone
+from sbr_types import Instrument, Melody, Note, Rhythm, Structure, Velocity
 from variables import variables_user
 from errors import SBR_ERROR
 from sbr_utils import *
-from sbr_types import *
 
 
 try: import soundfile as sf
@@ -28,7 +27,6 @@ with warnings.catch_warnings():
     from pygame import mixer
 
 import numpy as np
-#import numba as nb
 import random
 import time
 import wave
@@ -103,7 +101,6 @@ def pause():
         sound.fadeout(ms)
     mixer.music.fadeout(ms)
 
-
 def audio_render_engine(meta_data):
     note_path, when_kick = meta_data["files"], meta_data["position"]
     effects, velocity = meta_data["effect"], meta_data["velocity"]
@@ -111,78 +108,131 @@ def audio_render_engine(meta_data):
     cromatic_note, afination = meta_data["cromatic_note"], meta_data["afination_cst"]
 
     if not len(note_path): raise SBR_ERROR("Empty data")
-    #cargar archivos necesarios en un diccionario
-    for _file in note_path:
-        if _file not in arrays_bank.keys():
-            try:
-                #verificar si el sonido es sintetico
-                if len(_file) == 1:
-                    #crear el tono sintetico
-                    old_hz = sample_rate
-                    arrays_bank[_file] = create_tone(ord(_file), .3, sample_rate)
-                else: arrays_bank[_file], old_hz = sf.read(_file)
-            except sf.LibsndfileError: raise SBR_ERROR(f"Error loading file: {_file}")
-            except TypeError: raise SBR_ERROR(f"Error in audio engine")
-            #quitar espacios en silencio
-            arrays_bank[_file] = audio_effects.remove_ending_in_silence(arrays_bank[_file])
-            #verificar si tiene la misma frecuencia de muestreo y bits
-            if old_hz != sample_rate:
-                arrays_bank[_file] = audio_effects.resampling(
-                    arrays_bank[_file], sample_rate, old_hz).astype(np.float32)
 
-            #verificar si es audio estereo
-            if len(arrays_bank[_file].shape) == 1:
-                arrays_bank[_file] = arrays_bank[_file].reshape(-1, 1)
-                arrays_bank[_file] = np.repeat(arrays_bank[_file], 2, axis=1)
+    def get_synth_duration(note_duration):
+        if note_duration < 0:
+            raise SBR_ERROR("Synthesized note duration cannot be negative")
+        if note_duration == 0:
+            if tempo is None or tempo <= 0:
+                raise SBR_ERROR(
+                    "A positive tempo is required for synthesized rhythm notes"
+                )
+            return 15 / tempo
+        return note_duration
+
+    # Load and cache sample files, synthesized instruments render notes on demand
+    for source in note_path:
+        if isinstance(source, Instrument):
+            if source.type != "synthesized" or source.aura is None:
+                raise SBR_ERROR("Invalid synthesized instrument")
+            continue
+        if not isinstance(source, str):
+            raise SBR_ERROR(
+                "Audio sources must be sample paths or synthesized instruments"
+            )
+        if source not in arrays_bank:
+            try:
+                arrays_bank[source], old_hz = sf.read(source)
+            except sf.LibsndfileError:
+                raise SBR_ERROR(f"Error loading file: {source}")
+            except TypeError: raise SBR_ERROR(f"Error in audio engine")
+            arrays_bank[source] = audio_effects.remove_ending_in_silence(
+                arrays_bank[source]
+            )
+            if old_hz != sample_rate:
+                arrays_bank[source] = audio_effects.resampling(
+                    arrays_bank[source], sample_rate, old_hz
+                ).astype(np.float32)
+
+            if arrays_bank[source].ndim == 1:
+                arrays_bank[source] = np.repeat(
+                    arrays_bank[source][:, np.newaxis], 2, axis=1
+                )
 
     total_muestras = 0
-    #Obtener la duración total de muestras requerida para la mezcla
-    for _file, when, af in zip(note_path, when_kick, afination, strict=True):
-        if af == 0: durtn = sample_rate*when + len(arrays_bank[_file])
-        else: durtn = sample_rate*when + len(arrays_bank[_file])/af/.01
-        if total_muestras < durtn:
-            total_muestras = int(durtn)+5
+    for source, when, af, note_duration in zip(
+        note_path, when_kick, afination, duration, strict=True
+    ):
+        if isinstance(source, Instrument):
+            rendered_samples = int(
+                round(get_synth_duration(note_duration) * sample_rate)
+            )
+        elif af == 0:
+            rendered_samples = len(arrays_bank[source])
+        else:
+            rendered_samples = int(len(arrays_bank[source]) / af / .01)
+        total_muestras = max(
+            total_muestras,
+            int(when * sample_rate) + rendered_samples + 5,
+        )
 
-    #Crear un array de ceros para almacenar la mezcla (array en silencio)
     mixed_audio = np.zeros((total_muestras, 2), dtype=np.float32)
+    rendered_end = 0
 
-    #procesar datos y efectos
-    for note_path, when_kick, fx, v, panning, duration, _, af in zip(
-        note_path, when_kick, effects, velocity, panning, duration, cromatic_note, afination, strict=True):
-
-        #Cargar el archivo de audio
-        #verificar si se debe estrirar el audio antes de resamplearlo
-        #esto ayuda a que el audio no pierda resolucion al cambiar el sample rate
+    for source, when, fx, v, pan, note_duration, note_number, af in zip(
+        note_path,
+        when_kick,
+        effects,
+        velocity,
+        panning,
+        duration,
+        cromatic_note,
+        afination,
+        strict=True,
+    ):
+        is_synthesized = isinstance(source, Instrument)
+        if is_synthesized:
+            note_duration = get_synth_duration(note_duration)
+            if af != 0:
+                raise SBR_ERROR(
+                    "Pitch resampling is only supported for sample instruments"
+                )
+            note_hz = source.aura.get_hz_note(note_number)
+            audio_data = source.aura.get_note(
+                note_hz=note_hz,
+                duration=note_duration,
+                velocity=v,
+            )
+        # Pitch-shift sample files when required
         if af != 0:
-            audio_data, hz = sf.read(note_path)
-            audio_data = audio_data.astype(np.float32)
-            audio_data = audio_effects.remove_ending_in_silence(audio_data)
+            audio_data, hz = sf.read(source)
+            audio_data = audio_effects.remove_ending_in_silence(
+                audio_data.astype(np.float32)
+            )
             audio_data = audio_effects.vinyl(audio_data, af)
-            audio_data = audio_effects.resampling(audio_data,
-                        sample_rate_old=hz, new_sample_rate=sample_rate)
-        else: audio_data = arrays_bank[note_path]
-        #Obtener el tiempo de inicio
-        tiempo_inicio = int(when_kick * sample_rate)
-        #panning
-        audio_data = audio_effects.pan_sound(audio_data, panning)
-        #afination
+            audio_data = audio_effects.resampling(
+                audio_data,
+                sample_rate_old=hz,
+                new_sample_rate=sample_rate,
+            )
+        elif not is_synthesized:
+            audio_data = arrays_bank[source]
 
-        #velocity
-        audio_data *= v
+        audio_data = np.asarray(audio_data, dtype=np.float32)
+        start_sample = int(when * sample_rate)
+        audio_data = audio_effects.pan_sound(audio_data, pan)
+        if not is_synthesized:
+            audio_data *= v
 
-        #effects
         if fx == 7:
-            if when_kick == 0: continue
+            if when == 0: continue
             audio_data = audio_data[::-1]
-            tiempo_inicio -= len(audio_data)
+            start_sample -= len(audio_data)
 
-            if tiempo_inicio < 0: #cortar cola si empieza antes del segundo 0
-                audio_data = audio_data[1+~tiempo_inicio:]
-                tiempo_inicio = 0
+            if start_sample < 0:
+                audio_data = audio_data[-start_sample:]
+                start_sample = 0
 
-        #Superponer el sonido en el resultado (mezcla los canales individualmente)
-        mixed_audio[tiempo_inicio:tiempo_inicio+len(audio_data), :] += audio_data
+        event_end = start_sample + len(audio_data)
+        if event_end > len(mixed_audio):
+            new_length = max(event_end, max(1, len(mixed_audio) * 2))
+            expanded_audio = np.zeros((new_length, 2), dtype=np.float32)
+            expanded_audio[:len(mixed_audio)] = mixed_audio
+            mixed_audio = expanded_audio
+        mixed_audio[start_sample:event_end] += audio_data
+        rendered_end = max(rendered_end, event_end)
 
+    mixed_audio = mixed_audio[:rendered_end]
     mixed_audio = audio_effects.remove_ending_in_silence(mixed_audio)
     if np.max(mixed_audio) == 0: raise SBR_ERROR("Empty audio")
     #normalizar la mezcla (opcional)
@@ -195,6 +245,7 @@ def audio_render_engine(meta_data):
     #regular volumen
     mixed_audio *= volumen
     #retornar el array
+
     return mixed_audio
 
 
@@ -316,7 +367,8 @@ def struct_to_metadata(data):
         "cromatic_note": [], "afination_cst": [],
         "position": [], "duration": [],
         "files": [], "velocity": [],
-        "panning": [], "effect": []}
+        "panning": [], "effect": []
+        }
 
     #temp vars
     global tempo
@@ -352,11 +404,12 @@ def struct_to_metadata(data):
                             audio_data["afination_cst"].append(
                                 inst.calculate_interval(croma-60)
                                 +random_float()*(random_tunin_cst/100))
+                        elif inst.type == "synthesized":
+                            audio_data["files"].append(inst)
+                            audio_data["afination_cst"].append(0)
                         else:
                             audio_data["afination_cst"].append(random_float()*(random_tunin_cst/100))
-                            if inst.name == "seno":
-                                audio_data["files"].append(chr(croma))
-                            else: audio_data["files"].append(inst.path_note(croma))
+                            audio_data["files"].append(inst.path_note(croma))
                         audio_data["duration"].append(time[0]/15*tempo)
                         if inst.type == "sampled" or croma < 36:
                             audio_data["panning"].append(0)
@@ -375,17 +428,16 @@ def struct_to_metadata(data):
                             audio_data["cromatic_note"].append(croma)
                             audio_data["position"].append(ms)
                             if inst.type == "sampled":
-                                if inst.name == "seno":
-                                    audio_data["files"].append(chr(croma))
-                                else: audio_data["files"].append(inst.path)
+                                audio_data["files"].append(inst.path)
                                 audio_data["afination_cst"].append(
                                     inst.calculate_interval(croma-60)
                                     +random_float()*(random_tunin_cst/100))
+                            elif inst.type == "synthesized":
+                                audio_data["files"].append(inst)
+                                audio_data["afination_cst"].append(0)
                             else:
                                 audio_data["afination_cst"].append(random_float()*(random_tunin_cst/100))
-                                if inst.name == "seno":
-                                    audio_data["files"].append(chr(croma))
-                                else: audio_data["files"].append(inst.path_note(croma))
+                                audio_data["files"].append(inst.path_note(croma))
                             if bit == 3: audio_data["duration"].append(t/80*tempo)
                             elif bit == 6: audio_data["duration"].append(t/160*tempo)
                             elif bit == 2: audio_data["duration"].append(t/7.5*tempo)
@@ -414,6 +466,9 @@ def struct_to_metadata(data):
                     if inst.type == "sampled":
                         audio_data["files"].append(inst.path)
                         audio_data["afination_cst"].append(random_float()*(random_tunin_cst/100))
+                    elif inst.type == "synthesized":
+                        audio_data["files"].append(inst)
+                        audio_data["afination_cst"].append(0)
                     else:
                         audio_data["afination_cst"].append(random_float()*(random_tunin_cst/100))
                         audio_data["files"].append(inst.path_note(60))
@@ -433,11 +488,14 @@ def struct_to_metadata(data):
                         if inst.type == "sampled":
                             audio_data["files"].append(inst.path)
                             audio_data["afination_cst"].append(random_float()*(random_tunin_cst/100))
+                        elif inst.type == "synthesized":
+                            audio_data["files"].append(inst)
+                            audio_data["afination_cst"].append(0)
                         else:
                             audio_data["afination_cst"].append(random_float()*(random_tunin_cst/100))
-                            audio_data["files"].append(inst.path_note(croma))
+                            audio_data["files"].append(inst.path_note(60))
                         audio_data["duration"].append(0)
-                        if inst.type == "sampled" or croma < 36:
+                        if inst.type in ("sampled", "synthesized"):
                             audio_data["panning"].append(0)
                         else: audio_data["panning"].append(random_float()*random_stereo_value)
                         audio_data["effect"].append(0)
@@ -452,6 +510,7 @@ def struct_to_metadata(data):
             if len(obj) >= 1:
                 volumen_track = audio_effects.dbs_to_float(obj[0])
                 assigning_volumen = False
+
         elif isinstance(obj, Instrument):
             assigning_instrument = False
             inst = obj

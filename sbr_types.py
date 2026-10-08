@@ -841,13 +841,13 @@ class Melody():
                        self.vel, self.times])
 
     def concatenate(self, data):
-        return self+data
+        return self + data
 
     def overlap(self, data):
-        return self+data
+        return self + data
 
     def ghost(self, data):
-        return self-data
+        return self - data
 
 
 class Polyrhythm(Group):
@@ -894,7 +894,7 @@ class Structure(Group):
     def concatenate(self, data):
         if not isinstance(data, Structure):
             raise SBR_ERROR("This isn't a struct data")
-        return self+data
+        return self + data
 
 
 #avaible path caracters
@@ -902,17 +902,39 @@ abc = "._/\\: abcdefghijklmnñopqrstuvwxyz áéíóú 0123456789"
 abc += abc.upper()
 
 class Instrument:
-    def __init__(self, path, _id):
-        if not only_has(path, abc): raise SBR_ERROR("path no valid")
+    def __init__(self, path: "str | Aura", inst_id):
+        from Bsound.Aura import AURA_ERROR, Aura
+
+        self.aura = path if isinstance(path, Aura) else None
+        if self.aura is None:
+            if not isinstance(path, str):
+                raise SBR_ERROR("Instrument must be an Aura preset or a path")
+
+            preset_source = path.replace("\n", "")
+            if preset_source.startswith('{"') and preset_source.endswith('"}'):
+                try:
+                    self.aura = Aura(preset_source[2:-2], cache=True)
+                except AURA_ERROR as exc:
+                    raise SBR_ERROR(
+                        "Invalid Aura preset", advice=str(exc)
+                    ) from exc
+            elif not only_has(path, abc):
+                raise SBR_ERROR("Instrument path is not valid")
+
         self.path = path
-        self.inst_id = _id
-        directory, name, extension = separate_path_extension(path)
-        self.name = name.replace(" ", "_")
-        if extension == "":
-            self.type = "recorded"
-        elif extension in {".wav", ".ogg", ".mp3", ".flac"}:
-            self.type = "sampled"
-        else: raise SBR_ERROR("Instrument or sample not valid")
+        self.inst_id = inst_id
+        if self.aura is not None:
+            self.name = self.aura.name
+            self.type = "synthesized"
+        else:
+            _, name, extension = separate_path_extension(path)
+            self.name = name.replace(" ", "_").lower()
+            if extension == "":
+                self.type = "recorded"
+            elif extension.lower() in {".wav", ".ogg", ".mp3", ".flac"}:
+                self.type = "sampled"
+            else:
+                raise SBR_ERROR("Instrument or sample not valid")
         #type of instruments
         types =  ("synthesized", "sampled", "recorded", "plugin")
 

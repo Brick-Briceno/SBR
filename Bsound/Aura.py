@@ -19,139 +19,15 @@ Temperament or the specific frequency to which it is tuned—the SBR and Bsound 
 """
 
 
-preset_example = {
-    "meta": {
-        "version": "1.0.0",
-        "name": "Example Preset",
-        "description": "An example preset for demonstration purposes",
-        "author": "Brick Briceño",
-        "category": "Bass",
-        "tags": ["resampling", "distorted", "sub"],
-        "description": "Heavy wavetable bass with OTT style dynamics and fast LFO",
-        },
-
-    "master": {
-        "master_gain_db": -0.1,
-        "legato": True,
-        "glide": True,
-        "portamento": .045, #this is the time in seconds for the glide effect
-        "portamento_tension": 0, # this goes from -1 to 1
-        "effects": {
-            # Add compression
-            "la2a": {
-                "peak_reduction": 50.0,
-                "gain": 50.0,
-                "ratio": 5,
-            },
-            "reverb": {
-                "room_size": 0.98,
-                "wet_level": 0.35,
-                "dry_level": 0.65,
-                "width": 1.2,
-            },
-        },
-    },
-
-    # Variables (They can be used as parameters for automations, LFOs, and envelopes)
-    # inside variables you can use mathematical operators to create complex modulation
-
-    # "note_hz", example: "note_hz * 2" for an octave above
-
-    # "note_number", example: "note_number + 12" for an octave above
-    # it can also be used to control the intensity of a parameter
-    # for example, if you want fewer harmonics in the treble
-    # you can use "note_number / 127" to control the number of harmonics
-
-    # "octave" is note_number / 12
-    # "glide" is the pitch-ratio array for the current note
-
-    # "duration" is a constant indicating how long it lasts, expressed in seconds
-    # "duration_progress" is an array progressing from 0 to duration in seconds
-
-    # "velocity" put this variable after a "1-" and connect it to the ADSR attack
-    # it will sound softer if you play more gently and stronger if you play hard, like a real instrument
-    # "1-velocity" (goes from 1 to 0) and not the other way around
-
-    # "portamento" (goes from 0 to 1) in how long it takes to complete the glide
-
-    "data": {
-        # oscillators, ADSR envelopes, and LFOs are defined in this dictionary
-        # there are only 2 data types: numbers and arrays
-        # and all are valid in all effect, oscillator, and LFO inputs
-
-        # This "osc1" is optional; you can easily name it "papi rupi" if you want
-        # this works like variables that store waveforms with values you can place anywhere else
-        # and be careful: a variable name for the oscillator, envelope, or anything else stored in "data"
-        # cannot match an effect name or any reserved word
-        # the standard is to call oscillators "oscX"
-        # and envelopes "envX", sometimes with an additional description
-        "osc1": {
-            # Available waveform types: sine, square, sawtooth, triangle, noise, silence
-            "waveform": "square",
-            "frequency": "note_hz * vibrato",
-            "amplitude": "velocity * env1",
-            "stretch": "duration_progress ",
-            "duration": "duration",
-            "effects": {
-                "drive": {
-                    "gain_db": 20,
-                    "normalize": True,
-                },
-            },
-        },
-        "vibrato": {
-            "waveform": "square",
-            "frequency": 8,
-            "amplitude": "duration_progress * .5",
-            "stretch": 0,
-            "duration": "duration",
-        },
-        "env1": {
-            # All oscillators/envelopes must have a "waveform" or a "DAHDSR_envelope"
-            # The compiler will look for one or the other to find other parameters
-            "DAHDSR_envelope": {
-                # Delay before the envelope starts, in seconds (>= 0)
-                "delay": 0,
-                # Attack duration until the envelope reaches its maximum, in seconds
-                # This can easily be "1.125 - velocity * 1.1"
-                # so it has less attack if played harder
-                "attack": 0.25,
-                # Time held at maximum level before decay, in seconds
-                "hold": 0.2,
-                # Duration of the fall from maximum to sustain level, in seconds
-                "decay": .5,
-                # Sustain amplitude in [0, 1]; 1 is maximum and 0 is silence
-                "sustain_level": 0.5,
-                # Duration of the sustain phase, in seconds
-                "sustain": 0.5,
-                # Duration of the release from sustain level to silence, in seconds
-                "release": 2,
-
-                # Attack curve tension in [-1, 1]: positive rises faster initially
-                "attack_tension": 0.25,
-                # Decay curve tension in [-1, 1]
-                "decay_tension": -0.25,
-                # Release curve tension in [-1, 1]
-                "release_tension": 0.25,
-            },
-        },
-    },
-
-    # Not all oscillators need to be routed to the master output
-    "out": [
-        "osc1",
-        ]
-},
-
-
+from scipy.fft import irfft as fft_irfft, rfft as fft_rfft
 from scipy.signal import butter, lfilter_zi, lfilter, resample_poly
-import soundfile as sf
 from numba import jit, prange
+import soundfile as sf
 import numpy as np
-import ast
 import time
 import json
 import zlib
+import ast
 
 
 SAMPLE_RATE = 44_100
@@ -159,15 +35,18 @@ SAMPLE_RATE = 44_100
 
 def _tension_curve(progress: np.ndarray, tension: float) -> np.ndarray:
     """Map 0..1 progress to a normalized logarithmic curve"""
+    progress = np.asarray(progress, dtype=np.float32)
     progress = np.clip(progress, 0, 1)
     if tension > 0:
         curvature = 10 ** (2 * tension) - 1
-        return np.log1p(curvature * progress) / np.log1p(curvature)
+        return (np.log1p(curvature * progress) / np.log1p(curvature)).astype(
+            np.float32, copy=False
+        )
     if tension < 0:
         curvature = 10 ** (-2 * tension) - 1
         return 1 - (
             np.log1p(curvature * (1 - progress)) / np.log1p(curvature)
-        )
+        ).astype(np.float32, copy=False)
     return progress
 
 
@@ -186,22 +65,24 @@ ISOPHONIC_CURVE = {
 
 class WaveTables:
     def _phase(samples, frequency):
-        frequencies = np.asarray(frequency)
+        frequencies = np.asarray(frequency, dtype=np.float32)
         if frequencies.ndim == 0:
-            t = np.linspace(0, samples / SAMPLE_RATE, samples, endpoint=False)
-            return 2 * np.pi * frequencies * t
+            t = np.linspace(
+                0, samples / SAMPLE_RATE, samples, endpoint=False, dtype=np.float32
+            )
+            return (2 * np.pi * frequencies * t).astype(np.float32, copy=False)
         if frequencies.ndim != 1:
             raise ValueError("frequency must be a scalar or a one-dimensional array")
         if len(frequencies) != samples:
             raise ValueError("frequency array must have one value per sample")
 
-        phase = np.zeros(samples)
+        phase = np.zeros(samples, dtype=np.float32)
         if samples > 1:
             phase[1:] = np.cumsum(frequencies[:-1])
-        return 2 * np.pi * phase / SAMPLE_RATE
+        return (2 * np.pi * phase / SAMPLE_RATE).astype(np.float32, copy=False)
 
     def _stretch_values(samples, stretch):
-        values = np.asarray(stretch)
+        values = np.asarray(stretch, dtype=np.float32)
         if values.ndim > 1 or (values.ndim == 1 and len(values) != samples):
             raise ValueError("stretch must be a scalar or have one value per sample")
         if not np.all(np.isfinite(values)) or np.any(values < 0):
@@ -209,19 +90,19 @@ class WaveTables:
         return values
 
     def _stretched_harmonics(samples, frequency, amplitude, stretch, waveform):
-        frequencies = np.asarray(frequency)
+        frequencies = np.asarray(frequency, dtype=np.float32)
         if frequencies.ndim > 1 or (
             frequencies.ndim == 1 and len(frequencies) != samples
         ):
             raise ValueError("frequency must be a scalar or have one value per sample")
         if samples == 0:
-            return np.zeros(0)
+            return np.zeros(0, dtype=np.float32)
 
         max_frequency = np.max(np.abs(frequencies))
         if max_frequency == 0:
-            return np.zeros(samples)
+            return np.zeros(samples, dtype=np.float32)
 
-        result = np.zeros(samples)
+        result = np.zeros(samples, dtype=np.float32)
         nyquist = SAMPLE_RATE / 2
         waveform = str(waveform).lower()
         harmonic_limit = min(256, int(nyquist / max_frequency))
@@ -250,15 +131,16 @@ class WaveTables:
         peak = np.max(np.abs(result))
         if peak > 0:
             result = result * (amplitude / peak)
-        return result
+        return result.astype(np.float32, copy=False)
 
     def silence(samples):
-        return np.zeros((samples, 2))
+        return np.zeros((samples, 2), dtype=np.float32)
 
     def noise(samples, amplitude=1.0):
         rng = np.random.default_rng()
-        data = rng.normal(0.0, amplitude, size=samples)
-        return data
+        return rng.standard_normal(
+            size=samples, dtype=np.float32
+        ) * np.float32(amplitude)
 
     def vinyl(samples, db=-18):
         data = WaveTables.sample("vinyl.ogg")
@@ -266,10 +148,12 @@ class WaveTables:
             return np.zeros((0, data.shape[1]), dtype=data.dtype)
         if len(data) < samples:
             data = np.tile(data, (int(np.ceil(samples / len(data))), 1))
-        return data[:samples] * (10 ** (db / 20))
+        return (data[:samples] * (10 ** (db / 20))).astype(np.float32, copy=False)
 
     def sine(samples, frequency=440, amplitude=1.0):
-        return np.sin(WaveTables._phase(samples, frequency)) * amplitude
+        return (np.sin(WaveTables._phase(samples, frequency)) * amplitude).astype(
+            np.float32, copy=False
+        )
 
     def square(samples, frequency=440, amplitude=1.0, stretch=0.0):
         stretch = WaveTables._stretch_values(samples, stretch)
@@ -277,7 +161,9 @@ class WaveTables:
             return WaveTables._stretched_harmonics(
                 samples, frequency, amplitude, stretch, "square"
             )
-        return np.sign(np.sin(WaveTables._phase(samples, frequency))) * amplitude
+        return (
+            np.sign(np.sin(WaveTables._phase(samples, frequency))) * amplitude
+        ).astype(np.float32, copy=False)
 
     def sawtooth(samples, frequency=440, amplitude=1.0, stretch=0.0):
         stretch = WaveTables._stretch_values(samples, stretch)
@@ -286,8 +172,9 @@ class WaveTables:
                 samples, frequency, amplitude, stretch, "sawtooth"
             )
         phase = WaveTables._phase(samples, frequency)
-        return (2 * (phase / (2 * np.pi) - np.floor(0.5 + phase / (2 * np.pi)))) * amplitude
-
+        return (
+            2 * (phase / (2 * np.pi) - np.floor(0.5 + phase / (2 * np.pi)))
+        ).astype(np.float32, copy=False) * np.float32(amplitude)
 
     def triangle(samples, frequency=440, amplitude=1.0, stretch=0.0):
         stretch = WaveTables._stretch_values(samples, stretch)
@@ -296,7 +183,11 @@ class WaveTables:
                 samples, frequency, amplitude, stretch, "triangle"
             )
         phase = WaveTables._phase(samples, frequency)
-        return (2 * np.abs(2 * (phase / (2 * np.pi) - np.floor(0.5 + phase / (2 * np.pi)))) - 1) * amplitude
+        return (
+            2 * np.abs(
+                2 * (phase / (2 * np.pi) - np.floor(0.5 + phase / (2 * np.pi)))
+            ) - 1
+        ).astype(np.float32, copy=False) * np.float32(amplitude)
 
     def sample(path):
         data, samplerate = sf.read(path, dtype="float32", always_2d=True)
@@ -304,7 +195,7 @@ class WaveTables:
             divisor = np.gcd(samplerate, SAMPLE_RATE)
             data = resample_poly(
                 data, SAMPLE_RATE // divisor, samplerate // divisor, axis=0
-            )
+            ).astype(np.float32, copy=False)
         if data.shape[1] == 1:
             data = np.repeat(data, 2, axis=1)
         elif data.shape[1] > 2:
@@ -379,33 +270,33 @@ class Envelopes:
             raise ValueError("SAMPLE_RATE must be a positive integer")
 
         segments = [
-            np.zeros(int(round(delay * SAMPLE_RATE)), dtype=np.float64)
+            np.zeros(int(round(delay * SAMPLE_RATE)), dtype=np.float32)
         ]
 
         attack_count = int(round(attack * SAMPLE_RATE))
         if attack_count:
-            progress = np.arange(attack_count, dtype=np.float64) / attack_count
+            progress = np.arange(attack_count, dtype=np.float32) / attack_count
             segments.append(_tension_curve(progress, attack_tension))
 
         hold_count = int(round(hold * SAMPLE_RATE))
         if hold_count:
-            segments.append(np.ones(hold_count, dtype=np.float64))
+            segments.append(np.ones(hold_count, dtype=np.float32))
 
         decay_count = int(round(decay * SAMPLE_RATE))
         if decay_count:
-            progress = np.arange(decay_count, dtype=np.float64) / decay_count
+            progress = np.arange(decay_count, dtype=np.float32) / decay_count
             curve = _tension_curve(progress, decay_tension)
             segments.append(1 + (sustain_level - 1) * curve)
 
         sustain_count = int(round(sustain * SAMPLE_RATE))
         if sustain_count:
             segments.append(
-                np.full(sustain_count, sustain_level, dtype=np.float64)
+                np.full(sustain_count, sustain_level, dtype=np.float32)
             )
 
         release_count = int(round(release * SAMPLE_RATE))
         if release_count:
-            progress = np.arange(release_count, dtype=np.float64) / release_count
+            progress = np.arange(release_count, dtype=np.float32) / release_count
             curve = _tension_curve(progress, release_tension)
             segments.append(sustain_level * (1 - curve))
 
@@ -414,7 +305,6 @@ class Envelopes:
         envelope = np.concatenate(segments)
         envelope[-1] = 0
         return envelope.astype(np.float32)
-
 
 
 class Audio_Effects:
@@ -427,13 +317,14 @@ class Audio_Effects:
 
         def drive(audio_input: np.ndarray, gain_dbs=1.0, normalize=False) -> np.ndarray:
             """Use the hyperbolic tangent to distort the audio signal"""
+            audio_input = np.asarray(audio_input, dtype=np.float32)
             audio_output = np.tanh(
                 audio_input * 
                 Audio_Effects.Audio_Analysis.dbs_to_float(gain_dbs)
                 )
             if normalize:
                 audio_output /= np.max(np.abs(audio_output))
-            return audio_output
+            return audio_output.astype(np.float32, copy=False)
 
         def bit_crush(
             audio_input: np.ndarray,
@@ -447,7 +338,7 @@ class Audio_Effects:
             value per audio frame. ``sample_rate_reduction=4`` captures a new
             frame every four input frames while preserving the input length
             """
-            audio = np.asarray(audio_input)
+            audio = np.asarray(audio_input, dtype=np.float32)
             if audio.ndim not in (1, 2):
                 raise ValueError("audio_input must be mono or have shape (frames, channels)")
 
@@ -457,7 +348,7 @@ class Audio_Effects:
                 name, value, minimum, maximum=None, nearest_even=False
             ):
                 try:
-                    values = np.asarray(value, dtype=float)
+                    values = np.asarray(value, dtype=np.float32)
                 except (TypeError, ValueError) as exc:
                     raise ValueError(f"{name} must contain numeric values") from exc
                 if values.ndim > 1 or (
@@ -484,7 +375,7 @@ class Audio_Effects:
             )
 
             if np.all(depths >= 32) and np.all(reduction == 1):
-                return audio_input
+                return audio
 
             depth_scale = np.exp2(np.minimum(depths, 32) - 1) - 1
             if audio.ndim == 2:
@@ -500,7 +391,7 @@ class Audio_Effects:
                 quantized,
             )
 
-            held_audio = np.empty_like(quantized, dtype=np.result_type(quantized, float))
+            held_audio = np.empty_like(quantized, dtype=np.float32)
             phase = 1.0
             held_frame = None
             for frame in range(frame_count):
@@ -512,8 +403,9 @@ class Audio_Effects:
 
             if audio.ndim == 2:
                 wet_mix = wet_mix[:, np.newaxis]
-            return wet_mix * held_audio + (1 - wet_mix) * audio
-
+            return (wet_mix * held_audio + (1 - wet_mix) * audio).astype(
+                np.float32, copy=False
+            )
 
         @jit(nopython=True, cache=True, parallel=True)
         def _triode12ax7_solve_plate_voltage(
@@ -549,40 +441,27 @@ class Audio_Effects:
 
         def valve_distortion(audio: np.ndarray, gain_db=20,
                              normalize=False, high_pass_filter=True) -> np.ndarray:
-            audio = np.asarray(audio)
-            output_dtype = (
-                audio.dtype
-                if audio.dtype in (np.dtype(np.float32), np.dtype(np.float64))
-                else np.dtype(np.float64)
-            )
-            if audio.dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
-                audio = audio.astype(np.float64)
+            audio = np.asarray(audio, dtype=np.float32)
             if (
                 audio.ndim not in (1, 2)
                 or audio.shape[0] == 0
                 or (audio.ndim == 2 and audio.shape[1] not in (1, 2))
             ):
                 raise ValueError("Audio must be a non-empty mono or stereo array")
-            if not np.all(np.isfinite(audio)):
-                raise ValueError("Audio must contain only finite values")
-            if not np.isfinite(gain_db):
-                raise ValueError("gain_db must be a finite value")
 
             drive_gain = Audio_Effects.Audio_Analysis.dbs_to_float(gain_db)
-            if not np.isfinite(drive_gain):
-                raise ValueError("gain_db produces a non-finite gain")
 
             oversampling = 4
             audio = resample_poly(audio, oversampling, 1, axis=0)
 
-            # Single common-cathode 12AX7 stage; circuit values are explicit
+            # Single common-cathode 12AX7 stage, circuit values are explicit
             supply_voltage = 250.0
             plate_load = 100_000.0
             grid_bias = -1.5
             mu, exponent, kg1, kp, kvb = 100.0, 1.4, 1060.0, 600.0, 300.0
 
             quiescent_plate = Audio_Effects.Gain_Distortion_Dynamics._triode12ax7_solve_plate_voltage(
-                np.asarray([grid_bias], dtype=np.float64),
+                np.asarray([grid_bias], dtype=np.float32),
                 supply_voltage, plate_load, mu, exponent, kg1, kp, kvb
             )[0]
             grid_voltage = grid_bias + audio * drive_gain
@@ -599,6 +478,8 @@ class Audio_Effects:
 
             if high_pass_filter:
                 b, a = butter(1, 27.5, btype="highpass", fs=SAMPLE_RATE)
+                b = b.astype(np.float32)
+                a = a.astype(np.float32)
                 zi = lfilter_zi(b, a).reshape(
                     (-1,) + (1,) * (distorted_audio.ndim - 1)
                 )
@@ -612,8 +493,7 @@ class Audio_Effects:
                 if peak > 0:
                     distorted_audio /= peak
 
-            return distorted_audio.astype(output_dtype, copy=False)
-
+            return distorted_audio.astype(np.float32, copy=False)
 
         @jit(nopython=True, cache=True)
         def _t4_cell_and_tube_dsp(audio, peak_reduction_knob, gain_knob, ratio):
@@ -706,7 +586,6 @@ class Audio_Effects:
 
             return output
 
-
         def compressor_la2a(audio, peak_reduction=50.0, gain=50.0, ratio=5):
             """
             LA-2A style compression processor
@@ -718,16 +597,16 @@ class Audio_Effects:
             """
 
             # Apply the compiled DSP stage
+            audio = np.asarray(audio, dtype=np.float32)
             audio_procesado = Audio_Effects.Gain_Distortion_Dynamics._t4_cell_and_tube_dsp(
                 audio, peak_reduction, gain, ratio)
 
-            return audio_procesado
-
+            return audio_procesado.astype(np.float32, copy=False)
 
         @jit(nopython=True, cache=True)
-        def _1176_analog_core(audio_in, input_gain_lin, output_gain_lin, att_coef, rel_coef, ratio, thresh_db):
+        def _br11ck67_analog_core(audio_in, input_gain_lin, output_gain_lin, att_coef, rel_coef, ratio, thresh_db):
             """
-            1176 core processing sample by sample
+            br11ck67 core processing sample by sample
             Includes feedback loop, FET asymmetry, and transformer distortion (hysteresis)
             """
             out = np.zeros_like(audio_in)
@@ -787,13 +666,13 @@ class Audio_Effects:
                             attack_ms=0.2, release_ms=300.0, ratio=4.0,
                             all_buttons_in=False, oversampling=4):
             """
-            Main 1176 controller with anti-aliasing oversampling
+            Main FET br11ck67_analog controller with anti-aliasing oversampling
 
             Parameters:
             - audio_in: NumPy array (mono or processed channel by channel)
             - oversampling: 1 (Off), 2, 4, or 8. (4x recommended for analog distortion without aliasing)
             """
-            audio_in = np.asarray(audio_in)
+            audio_in = np.asarray(audio_in, dtype=np.float32)
             mono_input = audio_in.ndim == 1
             if mono_input:
                 audio_in = audio_in[:, np.newaxis]
@@ -801,8 +680,6 @@ class Audio_Effects:
                 raise ValueError("Audio must be mono or stereo")
             if audio_in.shape[0] == 0 or audio_in.shape[1] not in (1, 2):
                 raise ValueError("Audio must have samples and one or two channels")
-            if audio_in.dtype not in (np.dtype(np.float32), np.dtype(np.float64)):
-                audio_in = audio_in.astype(np.float64)
             if not np.all(np.isfinite(audio_in)):
                 raise ValueError("Audio must contain only finite values")
             audio_in = np.ascontiguousarray(audio_in)
@@ -832,7 +709,7 @@ class Audio_Effects:
             rel_coef = 1.0 - np.exp(-1.0 / (fs_up * (release_ms / 1000.0)))
 
             # 3. C-speed processing
-            processed_up = Audio_Effects.Gain_Distortion_Dynamics._1176_analog_core(
+            processed_up = Audio_Effects.Gain_Distortion_Dynamics._br11ck67_analog_core(
                 np.ascontiguousarray(audio_up),
                 input_gain_lin, output_gain_lin,
                                             att_coef, rel_coef, ratio, threshold_db)
@@ -845,10 +722,12 @@ class Audio_Effects:
                 
             # Strictly limit the output to [-1.0, 1.0] to avoid digital clipping during export
             processed = np.clip(processed, -1.0, 1.0)
+            processed = processed.astype(np.float32, copy=False)
             return processed[:, 0] if mono_input else processed
 
     class Stereo_Expansion:
         def pan_sound(sound, pan_level: float):
+            sound = np.asarray(sound, dtype=np.float32)
             # Ensure the sound has 2 channels
             if sound.shape[1] != 2:
                 raise ValueError("Sound must have 2 channels (stereo)")
@@ -865,6 +744,7 @@ class Audio_Effects:
 
         def to_stereo(input_audio):
             # Ensure the audio is stereo, if mono duplicate the channel
+            input_audio = np.asarray(input_audio, dtype=np.float32)
             if input_audio.ndim == 1:
                 input_audio = np.column_stack((input_audio, input_audio))
             return input_audio
@@ -874,9 +754,10 @@ class Audio_Effects:
             Converts stereo audio to mono by averaging both channels
             If input is already mono, returns it as is
             """
+            input_audio = np.asarray(input_audio, dtype=np.float32)
             if input_audio.ndim == 1:
-                return input_audio  # Already mono
-            return np.mean(input_audio, axis=1)  # Average L and R channels
+                return input_audio # Already mono
+            return np.mean(input_audio, axis=1) # Average L and R channels
 
         def only_side(input_audio):
             """
@@ -907,56 +788,63 @@ class Audio_Effects:
                 return input_audio  # Return mono as is
             return input_audio[:, 1]  # Return right channel
 
-
-        def reverb(input_audio, room_size=.92, wet_level=.45, dry_level=.55, width=1.5):
+        def reverb(input_audio, room_size=.92, wet_level=.45, dry_level=.55, width=1.5, tail_db=-60):
             """
-            Process stereo audio with reverb (Schroeder/Moorer algorithm)
-            Dynamically calculates the reverb tail to reach -80dB
+            Process stereo audio with reverb using the Schroeder/Moorer algorithm
+            Calculates the reverb tail length using the target level in dB
+
+            Args:
+                tail_db: Target level for the reverb tail in dB, defaults to -80
             """
 
-            # 1. TAIL CALCULATION (RT80)
-            # Base delay definitions (in samples)
+            # 1, tail calculation
+            # Base delay definitions in samples
             comb_delays = [1557, 1617, 1491, 1422]
             
             # Calculate the longest possible delay
-            # The right channel has an extra 'spread', so the maximum effective delay is:
-            # Max Base Delay + (20 * width)
+            # The right channel has extra spread, so the maximum effective delay is the maximum base delay plus 20 times the width
             max_delay_base = max(comb_delays)
             max_effective_delay = max_delay_base + (20 * width)
 
-            # Safety: room_size cannot be >= 1.0 (infinite feedback)
+            # Room size cannot be greater than or equal to 1 because that creates infinite feedback
             if room_size >= 1:
                 raise AURA_ERROR("Room_size cannot be >= 1.0 (infinite feedback)")
             safe_room_size = min(room_size, 0.999)
 
-            # RT80 FORMULA: N = (-4 * delay) / log10(gain)
-            # Calculate how many samples it takes for the signal to drop to -80dB (0.0001 amplitude)
-            rt80_samples = int(abs((-4 * max_effective_delay) / np.log10(safe_room_size)))
+            if tail_db > 0:
+                raise AURA_ERROR("tail_db must be less than or equal to 0")
+
+            # Calculate samples until the tail reaches the requested dB level
+            tail_samples = int(
+                abs((tail_db / 20 * max_effective_delay) / np.log10(safe_room_size))
+            )
             
-            # Add a safety buffer (20%) to compensate for All-Pass filter diffusion
-            padding_samples = int(rt80_samples * 1.2)
+            # Add a 20 percent safety buffer to compensate for All-Pass filter diffusion
+            padding_samples = int(tail_samples * 1.2)
 
-            # 2. AUDIO PREPARATION
+            # 2, audio preparation
 
-            # Convert to stereo (using the external library)
+            # Convert to stereo using the external library
             input_audio = Audio_Effects.Stereo_Expansion.to_stereo(input_audio)
             
-            # Generate silence using the dynamic calculation
-            # Note: WaveTables.silence should return a properly shaped array of zeros
+            # Generate silence using the calculated tail length
+            # WaveTables.silence returns an array of zeros
             silence = WaveTables.silence(padding_samples) 
             
-            # Ensure silence has 2 columns if input is stereo (N, 2)
+            # Ensure silence has two columns if input is stereo
             if input_audio.ndim == 2 and silence.ndim == 1:
                 silence = np.column_stack((silence, silence))
                 
-            input_audio = np.vstack((input_audio, silence))
+            input_audio = np.vstack((input_audio, silence)).astype(
+                np.float32, copy=False
+            )
 
-            # 3. DSP PROCESSING
+            # 3, DSP processing
 
             allpass_delays = [225, 341]
             allpass_gain = 0.7
 
-            # Ensure the audio is stereo for processing (N, 2)
+            # Ensure the audio is stereo for processing
             if input_audio.ndim == 1:
                 input_audio = np.column_stack((input_audio, input_audio))
 
@@ -967,35 +855,36 @@ class Audio_Effects:
             outputs = [output_l, output_r]
 
             for i, channel in enumerate(channels):
-                # A. Comb Filter Stage (Parallel)
+                # A, parallel comb filter stage
                 comb_out = np.zeros_like(channel)
                 
-                # If it's the right channel (i=1), apply the spread
+                # Apply the spread to the right channel
                 spread_factor = 0 if i == 0 else (20 * width)
 
                 for delay in comb_delays:
                     eff_delay = int(delay + spread_factor)
-                    # Call to the external library
+                    # Apply the comb filter
                     comb_out += Audio_Effects.Filters_Equalization \
                         .comb_filter(channel, eff_delay, safe_room_size)
 
-                # B. All-Pass Filter Stage (Series)
+                # B, series all-pass filter stage
                 ap_out = comb_out
                 for delay in allpass_delays:
                     eff_delay = int(delay + spread_factor)
-                    # Call to the external library
+                    # Apply the all-pass filter
                     ap_out = Audio_Effects.Filters_Equalization \
                         .allpass_filter(ap_out, eff_delay, allpass_gain)
 
                 outputs[i] = ap_out
             
-            # 4. FINAL MIX
+            # 4, final mix
             
-            # Scale the wet signal to avoid clipping when summing the combs
-            # (The 0.1 factor is correct to avoid saturation after summing 4 filters)
+            # Scale the wet signal to avoid clipping when summing the comb filters
             wet_signal = np.column_stack((outputs[0], outputs[1])) * 0.1
 
-            return (input_audio * dry_level) + (wet_signal * wet_level)
+            return (
+                (input_audio * dry_level) + (wet_signal * wet_level)
+            ).astype(np.float32, copy=False)
 
         def stereo_expander(input_audio, mix=.5, start_in_hz=180):
             """
@@ -1003,6 +892,8 @@ class Audio_Effects:
 
             ``mix`` blends the expanded signal with the original mono signal
             """
+
+            input_audio = np.asarray(input_audio, dtype=np.float32)
             if input_audio.ndim != 1:
                 raise ValueError("input_audio must be a mono one-dimensional array")
 
@@ -1010,18 +901,21 @@ class Audio_Effects:
             if input_audio.size == 0 or mix == 0:
                 return stereo_dry
 
-            mid_spectrum = np.fft.rfft(input_audio)
-            frequencies = np.fft.rfftfreq(len(input_audio), d=1 / SAMPLE_RATE)
+            mid_spectrum = fft_rfft(input_audio)
+            frequencies = (
+                np.arange(len(mid_spectrum), dtype=np.float32)
+                * (SAMPLE_RATE / len(input_audio))
+            )
 
             band_count = 32
             band_centers = np.geomspace(
-                start_in_hz, SAMPLE_RATE / 2, num=band_count
+                start_in_hz, SAMPLE_RATE / 2, num=band_count, dtype=np.float32
             )
             band_position = np.interp(
                 np.log(np.maximum(frequencies, start_in_hz)),
                 np.log(band_centers),
                 np.arange(band_count),
-            )
+            ).astype(np.float32)
             lower_band = np.floor(band_position).astype(int)
             upper_band = np.minimum(lower_band + 1, band_count - 1)
             upper_weight = band_position - lower_band
@@ -1041,11 +935,85 @@ class Audio_Effects:
 
             expanded = np.column_stack(
                 (
-                    np.fft.irfft(left_spectrum, n=len(input_audio)),
-                    np.fft.irfft(right_spectrum, n=len(input_audio)),
+                    fft_irfft(left_spectrum, n=len(input_audio)),
+                    fft_irfft(right_spectrum, n=len(input_audio)),
                 )
             )
-            return stereo_dry * (1 - mix) + expanded * mix
+            return (stereo_dry * (1 - mix) + expanded * mix).astype(
+                np.float32, copy=False
+            )
+
+        def delay(input_audio, input_gain=-6, times=(1.5, 1.5, 2, 1, 2), pan=0.12, ping_pong=True, offset=0):
+            """
+            Add a series of stereo echoes to the original audio
+
+            Each value in times is the interval in seconds before the next echo,
+            input_gain sets the gain applied to each successive echo in dB,
+            pan sets the echo balance from full left at -1 to full right at 1,
+            ping_pong alternates the pan direction between successive echoes,
+            offset delays the right channel when positive or the left when negative
+            """
+
+            input_audio = Audio_Effects.Stereo_Expansion.to_stereo(input_audio)
+            if input_audio.ndim != 2 or input_audio.shape[1] != 2:
+                raise ValueError("input_audio must be mono or stereo audio")
+
+            intervals = np.atleast_1d(np.asarray(times, dtype=np.float32))
+            input_gain, pan, offset = np.asarray(
+                (input_gain, pan, offset), dtype=np.float32
+            )
+
+            if intervals.ndim != 1 or not np.all(np.isfinite(intervals)):
+                raise ValueError("times must be a one-dimensional list of finite values")
+            if np.any(intervals < 0):
+                raise ValueError("delay intervals in times must be non-negative")
+            if not np.all(np.isfinite((input_gain, pan, offset))):
+                raise ValueError("input_gain, pan, and offset must be finite")
+            if not -1 <= pan <= 1:
+                raise AURA_ERROR("pan must be between -1 and 1")
+
+            if intervals.size == 0 or input_audio.size == 0:
+                return input_audio.astype(np.float32, copy=False)
+
+            input_audio = input_audio.astype(np.float32, copy=False)
+            interval_samples = np.rint(
+                intervals * SAMPLE_RATE
+            ).astype(np.int64)
+            echo_starts = np.cumsum(interval_samples)
+            offset_samples = int(
+                np.rint(np.abs(offset) * SAMPLE_RATE)
+            )
+            offset_channel = 1 if offset > 0 else 0
+            output_samples = max(
+                len(input_audio),
+                max(
+                    int(start) + len(input_audio)
+                    + (offset_samples if offset else 0)
+                    for start in echo_starts
+                ),
+            )
+            output = np.zeros((output_samples, 2), dtype=np.float32)
+            output[:len(input_audio)] += input_audio
+            gain_factor = np.float32(
+                Audio_Effects.Audio_Analysis.dbs_to_float(input_gain)
+            )
+
+            # Add each echo at its cumulative delay, applying gain and pan per repeat
+            for index, start in enumerate(echo_starts):
+                echo_pan = pan * (-1 if ping_pong and index % 2 else 1)
+                echo = Audio_Effects.Stereo_Expansion.pan_sound(
+                    input_audio, echo_pan
+                ) * np.float32(gain_factor ** (index + 1))
+                start = int(start)
+                for channel in range(2):
+                    channel_start = start
+                    if offset and channel == offset_channel:
+                        channel_start += offset_samples
+                    output[
+                        channel_start:channel_start + len(echo), channel
+                    ] += echo[:, channel]
+
+            return output
 
     class Tuning_Stretching:
         def vinyl_stretching(data, factor):
@@ -1054,45 +1022,59 @@ class Audio_Effects:
             return Audio_Effects.Tuning_Stretching.resampling(data, int(factor * SAMPLE_RATE), SAMPLE_RATE)
 
         def resampling(audio_data, sample_rate_old, new_sample_rate):
+            audio_data = np.asarray(audio_data, dtype=np.float32)
             # Compute the number of samples for the new sample rate
             ratio = new_sample_rate / sample_rate_old
             new_num_samples = int(len(audio_data) * ratio)
 
-            # Create original and new indices
-            original_indices = np.arange(len(audio_data))
-            new_indices = np.linspace(0, len(audio_data) - 1, new_num_samples)
+            if not new_num_samples or not len(audio_data):
+                return np.zeros(
+                    (new_num_samples, *audio_data.shape[1:]),
+                    dtype=np.float32,
+                )
 
-            # Interpolate to obtain the resampled audio
-            if audio_data.ndim == 1:  # Mono audio
-                resampled_audio = np.interp(new_indices, original_indices, audio_data)
-            else:  # Stereo or multichannel audio
-                resampled_audio = np.array([
-                    np.interp(new_indices, original_indices, audio_data[:, i])
-                    for i in range(audio_data.shape[1])]).T
+            # Create float32 positions and interpolate without widening audio arrays
+            positions = np.linspace(
+                0, len(audio_data) - 1, new_num_samples, dtype=np.float32
+            )
+            lower_indices = np.floor(positions).astype(np.intp)
+            upper_indices = np.minimum(lower_indices + 1, len(audio_data) - 1)
+            fraction = positions - lower_indices.astype(np.float32)
 
-            return resampled_audio
+            # Interpolate without widening audio arrays
+            if audio_data.ndim > 1:
+                fraction = fraction.reshape(
+                    (-1,) + (1,) * (audio_data.ndim - 1)
+                )
+            return (
+                audio_data[lower_indices]
+                + (audio_data[upper_indices] - audio_data[lower_indices])
+                * fraction
+            ).astype(np.float32, copy=False)
 
     class Filters_Equalization:
         def comb_filter(signal, delay_samples, feedback):
             """Creates a comb filter (Comb Filter)"""
-            b = np.zeros(delay_samples + 1)
+            signal = np.asarray(signal, dtype=np.float32)
+            b = np.zeros(delay_samples + 1, dtype=np.float32)
             b[delay_samples] = 1
-            a = np.zeros(delay_samples + 1)
+            a = np.zeros(delay_samples + 1, dtype=np.float32)
             a[0] = 1
             a[delay_samples] = -feedback
             return lfilter(b, a, signal)
 
         def allpass_filter(signal, delay_samples, gain):
             """Creates an all-pass filter (All-Pass Filter) for diffusion"""
-            b = np.zeros(delay_samples + 1)
+            signal = np.asarray(signal, dtype=np.float32)
+            b = np.zeros(delay_samples + 1, dtype=np.float32)
             b[0] = -gain
             b[delay_samples] = 1
-            a = np.zeros(delay_samples + 1)
+            a = np.zeros(delay_samples + 1, dtype=np.float32)
             a[0] = 1
             a[delay_samples] = -gain
             return lfilter(b, a, signal)
 
-        def calculate_peaking_coeffs(fc, Q, dBgain):
+        def _calculate_peaking_coeffs(fc, Q, dBgain):
             """
             Calculate coefficients for a Peaking EQ filter according to
             Robert Bristow-Johnson's 'Audio EQ Cookbook' formulas
@@ -1109,9 +1091,12 @@ class Audio_Effects:
             a1 = -2 * cos_w0
             a2 = 1 - alpha / A
 
-            return b0/a0, b1/a0, b2/a0, a1/a0, a2/a0
+            return tuple(
+                np.float32(value)
+                for value in (b0/a0, b1/a0, b2/a0, a1/a0, a2/a0)
+            )
 
-        def time_varying_eq(input_signal, freq_array, q_array, gain_array):
+        def parametricEq(input_signal, freq_array, q_array, gain_array):
             """
             Applies EQ where parameters change for each sample
 
@@ -1124,7 +1109,8 @@ class Audio_Effects:
             Returns:
                 Processed audio signal
             """
-            output_signal = np.zeros_like(input_signal)
+            input_signal = np.asarray(input_signal, dtype=np.float32)
+            output_signal = np.zeros_like(input_signal, dtype=np.float32)
 
             # Buffers to store previous states
             x1, x2 = 0.0, 0.0
@@ -1139,7 +1125,7 @@ class Audio_Effects:
                 gain = gain_array[n]
                 
                 # Recalculate coefficients
-                b0, b1, b2, a1, a2 = Audio_Effects.Filters_Equalization.calculate_peaking_coeffs(fc, Q, gain)
+                b0, b1, b2, a1, a2 = Audio_Effects.Filters_Equalization._calculate_peaking_coeffs(fc, Q, gain)
                 
                 # Apply difference equation (Direct Form I)
                 y0 = b0*x0 + b1*x1 + b2*x2 - a1*y1 - a2*y2
@@ -1151,9 +1137,9 @@ class Audio_Effects:
 
             return output_signal
 
-
     class Special:
         def normalize(audio_signal):
+            audio_signal = np.asarray(audio_signal, dtype=np.float32)
             max_val = np.max(np.abs(audio_signal))
             if max_val == 0:
                 return audio_signal
@@ -1161,11 +1147,11 @@ class Audio_Effects:
 
         def invert_phase(audio_signal):
             """Invert the phase of the signal (mono or multichannel)"""
-            return -np.asarray(audio_signal)
+            return -np.asarray(audio_signal, dtype=np.float32)
 
         def reverse(audio_signal):
             """Reverse the audio in time without separating its channels"""
-            return np.asarray(audio_signal)[::-1].copy()
+            return np.asarray(audio_signal, dtype=np.float32)[::-1].copy()
 
         def fade_in(audio_signal, start=0, end=None):
             """Apply a linear fade-in between the start and end indices, inclusive"""
@@ -1176,7 +1162,7 @@ class Audio_Effects:
             return Audio_Effects.Special._apply_fade(audio_signal, start, end, False)
 
         def _apply_fade(audio_signal, start, end, is_fade_in):
-            audio_signal = np.asarray(audio_signal)
+            audio_signal = np.asarray(audio_signal, dtype=np.float32)
             is_stereo = audio_signal.ndim == 2 and audio_signal.shape[1] == 2
             if end is None:
                 end = len(audio_signal) - 1
@@ -1184,7 +1170,9 @@ class Audio_Effects:
                 raise ValueError("start and end must be valid signal indices")
 
             result = audio_signal.copy()
-            gain = np.linspace(0.0, 1.0, end - start + 1)
+            gain = np.linspace(
+                0.0, 1.0, end - start + 1, dtype=np.float32
+            )
             if not is_fade_in:
                 gain = gain[::-1]
             if result.ndim > 1:
@@ -1219,15 +1207,15 @@ class AURA_ERROR(Exception):
          else f"{self.message} ({self.advice})")
 
 
-
 #ALPHABET = tuple("".join(chr(i) for i in range(0x3400, 0x3400 + 2048)))
 
 ALPHABET = tuple(dict.fromkeys("""
 
-0123456789aàáâãäåăæbcçdðeèéêëfghiìíîïĳjklmnñoòóôõöøœpqrsšșt
+0123456789
+aàáâãäåăæbcçdðeèéêëfghiìíîïĳjklmnñoòóôõöøœpqrsšșt
 țuùúûüvwxyýÿzþßAÀÁÂÃÄÅÆBCÇDÐEÈÉÊËFGHIÌÍÎÏĲJKLMNÑOÒÓÔÕÖØŒPQR
-SŠȘTȚUÙÚÛÜVWXYÝZÞẞ!"#$%&'()*+,-./:;<=>?@[]^_`{|}~¡¢£¤¥§©«®°
-±²³µ¶·»¿×÷
+SŠȘTȚUÙÚÛÜVWXYÝZÞẞ!#$%&'*+,-./<>?@[]^_`|~¡¢£¤¥§©«®°
+±²³µ¶·»¿×÷=
 
 """.replace("\n", "")))
 
@@ -1257,6 +1245,7 @@ def encode_baseX(data_bytes: bytes) -> str:
             break
             
     return (ALPHABET[0] * pad_count) + encoded
+
 
 def decode_baseX(encoded_str: str) -> bytes:
     if not encoded_str:
@@ -1359,7 +1348,6 @@ def _align_preset_arrays(parsed, variables):
     }
 
 
-
 class Aura:
     def __init__(self, preset: bytes | dict | str, cache=True):
         self.last_note = None
@@ -1378,7 +1366,9 @@ class Aura:
                 preset_json = zlib.decompress(preset_bytes)
                 preset = json.loads(preset_json.decode())
             except (ValueError, zlib.error, UnicodeDecodeError, json.JSONDecodeError) as exc:
-                raise AURA_ERROR("This preset is corrupt", advice=str(exc)) from exc
+                raise AURA_ERROR(
+                    "This preset is corrupt", advice=str(exc)
+                ) from exc
 
         if isinstance(preset, (list, tuple)) and len(preset) == 1:
             preset = preset[0]
@@ -1415,87 +1405,110 @@ class Aura:
             raise AURA_ERROR("This preset is corrupt: 'out' must be a non-empty list")
 
         self.preset = preset
+        self.version = preset["meta"]["version"]
+        self.name = preset["meta"]["name"]
+        self.description = preset["meta"]["description"]
+        self.author = preset["meta"]["author"]
+        self.category = preset["meta"]["category"]
+        self.tags = preset["meta"]["tags"]
+        self.description = preset["meta"]["description"]
 
 
     def get_note(self, note_hz=261.626, duration=4, velocity=.8, gain_db=-.1) -> np.ndarray:
         """
-        Generate a note from the preset with the specified frequency and duration
+        Render one note by evaluating this preset's audio graph
+
+        The method builds a context containing the requested note properties,
+        evaluates the preset's data nodes (including oscillators and envelopes),
+        applies effects at the node and master levels, and sums the configured
+        outputs into a stereo audio array. If glide is enabled and a previous
+        note was rendered, the pitch can transition from that note according
+        to the preset's portamento settings
 
         Args:
-            note_hz: Fundamental frequency of the note, in Hz
-            duration: Duration of the note, in seconds
-            velocity: Relative intensity of the note (default, 0.8)
-            gain_db: The final gain
+            note_hz: Fundamental frequency of the requested note, in Hz
+            duration: Requested note duration, in seconds, the value and the
+                sample rate determines the number of samples rendered
+            velocity: Relative note intensity made available to preset
+                expressions and nodes, defaults to 0.8
+            gain_db: Per-call output gain in decibels, this is added to the
+                preset's master gain before being applied to the rendered
+                audio
 
         Returns:
-            np.ndarray: Audio array with the generated note, in stereo format (2 channels)
+            Audio array: Rendered stereo audio with shape (samples, 2), preset
+            outputs are converted to stereo and summed, the final array
+            includes node effects, master effects, and the combined output
+            gain
+
+        Raises:
+            AURA_ERROR: If the preset's master settings, data nodes, effects,
+                or outputs are invalid, if a data dependency is missing or
+                circular, or if the duration is too short to produce samples
 
         """
 
-
+        # Read and validate settings used for gain and pitch glide before the cache lookup
         master = self.preset["master"]
         try:
             master_gain_db = float(master["master_gain_db"])
         except (TypeError, ValueError) as exc:
             raise AURA_ERROR("master.master_gain_db must be numeric") from exc
 
+        cache_key = (note_hz, duration, velocity, self.last_note)
+        if self.cache and cache_key in self.arrays_bank:
+            # Cache unscaled rendering so each call can apply its own output gain
+            audio_note = self.arrays_bank[cache_key]
+            if self.preset["master"]["glide"]:
+                self.last_note = note_hz
+            return audio_note * Audio_Effects.Audio_Analysis.dbs_to_float(
+                gain_db + master_gain_db
+            )
+
         try:
             portamento = float(master["portamento"])
             portamento_tension = float(master.get("portamento_tension", 0))
         except (TypeError, ValueError) as exc:
             raise AURA_ERROR(
-                "master.portamento and master.portamento_tension must be numeric"
+                "master.portamento and master.portamento_tension or master.portamento must be numeric"
             ) from exc
         if portamento < 0:
             raise AURA_ERROR("master.portamento must be non-negative")
         if not -1 <= portamento_tension <= 1:
             raise AURA_ERROR("master.portamento_tension must be in [-1, 1]")
 
-        previous_note = self.last_note
-        glide_source = (
-            previous_note
-            if (
-                master["glide"]
-                and portamento > 0
-                and previous_note is not None
-                and previous_note != note_hz
-            )
-            else None
-        )
-        cache_key = (note_hz, duration, velocity, glide_source)
-        if self.cache and cache_key in self.arrays_bank:
-            audio_note = self.arrays_bank[cache_key]
-            self.last_note = note_hz
-            return audio_note * Audio_Effects.Audio_Analysis.dbs_to_float(
-                gain_db + master_gain_db
-            )
 
         note_samples = int(round(duration * SAMPLE_RATE))
         if note_samples <= 0:
             raise AURA_ERROR("duration is too short to produce audio samples")
 
-        pitch_env = np.ones(note_samples, dtype=np.float64)
-        portamento_progress = np.ones(note_samples, dtype=np.float64)
+        pitch_env = np.ones(note_samples, dtype=np.float32)
+        portamento_progress = np.ones(note_samples, dtype=np.float32)
 
-        if master["glide"] and previous_note is not None and portamento > 0:
+        if master["glide"] and self.last_note is not None and portamento > 0:
             transition_samples = min(
                 note_samples, max(1, int(round(portamento * SAMPLE_RATE)))
             )
-            progress = np.linspace(0, 1, transition_samples)
+            progress = np.linspace(
+                0, 1, transition_samples, dtype=np.float32
+            )
             curve = _tension_curve(progress, portamento_tension)
-            initial_ratio = previous_note / note_hz
+            initial_ratio = self.last_note / note_hz
             pitch_env[:transition_samples] = (
                 initial_ratio + (1 - initial_ratio) * curve
             )
             portamento_progress[:transition_samples] = progress
 
         note_number = self.get_note_number(note_hz)
+        # Preset formulas and nodes can refer to these built-in note properties
         context = {
             "note_hz": note_hz,
             "note_number": note_number,
             "octave": note_number / 12,
             "duration": duration,
-            "duration_progress": np.linspace(0, duration, note_samples),
+            "duration_progress": np.linspace(
+                0, duration, note_samples, dtype=np.float32
+            ),
             "velocity": velocity,
             "glide": pitch_env,
             "portamento": portamento_progress,
@@ -1523,14 +1536,17 @@ class Aura:
             "br11ck67_analog": Audio_Effects.Gain_Distortion_Dynamics.br11ck67_analog,
             "reverb": Audio_Effects.Stereo_Expansion.reverb,
             "stereo_expander": Audio_Effects.Stereo_Expansion.stereo_expander,
+            "delay": Audio_Effects.Stereo_Expansion.delay,
             "normalize": Audio_Effects.Special.normalize,
             "invert_phase": Audio_Effects.Special.invert_phase,
             "reverse": Audio_Effects.Special.reverse,
             "fade_in": Audio_Effects.Special.fade_in,
             "fade_out": Audio_Effects.Special.fade_out,
+            "parametricEq": Audio_Effects.Filters_Equalization.parametricEq,
         }
-
+        
         def apply_effects(audio, effects, scope):
+            # Resolve effect parameters through the same preset expression system as node values
             if not isinstance(effects, dict):
                 raise AURA_ERROR(f"{scope} effects must be an object")
             for effect_name, effect_values in effects.items():
@@ -1553,7 +1569,7 @@ class Aura:
                 }
                 if effect_name == "drive" and "gain_db" in parameters:
                     parameters["gain_dbs"] = parameters.pop("gain_db")
-                audio = handler(audio, **parameters)
+                audio = np.asarray(handler(audio, **parameters), dtype=np.float32)
             return audio
 
         def resolve_node(name):
@@ -1568,6 +1584,7 @@ class Aura:
             try:
                 definition = data[name]
                 alias = node_aliases.get(name)
+                # Envelope and oscillator nodes are rendered specially, other nodes are expressions or values
                 if isinstance(definition, dict) and "DAHDSR_envelope" in definition:
                     stages = definition["DAHDSR_envelope"]
                     if not isinstance(stages, dict):
@@ -1670,15 +1687,17 @@ class Aura:
                             stretch = clip_parameter(stretch)
                             frequency = clip_parameter(frequency)
                             if waveform != "noise" and waveform != "silence":
-                                frequency = np.asarray(frequency) * pitch_env[
-                                    :rendered_samples
-                                ]
+                                frequency = np.asarray(
+                                    frequency, dtype=np.float32
+                                ) * pitch_env[:rendered_samples]
                             if waveform == "noise":
                                 result = WaveTables.noise(
                                     rendered_samples, amplitude
                                 )
                             elif waveform == "silence":
-                                result = np.zeros(rendered_samples)
+                                result = np.zeros(
+                                    rendered_samples, dtype=np.float32
+                                )
                             else:
                                 generator = {
                                     "sine": WaveTables.sine,
@@ -1714,19 +1733,21 @@ class Aura:
                     raise AURA_ERROR(
                         f"Preset data node '{name}' returned an invalid array shape"
                     )
+                result = result_values.astype(np.float32, copy=False)
                 if alias is not None:
                     data_bank[alias] = result
                 return result
             finally:
                 resolving.remove(name)
 
+        # Convert each configured output to stereo, then sum outputs with zero-padding
         output_arrays = []
         for output_name in self.preset["out"]:
             if not isinstance(output_name, str):
                 raise AURA_ERROR("Preset output names must be strings")
             output = resolve_node(output_name)
             output = Audio_Effects.Stereo_Expansion.to_stereo(
-                np.asarray(output)
+                np.asarray(output, dtype=np.float32)
             )
             if output.ndim != 2 or output.shape[1] != 2:
                 raise AURA_ERROR(
@@ -1737,22 +1758,23 @@ class Aura:
         output_samples = max(len(output) for output in output_arrays)
         audio_note = np.zeros(
             (output_samples, 2),
-            dtype=np.result_type(*(output.dtype for output in output_arrays), np.float32),
+            dtype=np.float32,
         )
         for output in output_arrays:
             audio_note[:len(output)] += output
 
+        # Master effects operate on the combined signal, gain is applied after caching
         audio_note = apply_effects(
             audio_note, master.get("effects", {}), "master"
         )
 
         if self.cache:
+            self.last_note = note_hz
             self.arrays_bank[cache_key] = audio_note
-        self.last_note = note_hz
+
         return audio_note * Audio_Effects.Audio_Analysis.dbs_to_float(
             gain_db + master_gain_db
         )
-
 
 
     def get_hz_note(self, note_number, tune_reference=440) -> float:
@@ -1763,7 +1785,6 @@ class Aura:
         """
         return tune_reference * 2**((note_number-57) / 12)
 
-
     def get_note_number(self, f) -> float:
         """
         Convert frequency in Hz to note number
@@ -1771,7 +1792,6 @@ class Aura:
         57 = A4 (440 Hz)
         """
         return float(12 * np.log2(f / 440)) + 57
-
 
     @staticmethod
     def _insert_multiplication_operators(expression):
@@ -1785,12 +1805,11 @@ class Aura:
                 result += char
         return result
 
-
     def _preset_value(self, value, data_bank, node_aliases, resolve_node):
         if isinstance(value, (bool, int, float, np.number)):
             return value
         if isinstance(value, (list, tuple, np.ndarray)):
-            return np.asarray(value)
+            return np.asarray(value, dtype=np.float32)
         if not isinstance(value, str):
             raise AURA_ERROR(f"Unsupported preset value type: {type(value).__name__}")
 
@@ -1826,9 +1845,7 @@ class Aura:
             raise AURA_ERROR(f"Invalid formula or syntax '{expression}'") from exc
 
 
-
     rb"""Save the preset in different formats for storage or transmission"""
-
 
     @property
     def get_bin_preset(self):
@@ -1841,7 +1858,6 @@ class Aura:
             preset_json.encode("utf-8"), level=9
             )
 
-
     @property
     def get_SBR_string_preset(self):
         """
@@ -1849,15 +1865,27 @@ class Aura:
         """
 
         max_leng = 70
-        var_name = self.preset["meta"]["name"].replace(" ", "_").lower()
-        data = f"$\"{self.get_baseX_preset}\""
-        code = f"{var_name} = {data}"
+        code = f"""\""
+{self.category.upper()} | {self.name}
+{self.author}
+{" | ".join(self.tags)}
+{self.description}
+Aura version: {self.version}
+\"""".strip()
+        code += "\ninstrument {\"" + self.get_baseX_preset + "\"}"
         code = "\n".join(
             code[index:index + max_leng]
             for index in range(0, len(code), max_leng)
         )
+        return code + "\n"
 
-        return code
+
+    def __str__(self):
+        return self.get_SBR_string_preset
+
+    def __repr__(self):
+        return str(self)
+
 
 
     @property
@@ -1867,75 +1895,10 @@ class Aura:
         """
         return encode_baseX(self.get_bin_preset)
 
-
     @property
     def get_json_preset(self):
         """
         Convert the preset dictionary to a string format for storage or transmission
         """
         return json.dumps(self.preset, separators=(",", ":"))[1:-1]
-
-
-
-def main():
-    # python -m cProfile -s tottime Bsound/Aura.py
-    """Create an audio array"""
-
-    #audio_data = WaveTables.sample("Bsound/guitar_test.mp3")
-
-    # ***************
-
-    sint1 = Aura(preset_example)
-
-    audio_data = sint1.get_note()
-    # ***************
-
-    start_time = time.perf_counter()
-
-    # ***************
-
-    audio_data = sint1.get_note()
-
-    # ***************
-
-
-    elapsed = time.perf_counter() - start_time
-    print(f"Took {elapsed:.3f} seconds")
-
-    sf.write("output.mp3", audio_data, SAMPLE_RATE)
-
-    if 0:
-        import matplotlib.pyplot as plt
-        time_axis = np.arange(len(audio_data)) / SAMPLE_RATE
-        plt.plot(time_axis, audio_data, label="Audio data")
-        lfo_time_axis = np.arange(len(lfo)) / SAMPLE_RATE
-        plt.plot(lfo_time_axis, Audio_Effects.Stereo_Expansion.to_mono(lfo), label="LFO")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Amplitude")
-        plt.title("Audio data and LFO")
-        plt.legend()
-        plt.grid(True)
-        plt.tight_layout()
-        plt.show()
-
-
-    """Play an audio array"""
-    import pygame
-
-    pygame.mixer.pre_init(frequency=SAMPLE_RATE, size=-16, channels=2)
-    pygame.init()
-
-    #sf.write("output.wav", audio_data, SAMPLE_RATE)
-
-    audio_data_int16 = np.clip(
-        audio_data * (2**15 * .9), -2**15, 2**15 - 1
-    ).astype(np.int16)
-    audio_data_int16 = np.ascontiguousarray(audio_data_int16)
-    sound = pygame.mixer.Sound(array=audio_data_int16)
-    sound.play()
-    time.sleep((1/SAMPLE_RATE) * len(audio_data))
-
-
-if __name__ == "__main__":
-    main()
 

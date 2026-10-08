@@ -4,6 +4,7 @@ pip install soundfile
 pip wheel setuptools
 pip install numpy
 #pip install pygame
+pip install keyboard
 pip install pygame-ce
 pip install scipy
 

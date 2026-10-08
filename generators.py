@@ -276,15 +276,16 @@ def Struct(args: list[Group]):
 
 from variables import vars_instruments
 
-def inst(args: list[int]):
+def inst(args: list[str | int]):
     "I'm the instrument generator, i've a good feeling yeah, if you wanna use me, you must to put the instrument ID"
-    if not len(args): raise SBR_ERROR("The instrument needs at least one argument")
+    if not len(args):
+        raise SBR_ERROR("The instrument needs at least one argument")
     for name, obj in zip(vars_instruments.keys(), vars_instruments.values()):
         if obj.inst_id == args[0]: break
     else: raise SBR_ERROR(
         f"This instrument ID isn't exist ${args[0]}",
         "type 'vars:' to see the available instruments")
-    return Instrument(vars_instruments[name].path, obj.inst_id)
+    return obj
 
 
 #in case only one group has been sent

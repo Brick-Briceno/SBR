@@ -40,6 +40,13 @@ it in turn you can create a lot of types of foods based on flours, the same here
 - [Click here to learn more about SBR 🎹](docs/en/about.md)
 
 
+## Aura
+
+The best synthesizer for creating a variety of complex sounds
+
+- [Tutorial Aura 🥸](Bsound/Aura.md)
+
+
 ## Key Features ✨
 
 - **Docs**: Detailed required documentation and tutorials
