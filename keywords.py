@@ -15,7 +15,6 @@ from sbr_types import *
 from variables import *
 #from sbr_help import *
 import lib.MidiFile
-import itertools
 import datetime
 import generators
 import effects
@@ -637,72 +636,369 @@ def sbr_type(args):
                   "a", "e", "i", "o", "h") else " is a ")
 
 
-def generate_fn_paramts(fn_name: str, fn_n_range_params: tuple[int]) -> tuple:
-    rang = range(1+fn_n_range_params[0], 1+fn_n_range_params[1])
-    Fn_params = []
-    for x in rang:
-        Fn_params.append(f"{fn_name}{x}")
-        for y in rang:
-            if x > y: continue
-            Fn_params.append(f"{fn_name}{x},{y}")
-
-    return tuple(Fn_params)
-
-
-def generate_bricks_dicts():
-    max_bricks = 5
-    operators = ("+", "-")
-    _vars = ("son", "bossa")
-    _vars = tuple(f"B{variables_sys[x].bin}" for x in _vars) #compile vars:
-    g_E = generate_fn_paramts(fn_name="E", fn_n_range_params=(1, 16))
-    g_X = ("X2", "X3")
-    #g_Q = generate_fn_paramts(fn_name="Q", fn_n_range_params=())
-    for x in range(1, 1+max_bricks):
-        perms = itertools.permutations(operators+g_X+_vars+g_E, r=x)
-        for perm in perms:
-            _perm = "".join(perm)
-            if (perm[0] in operators or
-                _perm[0] == "X" or
-                _perm[-1:] in operators or
-                any([f"{o}X" in _perm for o in operators])
-                ): continue
-            yield _perm
-            #if "X" in "".join(perm): input()
-
 def brute_force(args):
-    "I use brute force to discover data combinations, compressing and summarizing musical information"
-    if len(args) != 1:
-        raise SBR_ERROR("Put just one argument")
-    elif isinstance(args[0], (Rhythm, Tones, Melody)):
-        raise SBR_ERROR("Put just one Rhythms, Tones and Melodies")
-    #Brute force
+    """
+    Find and print compact SBR representations for a rhythm, tone sequence, or melody
+
+    Usage:
+        brute_force <data>             Print the simplest result
+        brute_force <data>:<number>    Print the result at that 1-based position
+        brute_force <data>:all or 0    Print every result, pausing after each one
+        brute_force <data>:short or -1 Print every result, shortest code first.
+
+    Rhythm results are prioritized by generator count. Single-E forms are tried
+    first: E with one parameter, then two parameters with lengths 8 and 16,
+    followed by other lengths. Three-parameter E forms are considered after
+    those, with the target length as their third parameter. Equal E parameters
+    are excluded. X2, X3, X4, <<, Q and << followed by Q are also tested
+
+    Results are ranked by expression complexity: each generator and operator
+    contributes to the rank, as does each pulse removed by Q. This favors a
+    compact two-generator expression over a one-generator expression with a
+    large Q list, while breaking ties in favor of fewer generators. ``all``
+    and ``short`` include combinations of up to two generators and pause for
+    Enter between printed results
+
+    """
+    if len(args) not in (1, 2):
+        raise SBR_ERROR("Put one data value and optionally a result selector")
+
     data = sbr_line(args[0])
+    selector = str(args[1]).strip().lower() if len(args) == 2 else "1"
+    if selector in ("all", "0"):
+        result_mode, result_number = "all", 0
+    elif selector in ("short", "-1"):
+        result_mode, result_number = "short", 0
+    else:
+        try:
+            result_number = int(selector)
+        except ValueError:
+            raise SBR_ERROR("Use a positive result number, all/0, or short/-1")
+        if result_number < 1:
+            raise SBR_ERROR("Use a positive result number, all/0, or short/-1")
+        result_mode = "number"
+
+    print(f"Buscando: {data}\nEsto puede tomar un tiempo")
+
+    def show_result(code):
+        print(code)
+        if result_mode in ("all", "short"):
+            input("Press Enter to show the next result...")
+
+    if isinstance(args[0], (Rhythm, Tones, Melody)):
+        raise SBR_ERROR("Put the data as SBR code, not as a Python object")
 
     if isinstance(data, Rhythm):
-        if not all([x in "01" for x in data.bin]):
+        if not all(bit in "01" for bit in data.bin):
             raise SBR_ERROR("only zeros are allowed in the rhythm :)")
-        leng = len(data)
-        for code in generate_bricks_dicts():
-            code = f"{code}L{leng}"
-            #print(code)
-            _compile = magia(code).bin
-            if _compile == data.bin: return code
-            #print(code, _compile)
 
-    elif isinstance(data, Tones):
-        return "Jumps0,4"
+        target_bin = data.bin
+        target_length = len(data)
+        target_metric = data.metric
+        if not target_length:
+            show_result("B")
+            return
 
-    elif isinstance(data, Melody):
-        start = time.time()
-        rh = brute_force([f"B{data.rhythm.bin}"])
-        tns = brute_force([repr(data.tones)])
-        end = time.time() - start
-        print(f"melody found in {end:.2f}s")
+        matches = []
+        seen_matches = set()
 
-        result = "Sm{"+rh+"; "+tns+"}"
-    else: raise SBR_ERROR("Put a Tones, Rhythm or Melody data")
+        def add_match(code, priority):
+            if code not in seen_matches:
+                seen_matches.add(code)
+                matches.append((priority, code))
 
-    print(result)
+        def q_arguments(source_bin):
+            pulse_number = 0
+            removed = []
+            for source_bit, wanted_bit in zip(source_bin, target_bin):
+                if source_bit == "1":
+                    pulse_number += 1
+                    if wanted_bit == "0":
+                        removed.append(pulse_number)
+                elif wanted_bit == "1":
+                    return None
+            return removed
+
+        def effect_prefix(code):
+            if code.startswith("E") and code.count("E") == 1 and "X" not in code:
+                return code
+            return f"({code})"
+
+        def inspect_candidate(code, rhythm, complexity, candidate_order, pulses):
+            x_effect = int("X" in code)
+            if rhythm.bin == target_bin:
+                add_match(
+                    code,
+                    (
+                        complexity * 2 + 1 + x_effect,
+                        complexity,
+                        x_effect,
+                        0,
+                        0,
+                        candidate_order,
+                        code,
+                    ),
+                )
+
+            if len(rhythm) != target_length:
+                return
+
+            shifted = rhythm.bin[1:] + rhythm.bin[:1]
+            prefix = effect_prefix(code)
+            if shifted == target_bin:
+                add_match(
+                    f"{prefix}<<",
+                    (complexity + 2, complexity, 2, 0, 0, candidate_order, code),
+                )
+
+            removed = q_arguments(rhythm.bin)
+            if removed:
+                add_match(
+                    f"{prefix}Q{','.join(map(str, removed))}",
+                    (
+                        complexity + 1 + len(removed),
+                        complexity,
+                        3,
+                        len(removed),
+                        abs(pulses - target_metric),
+                        candidate_order,
+                        code,
+                    ),
+                )
+
+            shifted_removed = q_arguments(shifted)
+            if shifted_removed:
+                add_match(
+                    f"{prefix}<<,Q{','.join(map(str, shifted_removed))}",
+                    (
+                        complexity + 2 + len(shifted_removed),
+                        complexity,
+                        4,
+                        len(shifted_removed),
+                        abs(pulses - target_metric),
+                        candidate_order,
+                        code,
+                    ),
+                )
+
+        def make_e_candidates():
+            candidates = []
+            seen_codes = set()
+
+            def add_e(code, params, order):
+                rhythm = generators.E(params)
+                if len(rhythm) <= target_length and code not in seen_codes:
+                    seen_codes.add(code)
+                    pulses = params[0]
+                    candidates.append((code, rhythm, order, pulses))
+
+            # Prefer E(a), then E(a,8), E(a,16), before less common lengths.
+            for pulses in range(1, 17):
+                add_e(f"E{pulses}", [pulses], (0, pulses))
+
+            preferred_lengths = [
+                length for length in (8, 16) if length <= target_length
+            ]
+            other_lengths = [
+                length for length in range(1, min(24, target_length) + 1)
+                if length not in preferred_lengths
+            ]
+            ordered_lengths = preferred_lengths + other_lengths
+
+            for length_order, base_length in enumerate(ordered_lengths, 1):
+                for pulses in range(1, min(base_length, 24) + 1):
+                    if pulses == base_length:
+                        continue
+                    add_e(
+                        f"E{pulses},{base_length}",
+                        [pulses, base_length],
+                        (length_order, pulses, base_length),
+                    )
+
+            # Third-parameter forms are only needed at the target length.
+            for length_order, base_length in enumerate(ordered_lengths, 1):
+                for pulses in range(1, min(base_length, 24) + 1):
+                    if pulses == base_length:
+                        continue
+                    add_e(
+                        f"E{pulses},{base_length},{target_length}",
+                        [pulses, base_length, target_length],
+                        (len(ordered_lengths) + length_order, pulses, base_length),
+                    )
+            return candidates
+
+        e_candidates = make_e_candidates()
+        one_generator_candidates = []
+        for code, rhythm, order, pulses in e_candidates:
+            one_generator_candidates.append((code, rhythm, order, pulses))
+            for factor in (2, 3, 4):
+                expanded = effects.X(rhythm, [factor])
+                if len(expanded) <= target_length:
+                    one_generator_candidates.append(
+                        (
+                            f"{code}X{factor}",
+                            expanded,
+                            order + (factor,),
+                            pulses,
+                        )
+                    )
+
+        for candidate_order, (code, rhythm, order, pulses) in enumerate(
+            one_generator_candidates
+        ):
+            inspect_candidate(
+                code, rhythm, 0, (order, candidate_order), pulses
+            )
+
+        matches.sort(key=lambda item: item[0])
+        simple_single_generator_matches = [
+            code for priority, code in matches
+            if priority[1] == 0 and priority[2] <= 2 and priority[0] <= 2
+        ]
+        if (
+            result_mode == "number"
+            and len(simple_single_generator_matches) >= result_number
+        ):
+            print(simple_single_generator_matches[result_number - 1])
+            return
+
+        # If no requested single-generator result exists, search pairs.
+        pair_candidates = [
+            (code, rhythm, order, pulses)
+            for code, rhythm, order, pulses in one_generator_candidates
+            if len(rhythm) <= target_length
+        ]
+        by_length_metric = {}
+        by_length = {}
+        for candidate in pair_candidates:
+            code, rhythm, order, pulses = candidate
+            by_length_metric.setdefault(
+                (len(rhythm), rhythm.metric), []
+            ).append(candidate)
+            by_length.setdefault(len(rhythm), []).append(candidate)
+
+        pair_order = 0
+        for left_length in range(1, target_length):
+            right_length = target_length - left_length
+            for left_metric in range(target_metric + 1):
+                right_metric = target_metric - left_metric
+                lefts = by_length_metric.get((left_length, left_metric), ())
+                rights = by_length_metric.get((right_length, right_metric), ())
+                for left_code, left_rhythm, left_rank, left_pulses in lefts:
+                    for right_code, right_rhythm, right_rank, _ in rights:
+                        code = left_code + right_code
+                        rhythm = left_rhythm.concatenate(right_rhythm)
+                        inspect_candidate(
+                            code,
+                            rhythm,
+                            1,
+                            (pair_order, left_rank, right_rank),
+                            left_pulses,
+                        )
+                        pair_order += 1
+
+        full_length = by_length.get(target_length, ())
+        shorter = [
+            candidate
+            for length, candidates in by_length.items()
+            if length < target_length
+            for candidate in candidates
+        ]
+        for operator in ("+", "-"):
+            for left_code, left_rhythm, left_rank, left_pulses in full_length:
+                for right_code, right_rhythm, right_rank, _ in shorter:
+                    if operator == "+":
+                        if (
+                            max(left_rhythm.metric, right_rhythm.metric) > target_metric
+                            or min(target_length, left_rhythm.metric + right_rhythm.metric)
+                            < target_metric
+                        ):
+                            continue
+                        rhythm = left_rhythm.overlap(right_rhythm)
+                    else:
+                        if (
+                            abs(left_rhythm.metric - right_rhythm.metric) > target_metric
+                            or (
+                                left_rhythm.metric + right_rhythm.metric - target_metric
+                            ) % 2
+                        ):
+                            continue
+                        rhythm = left_rhythm.ghost(right_rhythm)
+                    inspect_candidate(
+                        f"{left_code}{operator}{right_code}",
+                        rhythm,
+                        1,
+                        (pair_order, left_rank, right_rank),
+                        left_pulses,
+                    )
+                    pair_order += 1
+
+            for index, (
+                left_code, left_rhythm, left_rank, left_pulses
+            ) in enumerate(full_length):
+                for right_code, right_rhythm, right_rank, _ in full_length[index:]:
+                    if operator == "+":
+                        if (
+                            max(left_rhythm.metric, right_rhythm.metric) > target_metric
+                            or min(target_length, left_rhythm.metric + right_rhythm.metric)
+                            < target_metric
+                        ):
+                            continue
+                        rhythm = left_rhythm.overlap(right_rhythm)
+                    else:
+                        if (
+                            abs(left_rhythm.metric - right_rhythm.metric) > target_metric
+                            or (
+                                left_rhythm.metric + right_rhythm.metric - target_metric
+                            ) % 2
+                        ):
+                            continue
+                        rhythm = left_rhythm.ghost(right_rhythm)
+                    inspect_candidate(
+                        f"{left_code}{operator}{right_code}",
+                        rhythm,
+                        1,
+                        (pair_order, left_rank, right_rank),
+                        left_pulses,
+                    )
+                    pair_order += 1
+
+        matches.sort(
+            key=lambda item: (
+                (len(item[1]), item[0])
+                if result_mode == "short"
+                else item[0]
+            )
+        )
+        if result_mode == "number":
+            if len(matches) < result_number:
+                raise SBR_ERROR(
+                    f"Found only {len(matches)} results; "
+                    f"could not find result number {result_number}"
+                )
+            print(matches[result_number - 1][1])
+            return
+
+        if not matches:
+            raise SBR_ERROR("No equivalent rhythm was found")
+        for _, code in matches:
+            show_result(code)
+        return
+
+    if isinstance(data, Tones):
+        if result_mode == "number" and result_number != 1:
+            raise SBR_ERROR("Only one result is available for tones")
+        show_result("Jumps0,4")
+        return
+
+    if isinstance(data, Melody):
+        if result_mode == "number" and result_number != 1:
+            raise SBR_ERROR("Only one result is available for melodies")
+        show_result(f"Sm{{B{data.rhythm.bin}; Jumps0,4}}")
+        return
+
+    raise SBR_ERROR("Put a Tones, Rhythm or Melody data")
+
 
 
 def obj_to_array(text_sbr_obj: str, meta_data=False):
