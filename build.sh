@@ -21,8 +21,9 @@ else
 fi
 
     #--onefile \
+#    --include-data-files=Bsound/libaudio_engine.$LIB_EXT=libaudio_engine.$LIB_EXT \
 echo "Building SBR..."
-_python -m nuitka \
+python -m nuitka \
     --mode=accelerated \
     --enable-plugin=numpy \
     --include-module=soundfile \
@@ -30,7 +31,6 @@ _python -m nuitka \
     --lto=yes \
     --onefile-no-compression \
     --jobs=$(nproc) \
-    --include-data-files=Bsound/libaudio_engine.$LIB_EXT=libaudio_engine.$LIB_EXT \
     --windows-icon-from-ico=br256.ico \
     --assume-yes-for-downloads \
     --output-filename=sm \

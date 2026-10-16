@@ -171,6 +171,8 @@ def keys2(code, signo=r"{}"):
 
 
 def mathematical_operators(data):
+    if not data:
+        raise SBR_ERROR("Invalid syntax")
     if len(data) <= 2: return data[0]
     a = data[0]
     for i in range(1, len(data) - 1, 2):

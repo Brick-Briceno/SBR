@@ -1,7 +1,6 @@
 import os
 import sys
 import re
-from pathlib import Path
 
 def count_lines_in_file(file_path):
     """Count lines in a file, handling UTF-8 encoding."""
