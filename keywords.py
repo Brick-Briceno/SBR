@@ -503,8 +503,7 @@ def instrument(arg):
             )
         if f"${inst.name}" in vars_instruments.keys():
             print(f"This instrument already exists: {inst.name}")
-        vars_instruments[f"${inst.name}"] = inst
-
+        vars_instruments[f"${inst.name}".replace(" ", "_").lower()] = inst
 
 
 def phrase(arg):
@@ -1145,6 +1144,7 @@ def rec(_):
 
 
 alt = ""
+octave = 4
 last_note = Note(0)
 def piano(args):
     "I'm a piano on a console, what can I say?"
@@ -1176,14 +1176,16 @@ def piano(args):
     b_print("Live piano from SBR... ¡Enjoy!", color=color1)
     active = True
     def live_piano(event):
-        global alt, last_note
+        global alt, last_note, octave
         if not active: return
         key_name = event.name
         if "1" == key_name: alt = "b"
         elif "2" == key_name: alt = "#"
         print(key_name, end="\r")
+        if key_name.isnumeric():
+            octave = int(key_name)
         if key_name.lower() in keys:
-            n = Note(keys[key_name.lower()])
+            n = Note(keys[key_name.lower()]) + (octave - 4) * 7
             _interval = int(n) - int(last_note)# - int(n)
             last_note = n
 

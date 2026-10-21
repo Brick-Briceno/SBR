@@ -9,6 +9,8 @@ with it and that it helps them make better music, hugs <3
 @Brick_briceno 2022
 """
 
+print(" Loading...", end="\r")
+
 # ============================================================================
 # IMPORTS
 # ============================================================================
@@ -27,13 +29,14 @@ from b_color import color1, color2, color3, color4, color5
 from sbr_utils import clean_console, format_time
 from variables import code_that_has_been_made
 from b_color import print_color as b_print
+from Bsound.Aura import AURA_ERROR
 from keywords import sbr_import
 
 # ============================================================================
 # CONSTANTS & CONFIGURATION
 # ============================================================================
 
-__version__ = "2.0.14"
+__version__ = "2.0.15"
 
 # Debug mode flag
 DEBUG = False
@@ -82,6 +85,9 @@ def initialize_main_preset():
                            "\"\n\n")
             b_print("File created successfully! please try to reload the program", color=color1)
     try: sbr_import(["main.sm"])
+    except AURA_ERROR as bad:
+        handle_aura_error(bad)
+        sbr_line("exit")
     except SBR_ERROR as bad:
         b_print("Error:", color=color3, end="")
         b_print(bad, color=color4)
@@ -120,6 +126,15 @@ def handle_sbr_error(error: SBR_ERROR, line_number: int = None):
         b_print(f"Error in line {line_number}:", color=color3, end=" ")
     else:
         b_print("Error:", color=color3, end="")
+    b_print(error, color=color4)
+
+
+def handle_aura_error(error: AURA_ERROR, line_number: int = None):
+    """Handle Aura errors with consistent formatting"""
+    if line_number:
+        b_print(f"Aura Error in line {line_number}:", color=color3, end=" ")
+    else:
+        b_print("Aura Error:", color=color3, end=" ")
     b_print(error, color=color4)
 
 
@@ -205,6 +220,8 @@ def run_repl():
             print_result(result)
 
         # Errors
+        except AURA_ERROR as bad:
+            handle_aura_error(bad)
         except SBR_ERROR as bad:
             handle_sbr_error(bad)
         except (KeyboardInterrupt, EOFError, SystemExit):
@@ -236,6 +253,8 @@ def run_file(filepath: str):
             code_that_has_been_made.append(line)
             sbr_line(line)
 
+    except AURA_ERROR as bad:
+        handle_aura_error(bad, n)
     except SBR_ERROR as bad:
         handle_sbr_error(bad, n)
     except FileNotFoundError:
@@ -261,6 +280,10 @@ def run_code_string(code: str):
         for n, line in enumerate(code.splitlines(), start=1):
             code_that_has_been_made.append(line)
             sbr_line(line)
+    except AURA_ERROR as bad:
+        if DEBUG:
+            raise bad
+        handle_aura_error(bad, n)
     except SBR_ERROR as bad:
         if DEBUG:
             raise bad

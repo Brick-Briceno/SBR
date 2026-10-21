@@ -4,7 +4,6 @@ Symmetry Melody Api v2.1
 
 """
 
-from sbr_types import Instrument, Melody, Note, Rhythm, Structure, Velocity
 from variables import variables_user
 from errors import SBR_ERROR
 from sbr_utils import *
@@ -122,7 +121,7 @@ def audio_render_engine(meta_data):
 
     # Load and cache sample files, synthesized instruments render notes on demand
     for source in note_path:
-        if isinstance(source, Instrument):
+        if type(source).__name__ == "Instrument":
             if source.type != "synthesized" or source.aura is None:
                 raise SBR_ERROR("Invalid synthesized instrument")
             continue
@@ -153,7 +152,7 @@ def audio_render_engine(meta_data):
     for source, when, af, note_duration in zip(
         note_path, when_kick, afination, duration, strict=True
     ):
-        if isinstance(source, Instrument):
+        if type(source).__name__ == "Instrument":
             rendered_samples = int(
                 round(get_synth_duration(note_duration) * sample_rate)
             )
@@ -180,7 +179,7 @@ def audio_render_engine(meta_data):
         afination,
         strict=True,
     ):
-        is_synthesized = isinstance(source, Instrument)
+        is_synthesized = type(source).__name__ == "Instrument"
         if is_synthesized:
             note_duration = get_synth_duration(note_duration)
             if af != 0:
@@ -361,7 +360,7 @@ def random_float():
 
 ms = 0
 def struct_to_metadata(data):
-    if not isinstance(data, Structure):
+    if type(data).__name__ != "Structure":
         raise SBR_ERROR("This isn't a struct data, melody or rhythm")
     audio_data = {
         "cromatic_note": [], "afination_cst": [],
@@ -380,11 +379,11 @@ def struct_to_metadata(data):
     volumen_track = 0
     inst = None
     global ms
-    if not isinstance(mode, Rhythm):
+    if type(mode).__name__ != "Rhythm":
         raise SBR_ERROR("The scale mode should be a rhythm data")
     #Proses data
     for obj in data:
-        if isinstance(obj, Melody):
+        if type(obj).__name__ == "Melody":
             if assigning_instrument or assigning_volumen:
                 raise SBR_ERROR("You must assign an instrument and a volume before anything else")
             #(bit=int, notes=[], vel=[], time=[])
@@ -392,7 +391,7 @@ def struct_to_metadata(data):
                 #one_dimention_list_recurtion()
                 if bit == 0: ms += 15/tempo
                 elif bit in (1, 5, 7, 9):
-                    if isinstance(notes[0], Note): note = [notes[0]]
+                    if type(notes[0]).__name__ == "Note": note = [notes[0]]
                     else: note = notes[0]
                     for note in one_dimention_list_recurtion(note):
                         croma = inst.grade_to_cromatic(mode, tone, note) 
@@ -421,7 +420,7 @@ def struct_to_metadata(data):
 
                 elif bit in (3, 6, 2, 4, 8):
                     for _note, v, t in zip(notes, vel, time, strict=True):
-                        if isinstance(_note, Note): _note = [_note]
+                        if type(_note).__name__ == "Note": _note = [_note]
                         for note in one_dimention_list_recurtion(_note):
                             croma = inst.grade_to_cromatic(mode, tone, note)
                             audio_data["velocity"].append(v*volumen_track)
@@ -454,7 +453,7 @@ def struct_to_metadata(data):
                         elif bit == 4: ms += (1/4)*15/tempo
                         elif bit == 8: ms += (1/8)*15/tempo
 
-        elif isinstance(obj, Rhythm):
+        elif type(obj).__name__ == "Rhythm":
             if assigning_instrument or assigning_volumen:
                 raise SBR_ERROR("You must assign an instrument and a volume before anything else")
             for bit in obj:
@@ -506,12 +505,12 @@ def struct_to_metadata(data):
                         elif bit == 4: ms += (1/4)*15/tempo
                         elif bit == 8: ms += (1/8)*15/tempo
 
-        elif isinstance(obj, Velocity):
+        elif type(obj).__name__ == "Velocity":
             if len(obj) >= 1:
                 volumen_track = audio_effects.dbs_to_float(obj[0])
                 assigning_volumen = False
 
-        elif isinstance(obj, Instrument):
+        elif type(obj).__name__ == "Instrument":
             assigning_instrument = False
             inst = obj
             ms = 0

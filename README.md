@@ -1,6 +1,6 @@
 # SBR language 🚀
 
-![](https://img.shields.io/badge/python-3.14-blue)
+![](https://img.shields.io/badge/python-3.15-blue)
 ![](https://img.shields.io/badge/license-BSD%203--Clause-green)
 
 The SBR language provides super creative tools 
@@ -44,7 +44,16 @@ it in turn you can create a lot of types of foods based on flours, the same here
 
 The best synthesizer for creating a variety of complex sounds
 
-- [Tutorial Aura 🥸](Bsound/Aura.md)
+- [Tutorial Aura 🥸](docs/en/Aura.md)
+
+### Aura Scope
+
+Run `python -m Bsound.test_aura_presets` to open a Tkinter editor for Aura JSON
+presets. It renders and plays the preset at 261.626 Hz, displays the output
+waveform and spectrum, and supports Ctrl+P. Enable **Reproducir al editar** to
+render after a short pause while editing. Tkinter is included with most Python
+installations; playback requires pygame and Aura's dependencies (NumPy, SciPy,
+Numba, and SoundFile).
 
 
 ## Key Features ✨
@@ -100,33 +109,13 @@ bash build.sh
 ### Compile in Android 📱
 
 ```bash
-# You need to be on Linux to compile the APK, use wsl
+# You can compile it from Windows, Linux, or wherever you like
 
 # Download
 git clone --depth 1 https://github.com/Brick-Briceno/SBR.git
-cd SBR
+cd SBR/app
 
-# Clean
-rm -rf venv bin .buildozer ~/.buildozer
-
-#Install things
-sudo apt-get install python3.11-venv
-python3.11 -m venv venv
-source venv/bin/activate
-pip install buildozer
-
-# This uses deprecated features that aren't in Cython 3.0
-# https://github.com/cython/cython/issues/4310
-pip install Cython==0.29.37
-bash dependencies.sh
-
-apt-get update
-apt-get install -y libmtdev-dev xsel xclip
-apt-get install -y build-essential libltdl-dev libffi-dev libssl-dev autoconf automake libtool
-export BUILDOZER_ALLOW_ORG_TEST_DOMAIN=1
-
-# Compile apk
-# buildozer android clean # (Use it to clean up temporary build files)
-buildozer android debug
+# Build
+bash build_app.sh
 
 ```

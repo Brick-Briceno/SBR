@@ -24,10 +24,10 @@ from scipy.signal import butter, lfilter_zi, lfilter, resample_poly
 from numba import jit, prange
 import soundfile as sf
 import numpy as np
-import time
 import json
 import zlib
 import ast
+import sys
 
 
 SAMPLE_RATE = 44_100
@@ -78,7 +78,7 @@ class WaveTables:
 
         phase = np.zeros(samples, dtype=np.float32)
         if samples > 1:
-            phase[1:] = np.cumsum(frequencies[:-1])
+            phase[1:] = np.cumsum(frequencies[:-1], dtype=np.float64)
         return (2 * np.pi * phase / SAMPLE_RATE).astype(np.float32, copy=False)
 
     def _stretch_values(samples, stretch):
@@ -586,7 +586,7 @@ class Audio_Effects:
 
             return output
 
-        def compressor_la2a(audio, peak_reduction=50.0, gain=50.0, ratio=5):
+        def optical_compressor(audio, peak_reduction=50.0, gain=50.0, ratio=5):
             """
             LA-2A style compression processor
 
@@ -1531,8 +1531,7 @@ class Aura:
             "drive": Audio_Effects.Gain_Distortion_Dynamics.drive,
             "bit_crush": Audio_Effects.Gain_Distortion_Dynamics.bit_crush,
             "valve_distortion": Audio_Effects.Gain_Distortion_Dynamics.valve_distortion,
-            "la2a": Audio_Effects.Gain_Distortion_Dynamics.compressor_la2a,
-            "compressor_la2a": Audio_Effects.Gain_Distortion_Dynamics.compressor_la2a,
+            "optical_compressor": Audio_Effects.Gain_Distortion_Dynamics.optical_compressor,
             "br11ck67_analog": Audio_Effects.Gain_Distortion_Dynamics.br11ck67_analog,
             "reverb": Audio_Effects.Stereo_Expansion.reverb,
             "stereo_expander": Audio_Effects.Stereo_Expansion.stereo_expander,
@@ -1544,7 +1543,7 @@ class Aura:
             "fade_out": Audio_Effects.Special.fade_out,
             "parametricEq": Audio_Effects.Filters_Equalization.parametricEq,
         }
-        
+
         def apply_effects(audio, effects, scope):
             # Resolve effect parameters through the same preset expression system as node values
             if not isinstance(effects, dict):
@@ -1865,7 +1864,7 @@ class Aura:
         """
 
         max_leng = 70
-        code = f"""\""
+        code = f"""\"
 {self.category.upper()} | {self.name}
 {self.author}
 {" | ".join(self.tags)}
@@ -1879,14 +1878,11 @@ Aura version: {self.version}
         )
         return code + "\n"
 
-
     def __str__(self):
         return self.get_SBR_string_preset
 
     def __repr__(self):
         return str(self)
-
-
 
     @property
     def get_baseX_preset(self):

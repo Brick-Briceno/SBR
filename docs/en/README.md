@@ -6,6 +6,7 @@ Welcome to the documentation! This documentation is designed to provide... docum
 
 - [Basic Music Theory](basic-music-theory.md) 🎼
 - [SBR Tutorial](sbr-tutorial.md) 📖
+- [Aura Synthesizer](aura.md) 🌊
 - [Examples](examples.md) 🎹
 - [Exercises](exercises.md) 📝
 - [Genre Analysis](genre-analysis.md) 🎷
@@ -24,3 +25,6 @@ This project aims to provide a comprehensive resource for music theory, composit
 ## Contribution
 
 We welcome contributions to improve the documentation, if you have suggestions or would like to add content, please feel free to reach out
+
+Long live music, goodbye 💙
+

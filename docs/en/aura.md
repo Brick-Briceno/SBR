@@ -6,6 +6,9 @@
 
 This system is designed to be a preset-driven synth layer: the user defines a sound in structured JSON-like Python dictionaries, and `Aura` compiles it into audio
 
+![](img/aura_test.png)  
+**You can find this Aura IDE in Bsound/Aura_IDE.py**  
+You can even generate the code for using the sound in SBR by copying the code and pasting it into main.sm
 
 ## Responsibilities of the class
 
@@ -179,7 +182,7 @@ preset_example = {
         "portamento_tension": 0, # this goes from -1 to 1
         "effects": {
             # Add compression
-            "la2a": {
+            "optical_compressor": {
                 "peak_reduction": 50.0,
                 "gain": 50.0,
                 "ratio": 5,
@@ -415,23 +418,275 @@ This provides a safer evaluation model than raw `eval()` on arbitrary strings
 
 ## Effects available in `master.effects`
 
-The `effect_handlers` registry includes these built-in effects:
+Effects are dictionaries whose keys are effect names and whose values are parameter dictionaries
+They can be placed in `master.effects` to process the mixed output or inside an oscillator's `effects` object to process that oscillator
+An effect with no parameters can use an empty object or the value `true`
 
-- `drive`
-- `bit_crush`
-- `valve_distortion`
-- `la2a`
-- `compressor_la2a`
-- `br11ck67_analog`
-- `reverb`
-- `stereo_expander`
-- `normalize`
-- `invert_phase`
-- `reverse`
-- `fade_in`
-- `fade_out`
+```json
+"effects": {
+    "drive": {
+        "gain_db": 20,
+        "normalize": true
+    }
+}
+```
 
-These handlers are mapped to the DSP functions defined inside `Audio_Effects` and are called with preset-derived parameters
+Formula strings and arrays can be used as effect parameter values when the effect supports array-valued parameters
+
+### `drive`
+
+Applies soft-clipping distortion using a hyperbolic tangent
+
+Parameters:
+
+- `gain_db`: input drive in decibels, defaults to `1.0`; the implementation also accepts the function parameter name `gain_dbs`
+- `normalize`: when `true`, scales the result so its peak reaches 1; defaults to `false`
+
+```json
+"drive": {
+    "gain_db": 20,
+    "normalize": true
+}
+```
+
+### `bit_crush`
+
+Reduces the number of amplitude steps and can hold samples to imitate a lower sample rate
+
+Parameters:
+
+- `bit_depth`: quantization depth in bits, defaults to `8`; values below 2 are invalid and values are rounded to an even number
+- `mix_wet`: blend from the original signal at `0` to the crushed signal at `1`, defaults to `1` and must be in the range `[0, 1]`
+- `sample_rate_reduction`: frame-hold factor, defaults to `1`; `4` holds each captured frame for about four input frames and values must be at least `1`
+
+Each parameter can be a scalar or an array with one value per audio frame
+
+```json
+"bit_crush": {
+    "bit_depth": 8,
+    "mix_wet": 0.85,
+    "sample_rate_reduction": 4
+}
+```
+
+### `valve_distortion`
+
+Models a 12AX7 tube stage with four-times oversampling
+
+Parameters:
+
+- `gain_db`: input drive in decibels, defaults to `20`
+- `normalize`: when `true`, normalizes the processed signal peak; defaults to `false`
+- `high_pass_filter`: when `true`, enables the internal 27.5 Hz high-pass filter; defaults to `true`
+
+```json
+"valve_distortion": {
+    "gain_db": 20,
+    "normalize": false,
+    "high_pass_filter": true
+}
+```
+
+### `optical compressor`
+
+Both names call the same LA-2A-style optical compressor and tube processor
+
+Parameters:
+
+- `peak_reduction`: sidechain drive control from `0` to `100`, defaults to `50`; higher values increase compression
+- `gain`: output make-up control from `0` to `100`, defaults to `50`; the implementation maps this control to as much as approximately 40 dB of make-up gain
+- `ratio`: compression ratio, defaults to `5`
+
+```json
+"optical": {
+    "peak_reduction": 50.0,
+    "gain": 50.0,
+    "ratio": 5
+}
+```
+
+### `br11ck67_analog`
+
+Applies a FET-style compressor and analog saturation with configurable oversampling
+
+Parameters:
+
+- `input_db`: input gain in decibels, defaults to `12`
+- `output_db`: output gain in decibels, defaults to `-6`
+- `attack_ms`: attack time in milliseconds, defaults to `0.2`
+- `release_ms`: release time in milliseconds, defaults to `300`
+- `ratio`: compression ratio, defaults to `4`
+- `all_buttons_in`: enables the all-buttons mode when `true`; defaults to `false`; this mode sets the ratio to `100`, attack to `0.02` ms and adds 6 dB of input gain
+- `oversampling`: oversampling factor; supported values are `1`, `2`, `4` or `8`, with `4` as the default
+
+```json
+"br11ck67_analog": {
+    "input_db": 12,
+    "output_db": -6,
+    "attack_ms": 0.2,
+    "release_ms": 300,
+    "ratio": 4,
+    "all_buttons_in": false,
+    "oversampling": 4
+}
+```
+
+### `reverb`
+
+Adds a stereo Schroeder-style reverberation tail
+
+Parameters:
+
+- `room_size`: feedback amount that controls decay; defaults to `0.92` and must be less than `1`
+- `wet_level`: gain applied to the reverberated signal, defaults to `0.45`
+- `dry_level`: gain applied to the original signal, defaults to `0.55`
+- `width`: stereo spread that offsets the right-channel delay lines, defaults to `1.5`
+- `tail_db`: target level used to estimate the tail length, defaults to `-60` dB and must be no greater than `0`
+
+```json
+"reverb": {
+    "room_size": 0.92,
+    "wet_level": 0.45,
+    "dry_level": 0.55,
+    "width": 1.5,
+    "tail_db": -60
+}
+```
+
+### `stereo_expander`
+
+Splits a mono signal into 32 frequency bands and alternates their stereo positions
+
+Parameters:
+
+- `mix`: blend from the dry mono signal at `0` to the expanded stereo signal at `1`, defaults to `0.5`
+- `start_in_hz`: lowest band-center frequency in hertz, defaults to `180`
+
+This effect accepts a mono signal
+
+```json
+"stereo_expander": {
+    "mix": 0.5,
+    "start_in_hz": 180
+}
+```
+
+### `delay`
+
+Adds repeated stereo echoes to the original signal
+
+Parameters:
+
+- `input_gain`: gain in decibels applied successively to each echo, defaults to `-6`
+- `times`: list of intervals in seconds between the original signal and each successive echo, defaults to `[1.5, 1.5, 2, 1, 2]`
+- `pan`: echo balance from full left at `-1` to full right at `1`, defaults to `0.12`
+- `ping_pong`: when `true`, alternates the pan direction on each echo; defaults to `true`
+- `offset`: channel offset in seconds; positive values delay the right channel and negative values delay the left, defaults to `0`
+
+```json
+"delay": {
+    "input_gain": -6,
+    "times": [0.25, 0.5, 0.5],
+    "pan": 0.12,
+    "ping_pong": true,
+    "offset": 0.01
+}
+```
+
+### `parametricEq`
+
+Applies a peaking equalizer whose parameters can change for each audio frame
+
+Parameters:
+
+- `freq_array`: center frequency in hertz for each frame
+- `q_array`: Q factor, which controls the bandwidth for each frame
+- `gain_array`: boost or cut in decibels for each frame
+
+Each parameter must resolve to an array with one value per audio frame
+Expressions based on `duration_progress` create arrays with the current note's sample count
+
+```json
+"data": {
+    "eq_frequency": "500 + duration_progress * 0",
+    "eq_q": "1 + duration_progress * 0",
+    "eq_gain": "6 + duration_progress * 0"
+},
+"effects": {
+    "parametricEq": {
+        "freq_array": "eq_frequency",
+        "q_array": "eq_q",
+        "gain_array": "eq_gain"
+    }
+}
+```
+
+### `normalize`
+
+Scales the signal so its largest absolute sample reaches `1`
+Silence remains unchanged
+
+This effect has no parameters
+
+```json
+"normalize": {}
+```
+
+### `invert_phase`
+
+Multiplies every sample by `-1` without changing its amplitude
+
+This effect has no parameters
+
+```json
+"invert_phase": {}
+```
+
+### `reverse`
+
+Reverses the samples in time while keeping the audio channels together
+
+This effect has no parameters
+
+```json
+"reverse": {}
+```
+
+### `fade_in`
+
+Applies a linear fade from silence to the original signal over the selected sample range
+
+Parameters:
+
+- `start`: first sample index affected by the fade, defaults to `0`
+- `end`: last sample index affected by the fade, inclusive; defaults to the final sample; use `null` for the default
+
+Both indices are zero-based and must identify a valid range in the signal
+
+```json
+"fade_in": {
+    "start": 0,
+    "end": 22049
+}
+```
+
+### `fade_out`
+
+Applies a linear fade from the original signal to silence over the selected sample range
+
+Parameters:
+
+- `start`: first sample index affected by the fade, defaults to `0`
+- `end`: last sample index affected by the fade, inclusive; defaults to the final sample; use `null` for the default
+
+Both indices are zero-based and must identify a valid range in the signal
+
+```json
+"fade_out": {
+    "start": 22050,
+    "end": null
+}
+```
 
 ## Final output routing
 

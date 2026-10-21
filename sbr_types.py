@@ -2,11 +2,11 @@
 SBR types of data
 by @brick_briceno 2024
 """
-
 from sbr_utils import (one_dimention_list_recurtion,
                        convert_unions_to_tuples,
                        separate_path_extension,
                        white_spaces_in_list)
+from Bsound.Aura import AURA_ERROR, Aura
 from typing import get_type_hints
 from errors import *
 import inspect
@@ -901,9 +901,9 @@ class Structure(Group):
 abc = "._/\\: abcdefghijklmnñopqrstuvwxyz áéíóú 0123456789"
 abc += abc.upper()
 
+
 class Instrument:
-    def __init__(self, path: "str | Aura", inst_id):
-        from Bsound.Aura import AURA_ERROR, Aura
+    def __init__(self, path: str | Aura, inst_id):
 
         self.aura = path if isinstance(path, Aura) else None
         if self.aura is None:

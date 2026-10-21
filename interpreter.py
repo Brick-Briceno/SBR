@@ -3,9 +3,9 @@ Interpreter developed by @brick_briceno in 2025
 
 """
 
+from sbr_types import Rhythm
 from compiler import compiler
 from errors import SBR_ERROR
-from sbr_types import Rhythm
 from sbr_utils import *
 from variables import *
 import generators
